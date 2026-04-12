@@ -10,5 +10,13 @@ namespace Application.Interfaces
     {
         Task AddAsync(Department department);
         Task<bool> SaveChangesAsync();
+
+        Task<Department> GetByIdAsync(int id);
+
+        Task UpdateAsync(Department department);
+
+        Task DeleteAsync(Department department);
+
+        Task<List<Department>> GetAllAsync();
     }
 }
