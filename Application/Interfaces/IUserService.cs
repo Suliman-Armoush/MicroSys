@@ -1,4 +1,4 @@
-﻿using Application.DTOs.Responce;
+﻿using Application.DTOs.Response;
 using Domain.Entities;
 using System;
 using System.Collections.Generic;

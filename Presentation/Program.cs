@@ -4,6 +4,7 @@ using Application.Interfaces;
 using Infrastructure.Persistence.Data;
 using Infrastructure.Persistence.Repositories;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.DependencyInjection;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -23,10 +24,11 @@ builder.Services.AddMediatR(cfg =>
   cfg.RegisterServicesFromAssembly(typeof(GetUserQuery).Assembly);
 });
 
-builder.Services.AddAutoMapper(cfg => { }, typeof(MappingProfile).Assembly);
 
 builder.Services.AddScoped<IUserService, UserService>();
 
+builder.Services.AddScoped<IDepartmentService, DepartmentService>();
+builder.Services.AddAutoMapper(cfg => { }, typeof(MappingProfile).Assembly); 
 var app = builder.Build();
 
 // Configure the HTTP request pipeline.
