@@ -26,10 +26,7 @@ namespace Presentation.Controllers
         [HttpPost("Create")]
         public async Task<ActionResult<DepartmentResponseDto>> Create([FromForm] DepartmentRequestDto dto)
         {
-            if (dto == null) return BadRequest();
-
             var result = await _mediator.Send(new CreateDepartmentCommand(dto));
-
             return Ok(result);
         }
 

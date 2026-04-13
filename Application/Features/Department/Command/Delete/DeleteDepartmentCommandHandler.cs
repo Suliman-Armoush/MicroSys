@@ -20,7 +20,7 @@ namespace Application.Features.Department.Command.Delete
 
             await _departmentService.DeleteAsync(department);
 
-            return await _departmentService.SaveChangesAsync();
+            return true;
         }
     }
 }
