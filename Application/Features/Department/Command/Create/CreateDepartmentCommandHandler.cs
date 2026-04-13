@@ -24,7 +24,6 @@ namespace Application.Features.Department.Command.Create
             var department = _mapper.Map<Domain.Entities.Department>(request.DepartmentDto);
 
             await _departmentService.AddAsync(department);
-            await _departmentService.SaveChangesAsync();
 
             return _mapper.Map<DepartmentResponseDto>(department);
         }

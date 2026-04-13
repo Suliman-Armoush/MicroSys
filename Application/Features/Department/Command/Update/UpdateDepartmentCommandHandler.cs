@@ -25,7 +25,6 @@ namespace Application.Features.Department.Command.Update
             _mapper.Map(request.DepartmentDto, department);
 
             await _departmentService.UpdateAsync(department);
-            await _departmentService.SaveChangesAsync();
 
             return _mapper.Map<DepartmentResponseDto>(department);
         }

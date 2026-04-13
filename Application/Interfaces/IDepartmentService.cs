@@ -8,14 +8,14 @@ namespace Application.Interfaces
 {
     public interface IDepartmentService
     {
-        Task AddAsync(Department department);
+        Task<bool> AddAsync(Department department);
         Task<bool> SaveChangesAsync();
 
         Task<Department> GetByIdAsync(int id);
 
-        Task UpdateAsync(Department department);
+        Task<bool> UpdateAsync(Department department);
 
-        Task DeleteAsync(Department department);
+        Task<bool> DeleteAsync(Department department);
 
         Task<List<Department>> GetAllAsync();
     }
