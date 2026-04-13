@@ -5,4 +5,5 @@ using MediatR;
 namespace Application.Features.Department.Command.Create
 {
     public record CreateDepartmentCommand(DepartmentRequestDto DepartmentDto) : IRequest<DepartmentResponseDto>;
+
 }
