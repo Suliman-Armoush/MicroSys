@@ -20,7 +20,8 @@ namespace Application.Features.Department.Command.Update
         {
             var department = await _departmentService.GetByIdAsync(request.Id);
 
-            if (department == null) return null;
+            if (department == null)
+            return null;
 
             _mapper.Map(request.DepartmentDto, department);
 
