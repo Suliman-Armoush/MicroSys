@@ -6,43 +6,42 @@ using System.Threading.Tasks;
 
 namespace Infrastructure.Persistence.Repositories
 {
-    public class DepartmentService : IDepartmentService
+  public class DepartmentService : IDepartmentService
+  {
+    private readonly DataContext _context;
+
+    public DepartmentService(DataContext context)
     {
-        private readonly DataContext _context;
-
-        public DepartmentService(DataContext context)
-        {
-            _context = context;
-        }
-
-        public async Task AddAsync(Department department)
-        {
-            await _context.Departments.AddAsync(department);
-        }
-
-        public async Task<bool> SaveChangesAsync()
-        {
-            return (await _context.SaveChangesAsync()) > 0;
-        }
-        public async Task<Department> GetByIdAsync(int id)
-        {
-            return await _context.Departments.FindAsync(id);
-        }
-
-        public async Task UpdateAsync(Department department)
-        {
-            _context.Departments.Update(department);
-            await Task.CompletedTask;
-        }
-        public async Task DeleteAsync(Department department)
-        {
-            _context.Departments.Remove(department);
-            await Task.CompletedTask;
-        }
-
-        public async Task<List<Department>> GetAllAsync()
-        {
-            return await _context.Departments.ToListAsync();
-        }
+      _context = context;
     }
+
+    public async Task<bool> AddAsync(Department department)
+    {
+      await _context.Departments.AddAsync(department);
+      return await SaveChangesAsync();
+    }
+    public async Task<bool> SaveChangesAsync()
+    {
+      return (await _context.SaveChangesAsync()) > 0;
+    }
+    public async Task<Department> GetByIdAsync(int id)
+    {
+      return await _context.Departments.FindAsync(id);
+    }
+    public async Task<bool> UpdateAsync(Department department)
+    {
+      _context.Departments.Update(department);
+      return await SaveChangesAsync();
+    }
+
+    public async Task<bool> DeleteAsync(Department department)
+    {
+      _context.Departments.Remove(department);
+      return await SaveChangesAsync();
+    }
+    public async Task<List<Department>> GetAllAsync()
+    {
+      return await _context.Departments.ToListAsync();
+    }
+  }
 }

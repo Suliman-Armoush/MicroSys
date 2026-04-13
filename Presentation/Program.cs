@@ -1,4 +1,5 @@
-using Application.Features.User;
+//using Application.Features.User;
+using Application.Features.Department.Queries.GetById;
 using Application.Helper;
 using Application.Interfaces;
 using Infrastructure.Persistence.Data;
@@ -21,7 +22,7 @@ builder.Services.AddDbContext<DataContext>(opt =>
 
 builder.Services.AddMediatR(cfg =>
 {
-  cfg.RegisterServicesFromAssembly(typeof(GetUserQuery).Assembly);
+  cfg.RegisterServicesFromAssembly(typeof(GetDepartmentByIdQuery).Assembly);
 });
 
 
