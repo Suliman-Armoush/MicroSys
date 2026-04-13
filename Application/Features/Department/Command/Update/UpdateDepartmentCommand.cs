@@ -4,15 +4,5 @@ using MediatR;
 
 namespace Application.Features.Department.Command.Update
 {
-    public class UpdateDepartmentCommand : IRequest<DepartmentResponseDto>
-    {
-        public int Id { get; }
-        public DepartmentRequestDto DepartmentDto { get; }
-
-        public UpdateDepartmentCommand(int id, DepartmentRequestDto dto)
-        {
-            Id = id;
-            DepartmentDto = dto;
-        }
-    }
+    public record UpdateDepartmentCommand(int Id, DepartmentRequestDto DepartmentDto) : IRequest<DepartmentResponseDto>;
 }
