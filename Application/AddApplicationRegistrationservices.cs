@@ -1,8 +1,11 @@
-﻿using Application.Features.Department.Command.Create;
+﻿using Application.Behaviors;
+using Application.Features.Department.Command.Create;
 using Application.Helper;
 using Application.Helper.Profiles;
 using AutoMapper;
-
+using Azure;
+using FluentValidation;
+using MediatR;
 using Microsoft.Extensions.DependencyInjection;
 using System;
 using System.Collections.Generic;
@@ -24,14 +27,17 @@ namespace Application
                 cfg.AddProfile<RoleProfile>();
 
 
-            } );
+            });
 
 
 
             // تسجيل MediatR
             services.AddMediatR(cfg =>
-                cfg.RegisterServicesFromAssembly(Assembly.GetExecutingAssembly()));
-
+            {
+                cfg.RegisterServicesFromAssembly(Assembly.GetExecutingAssembly());
+                cfg.AddOpenBehavior(typeof(ValidationBehavior<,>));
+            });
+            services.AddValidatorsFromAssembly(Assembly.GetExecutingAssembly());
 
             return services;
         }
