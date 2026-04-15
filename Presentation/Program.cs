@@ -1,27 +1,18 @@
 //using Application.Features.User;
-using Application;
-using Application.Features.Department.Queries.GetById;
-using Application.Helper;
-using Application.Interfaces;
-using Infrastructure;
-using Infrastructure.Persistence.Data;
-using Infrastructure.Persistence.Repositories;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.Extensions.DependencyInjection;
 using Presentation;
+using Presentation.Middlewares;
 
 var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
-
 builder.Services.AddPresentationServices(builder.Configuration);
 
 
-
-
-
-
 var app = builder.Build();
+
+
+app.UseMiddleware<ExceptionMiddleware>();
 
 // Configure the HTTP request pipeline.
 if (app.Environment.IsDevelopment())
