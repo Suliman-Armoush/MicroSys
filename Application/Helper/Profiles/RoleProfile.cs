@@ -12,8 +12,8 @@ namespace Application.Helper.Profiles
     {
         public RoleProfile()
         {
-            CreateMap<Role, RoleResponseDto>();
-            CreateMap<RoleRequestDto, Role>();
+            CreateMap<Role, RoleResponseDto>().ReverseMap();
+            CreateMap<RoleRequestDto, Role>().ReverseMap();
         }
     }
 }
