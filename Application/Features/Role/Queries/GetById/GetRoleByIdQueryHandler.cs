@@ -23,7 +23,8 @@ namespace Application.Features.Role.Queries.GetById
         {
             var role = await _roleService.GetByIdAsync(request.Id);
 
-            if (role == null) return null;
+            if (role == null)
+                throw new KeyNotFoundException("Role not found.");
 
             return _mapper.Map<RoleResponseDto>(role);
         }

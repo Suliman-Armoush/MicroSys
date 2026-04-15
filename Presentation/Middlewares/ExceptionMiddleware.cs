@@ -24,6 +24,10 @@ public class ExceptionMiddleware
         {
             await HandleValidationExceptionAsync(httpContext, ex);
         }
+        catch (KeyNotFoundException ex) // إمساك خطأ "العنصر غير موجود"
+        {
+            await HandleKeyNotFoundExceptionAsync(httpContext, ex);
+        }
         catch (Exception ex)
         {
             await HandleExceptionAsync(httpContext, ex);
@@ -35,11 +39,18 @@ public class ExceptionMiddleware
         context.Response.ContentType = "application/json";
         context.Response.StatusCode = (int)HttpStatusCode.BadRequest;
 
-        // ترتيب الأخطاء في قائمة بسيطة (Key, Value)
         var errors = exception.Errors
             .Select(e => new { Field = e.PropertyName, Message = e.ErrorMessage });
 
         var result = JsonSerializer.Serialize(new { errors });
+        return context.Response.WriteAsync(result);
+    }
+    private static Task HandleKeyNotFoundExceptionAsync(HttpContext context, KeyNotFoundException exception)
+    {
+        context.Response.ContentType = "application/json";
+        context.Response.StatusCode = (int)HttpStatusCode.NotFound;
+
+        var result = JsonSerializer.Serialize(new { message = exception.Message });
         return context.Response.WriteAsync(result);
     }
 
@@ -51,4 +62,5 @@ public class ExceptionMiddleware
         var result = JsonSerializer.Serialize(new { message = "An unexpected error occurred." });
         return context.Response.WriteAsync(result);
     }
+
 }

@@ -1,9 +1,10 @@
-﻿using Application.Interfaces;
+﻿using Application.Features.Department.Command.Delete;
+using Application.Interfaces;
 using MediatR;
 
 namespace Application.Features.Department.Command.Delete
 {
-    public class DeleteDepartmentCommandHandler : IRequestHandler<DeleteDepartmentCommand, bool>
+    public class DeleteDepartmentCommandHandler : IRequestHandler<DeleteDepartmentCommand, Unit>
     {
         private readonly IDepartmentService _departmentService;
 
@@ -12,15 +13,16 @@ namespace Application.Features.Department.Command.Delete
             _departmentService = departmentService;
         }
 
-        public async Task<bool> Handle(DeleteDepartmentCommand request, CancellationToken cancellationToken)
+        public async Task<Unit> Handle(DeleteDepartmentCommand request, CancellationToken cancellationToken)
         {
             var department = await _departmentService.GetByIdAsync(request.Id);
 
-            if (department == null) return false;
+            if (department == null)
+                throw new KeyNotFoundException("Department not found");
 
             await _departmentService.DeleteAsync(department);
 
-            return true;
+            return Unit.Value;
         }
     }
 }

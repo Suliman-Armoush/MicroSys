@@ -5,5 +5,5 @@ using System.Text;
 
 namespace Application.Features.Role.Command.Delete
 {
-    public record DeleteRoleCommand(int Id) : IRequest<bool>;
+    public record DeleteRoleCommand(int Id) : IRequest<Unit>;
 }
