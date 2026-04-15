@@ -1,6 +1,7 @@
 ﻿using Domain.Entities;
 using Microsoft.EntityFrameworkCore;
 using System.Data;
+using System.Reflection.Emit;
 
 namespace Infrastructure.Persistence.Data
 {
@@ -17,6 +18,10 @@ namespace Infrastructure.Persistence.Data
         {
             base.OnModelCreating(builder);
 
+            builder.Entity<Role>()
+            .HasIndex(r => r.Name)
+            .IsUnique();
+
             builder.Entity<User>()
                 .HasOne(u => u.Role)
                 .WithMany()
@@ -26,6 +31,7 @@ namespace Infrastructure.Persistence.Data
                 .HasOne(u => u.Department)
                 .WithMany()
                 .HasForeignKey(u => u.DepartmentId);
+
         }
     } 
 } 

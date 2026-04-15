@@ -34,6 +34,8 @@ namespace Presentation.Controllers
         public async Task<ActionResult<DepartmentResponseDto>> Update(int id, [FromBody] DepartmentRequestDto dto)
         {
             var result = await _mediator.Send(new UpdateDepartmentCommand(id, dto));
+            if (result == null)
+                return NotFound("Department not found"); ;
 
 
             return Ok(result);
