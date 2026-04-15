@@ -7,7 +7,7 @@ using System.Text;
 
 namespace Application.Features.Role.Command.Delete
 {
-    public class DeleteRoleCommandHandler : IRequestHandler<DeleteRoleCommand, bool>
+    public class DeleteRoleCommandHandler : IRequestHandler<DeleteRoleCommand, Unit>
     {
         private readonly IRoleService _roleService;
 
@@ -16,15 +16,16 @@ namespace Application.Features.Role.Command.Delete
             _roleService = roleService;
         }
 
-        public async Task<bool> Handle(DeleteRoleCommand request, CancellationToken cancellationToken)
+        public async Task<Unit> Handle(DeleteRoleCommand request, CancellationToken cancellationToken)
         {
 
             var role = await _roleService.GetByIdAsync(request.Id);
 
-            if (role == null) return false;
+            if (role == null)
+                throw new KeyNotFoundException("Role not found.");
 
             await _roleService.DeleteAsync(role);
-            return true;
+            return Unit.Value;
         }
     }
 }

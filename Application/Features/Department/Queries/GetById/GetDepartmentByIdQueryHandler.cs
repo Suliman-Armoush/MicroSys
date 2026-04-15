@@ -20,7 +20,8 @@ namespace Application.Features.Department.Queries.GetById
         {
             var department = await _departmentService.GetByIdAsync(request.Id);
 
-            if (department == null) return null;
+            if (department == null)
+                throw new KeyNotFoundException("Department not found.");
 
             return _mapper.Map<DepartmentResponseDto>(department);
         }

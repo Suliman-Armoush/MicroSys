@@ -23,7 +23,7 @@ namespace Application.Features.Role.Command.Update
         {
             var role = await _roleService.GetByIdAsync(request.Id);
             if (role == null)
-                return null;
+                throw new KeyNotFoundException("Role not found.");
 
             role.Name = request.RoleDto.Name;
 
