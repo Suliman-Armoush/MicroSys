@@ -16,8 +16,13 @@ namespace Application.Features.Role.Command.Create
 
             RuleFor(x => x.RoleDto.Name)
                 .NotEmpty().WithMessage("Role name is required")
-                .MinimumLength(2).WithMessage("Role name is too short");
-                
+                .MinimumLength(2).WithMessage("Role name is too short")
+                .MustAsync(async (name, cancellation) =>
+                {
+                     return !await _roleService.ExistsAsync(name);
+                }).WithMessage("This role name already exists.");
+
+
         }
     }
 }

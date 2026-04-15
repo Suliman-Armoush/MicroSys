@@ -26,7 +26,6 @@ namespace Application.Features.Role.Command.Create
 
             await _roleService.AddAsync(role);
 
-            
             return _mapper.Map<RoleResponseDto>(role);
         }
     }

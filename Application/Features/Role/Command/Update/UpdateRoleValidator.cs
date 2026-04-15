@@ -6,11 +6,11 @@ using System.Text;
 
 namespace Application.Features.Role.Command.Update
 {
-    public class UpdateRoleValidator : AbstractValidator<UpdateRoleCommand>
+    public class DeleteRoleValidator : AbstractValidator<UpdateRoleCommand>
     {
         private readonly IRoleService _roleService;
 
-        public UpdateRoleValidator(IRoleService roleService)
+        public DeleteRoleValidator(IRoleService roleService)
         {
             _roleService = roleService;
 
@@ -25,8 +25,6 @@ namespace Application.Features.Role.Command.Update
                 .MinimumLength(2).WithMessage("Role name is too short")
                 .MustAsync(async (command, name, cancellation) =>
                 {
-                    // نتحقق إذا كان الاسم موجوداً عند "رتبة أخرى" غير التي نقوم بتعديلها حالياً
-                    // نمرر الـ ID لاستثنائه من الفحص
                     bool exists = await _roleService.ExistsAsync(name, command.Id);
                     return !exists;
                 })
