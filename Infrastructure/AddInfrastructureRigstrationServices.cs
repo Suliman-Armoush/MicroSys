@@ -17,6 +17,7 @@ namespace Infrastructure
             // تسجيل الـ Repositories (تنفيذ العقود)
             services.AddScoped<IDepartmentService, DepartmentService>();
             services.AddScoped<IUserService, UserService>();
+            services.AddScoped<IRoleService, RoleService>();
 
             services.AddDbContext<DataContext>(opt =>
     opt.UseSqlServer(configuration.GetConnectionString("Default")));

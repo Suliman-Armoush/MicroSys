@@ -8,11 +8,12 @@ using System.Text;
 
 namespace Application.Helper.Profiles
 {
-    public class UserProfile: Profile
+    public class RoleProfile : Profile
     {
-        public UserProfile()
+        public RoleProfile()
         {
-            CreateMap<User, UserDto>().ReverseMap();
+            CreateMap<Role, RoleResponseDto>();
+            CreateMap<RoleRequestDto, Role>();
         }
     }
 }
