@@ -19,9 +19,9 @@ namespace Application.Features.Department.Command.Update
         public async Task<DepartmentResponseDto> Handle(UpdateDepartmentCommand request, CancellationToken cancellationToken)
         {
             var department = await _departmentService.GetByIdAsync(request.Id);
-
             if (department == null)
-            return null;
+                return null;
+
 
             _mapper.Map(request.DepartmentDto, department);
 
