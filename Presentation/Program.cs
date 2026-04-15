@@ -36,6 +36,8 @@ builder.Services.AddMediatR(cfg =>
 
 
 builder.Services.AddScoped<IUserService, UserService>();
+builder.Services.AddScoped<IRoleService, RoleService>();
+
 
 builder.Services.AddScoped<IDepartmentService, DepartmentService>();
 builder.Services.AddAutoMapper(cfg => { }, typeof(MappingProfile).Assembly); 
