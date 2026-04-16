@@ -13,6 +13,8 @@ namespace Infrastructure.Persistence.Data
         public DbSet<Department> Departments { get; set; }
         public DbSet<Role> Roles { get; set; }
         public DbSet<SysInfo> SysInfos { get; set; }
+        public DbSet<UserToken> UserTokens { get; set; }
+
 
         protected override void OnModelCreating(ModelBuilder builder)
         {
@@ -30,8 +32,15 @@ namespace Infrastructure.Persistence.Data
             builder.Entity<User>()
                 .HasOne(u => u.Department)
                 .WithMany()
-                .HasForeignKey(u => u.DepartmentId);
+                .HasForeignKey(u => u.DepartmentId)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            builder.Entity<UserToken>()
+                .HasOne(ut => ut.User)
+                .WithMany()
+                .HasForeignKey(ut => ut.UserId)
+                .OnDelete(DeleteBehavior.Cascade);
 
         }
-    } 
-} 
+    }
+}

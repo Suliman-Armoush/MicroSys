@@ -6,13 +6,20 @@ using System.Text;
 
 namespace Application.Interfaces
 {
-  public interface IUserService
-  {
-    Task<User> GetByIdAsync(int id);
-    Task<ICollection<User>> GetAllAsync();
-    Task<bool> CreateAsync(User user);
-    Task<bool> UpdateAsync(User user);
-    Task<bool> DeleteAsync(User user);
-    Task<bool> SaveAsync();
-  }
+    public interface IUserService
+    {
+        Task<User?> GetByIdAsync(int id);
+
+        Task<User?> GetByEmailAsync(string email);
+
+        Task<List<User>> GetAllAsync();
+
+        Task AddAsync(User user);
+
+        Task UpdateAsync(User user);
+
+        Task DeleteAsync(User user);
+
+        Task<bool> IsEmailUniqueAsync(string email);
+    }
 }

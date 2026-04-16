@@ -18,5 +18,6 @@ namespace Application.Interfaces
         Task<bool> DeleteAsync(Department department);
 
         Task<List<Department>> GetAllAsync();
+        Task<bool> HasUsersAsync(int departmentId);
     }
 }
