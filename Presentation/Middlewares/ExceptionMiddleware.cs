@@ -28,6 +28,10 @@ public class ExceptionMiddleware
         {
             await HandleKeyNotFoundExceptionAsync(httpContext, ex);
         }
+        catch (UnauthorizedAccessException ex)
+        {
+            await HandleUnauthorizedExceptionAsync(httpContext, ex);
+        }
         catch (Exception ex)
         {
             await HandleExceptionAsync(httpContext, ex);
@@ -60,6 +64,15 @@ public class ExceptionMiddleware
         context.Response.StatusCode = (int)HttpStatusCode.InternalServerError;
 
         var result = JsonSerializer.Serialize(new { message = "An unexpected error occurred." });
+        return context.Response.WriteAsync(result);
+    }
+
+    private static Task HandleUnauthorizedExceptionAsync(HttpContext context, UnauthorizedAccessException exception)
+    {
+        context.Response.ContentType = "application/json";
+        context.Response.StatusCode = (int)HttpStatusCode.Unauthorized; 
+
+        var result = JsonSerializer.Serialize(new { message = exception.Message });
         return context.Response.WriteAsync(result);
     }
 

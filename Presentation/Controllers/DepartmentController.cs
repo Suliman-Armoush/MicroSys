@@ -6,6 +6,7 @@ using Application.Features.Department.Command.Update;
 using Application.Features.Department.Queries.GetAll;
 using Application.Features.Department.Queries.GetById;
 using MediatR;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 namespace Presentation.Controllers
@@ -49,6 +50,7 @@ namespace Presentation.Controllers
             return Ok(result);
         }
 
+        [Authorize(Roles = "Admin")]
         [HttpGet("GetAll")] 
         public async Task<ActionResult<List<DepartmentResponseDto>>> GetAll()
         {

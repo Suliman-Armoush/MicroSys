@@ -11,41 +11,57 @@ namespace Infrastructure.Persistence.Repositories
     {
         private readonly DataContext _context;
 
-
         public UserService(DataContext context)
         {
             _context = context;
         }
 
-        public async Task<User> GetByIdAsync(int id)
+        public async Task<User?> GetByIdAsync(int id)
         {
             return await _context.Users
-                .FirstOrDefaultAsync(a => a.Id == id);
+                .Include(u => u.Role)
+                .Include(u => u.Department)
+                .FirstOrDefaultAsync(u => u.Id == id);
         }
 
-        public Task<bool> CreateAsync(User user)
+        public async Task<User?> GetByEmailAsync(string email)
         {
-            throw new NotImplementedException();
+            return await _context.Users
+                .Include(u => u.Role)
+                .Include(u => u.Department)
+                .FirstOrDefaultAsync(u => u.Email == email);
         }
 
-        public Task<bool> DeleteAsync(User user)
+        public async Task<List<User>> GetAllAsync()
         {
-            throw new NotImplementedException();
+            return await _context.Users
+                .Include(u => u.Role)
+                .Include(u => u.Department)
+                .ToListAsync();
         }
 
-        public Task<ICollection<User>> GetAllAsync()
+        public async Task AddAsync(User user)
         {
-            throw new NotImplementedException();
+            await _context.Users.AddAsync(user);
+            await _context.SaveChangesAsync();
         }
 
-        public Task<bool> SaveAsync()
+        public async Task UpdateAsync(User user)
         {
-            throw new NotImplementedException();
+            _context.Entry(user).State = EntityState.Modified;
+            await _context.SaveChangesAsync();
         }
 
-        public Task<bool> UpdateAsync(User user)
+        public async Task DeleteAsync(User user)
         {
-            throw new NotImplementedException();
+            _context.Users.Remove(user);
+            await _context.SaveChangesAsync();
+        }
+
+        public async Task<bool> IsEmailUniqueAsync(string email)
+        {
+
+            return !await _context.Users.AnyAsync(u => u.Email == email);
         }
     }
 }
