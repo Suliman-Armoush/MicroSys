@@ -19,5 +19,6 @@ namespace Application.Interfaces
 
         Task<List<Department>> GetAllAsync();
         Task<bool> HasUsersAsync(int departmentId);
+        Task<bool> ExistsAsync(int departmentId);
     }
 }

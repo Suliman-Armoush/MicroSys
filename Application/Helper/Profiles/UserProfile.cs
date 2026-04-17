@@ -13,7 +13,8 @@ namespace Application.Helper.Profiles
         public UserProfile()
         {
             CreateMap<User, UserResponseDto>().ReverseMap();
-            CreateMap<UserRequestDto, User>().ReverseMap(); 
+            CreateMap<UserRequestDto, User>().ReverseMap();
+            CreateMap<UpdateUserRequestDto, User>();
         }
     }
 }

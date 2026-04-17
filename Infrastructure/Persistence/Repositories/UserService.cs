@@ -24,13 +24,6 @@ namespace Infrastructure.Persistence.Repositories
                 .FirstOrDefaultAsync(u => u.Id == id);
         }
 
-        public async Task<User?> GetByEmailAsync(string email)
-        {
-            return await _context.Users
-                .Include(u => u.Role)
-                .Include(u => u.Department)
-                .FirstOrDefaultAsync(u => u.Email == email);
-        }
 
         public async Task<List<User>> GetAllAsync()
         {
@@ -58,10 +51,18 @@ namespace Infrastructure.Persistence.Repositories
             await _context.SaveChangesAsync();
         }
 
-        public async Task<bool> IsEmailUniqueAsync(string email)
+        public async Task<bool> IsEmailUniqueAsync(string email, int? excludeId = null)
+        {
+            return !await _context.Users.AnyAsync(u => u.Email == email && u.Id != excludeId);
+        }
+
+        public async Task<User?> GetByEmailAsync(string email)
         {
 
-            return !await _context.Users.AnyAsync(u => u.Email == email);
+            return await _context.Users
+                 .Include(u => u.Role)
+                .Include(u => u.Department)
+                .FirstOrDefaultAsync(u => u.Email == email);
         }
     }
 }
