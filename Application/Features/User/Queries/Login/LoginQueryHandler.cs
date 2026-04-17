@@ -24,7 +24,6 @@ namespace Application.Features.User.Queries.Login
         public async Task<AuthResponseDto> Handle(LoginQuery request, CancellationToken cancellationToken)
         {
             var user = await _userService.GetByEmailAsync(request.LoginDto.Email);
-
             if (user == null || !BCrypt.Net.BCrypt.Verify(request.LoginDto.Password, user.PasswordHash))
             {
                 throw new UnauthorizedAccessException("Invalid Email or Password.");
