@@ -41,7 +41,22 @@ namespace Infrastructure
                       ValidIssuer = configuration["JwtSettings:Issuer"],
                       ValidateAudience = true,
                       ValidAudience = configuration["JwtSettings:Audience"],
-                      ValidateLifetime = true
+                      ValidateLifetime = true,
+                      ClockSkew = TimeSpan.Zero
+
+                  };
+                  options.Events = new JwtBearerEvents
+                  {
+                      OnAuthenticationFailed = context =>
+                      {
+                          Console.WriteLine("❌ FAILED: " + context.Exception.Message);
+                          return Task.CompletedTask;
+                      },
+                      OnTokenValidated = context =>
+                      {
+                          Console.WriteLine("✅ TOKEN VALID");
+                          return Task.CompletedTask;
+                      }
                   };
               });
             return services;

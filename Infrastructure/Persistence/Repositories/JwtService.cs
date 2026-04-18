@@ -37,13 +37,12 @@ namespace Infrastructure.Persistence.Repositories
             var expiration = DateTime.UtcNow.AddYears(100);
 
             var token = new JwtSecurityToken(
-                _config["JwtSettings:Issuer"],
-                _config["JwtSettings:Audience"],
-                claims,
-                null,
-                expiration,
-                creds
-            );
+                 issuer: _config["JwtSettings:Issuer"],
+                 audience: _config["JwtSettings:Audience"],
+                 claims: claims,
+                 expires: expiration,
+                 signingCredentials: creds
+ );
 
             var tokenString = new JwtSecurityTokenHandler().WriteToken(token);
 
