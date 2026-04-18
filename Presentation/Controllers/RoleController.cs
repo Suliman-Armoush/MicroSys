@@ -5,10 +5,12 @@ using Application.Features.Role.Command.Delete;
 using Application.Features.Role.Queries.GetAll;
 using Application.Features.Role.Queries.GetById;
 using MediatR;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 namespace Presentation.Controllers
 {
+    [Authorize]
     [ApiController]
     [Route("api/Role")]
     public class RoleController : ControllerBase
