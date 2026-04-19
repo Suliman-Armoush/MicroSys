@@ -22,11 +22,11 @@ namespace Application.Features.User.Command.Create
             RuleFor(x => x.UserDto.Name)
                 .NotEmpty().WithMessage("Name is required.");
 
-            RuleFor(x => x.UserDto.Email)
-                .NotEmpty().WithMessage("Email address is required.")
-                .EmailAddress().WithMessage("A valid email address is required.")
-                .MustAsync(async (email, _) => await _userService.IsEmailUniqueAsync(email))
-                .WithMessage("This email is already registered.");
+            RuleFor(x => x.UserDto.UserName)
+                .NotEmpty().WithMessage("UserName address is required.")
+                //.EmailAddress().WithMessage("A valid UserName address is required.")
+                .MustAsync(async (UserName, _) => await _userService.IsUserNameUniqueAsync(UserName))
+                .WithMessage("This UserName is already registered.");
 
             RuleFor(x => x.UserDto.Password)
                 .NotEmpty().WithMessage("Password is required.")

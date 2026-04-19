@@ -11,7 +11,7 @@ using Microsoft.AspNetCore.Mvc;
 
 namespace Presentation.Controllers
 {
-  [Authorize(Roles = "admin")]
+  //[Authorize(Roles = "admin")]
   [ApiController]
   [Route("api/Department")]
   public class DepartmentsController : ControllerBase
