@@ -11,12 +11,12 @@ namespace Application.Features.User.Command.Update
         public UpdateUserCommandValidator(IUserService userService, IRoleService roleService, IDepartmentService departmentService)
         {
             
-            RuleFor(x => x.UserDto.Email)
-                 .EmailAddress().WithMessage("A valid email address is required.")
-                 .MustAsync(async (command, email, cancellationToken) => 
-                     await userService.IsEmailUniqueAsync(email!, command.Id))
-                    .When(x => !string.IsNullOrEmpty(x.UserDto.Email))
-                     .WithMessage("This email is already registered to another user.");
+            RuleFor(x => x.UserDto.UserName)
+                 //.EmailAddress().WithMessage("A valid UserName address is required.")
+                 .MustAsync(async (command, UserName, cancellationToken) => 
+                     await userService.IsUserNameUniqueAsync(UserName!, command.Id))
+                    .When(x => !string.IsNullOrEmpty(x.UserDto.UserName))
+                     .WithMessage("This UserName is already registered to another user.");
           
             RuleFor(x => x.UserDto.RoleId)
                 .MustAsync(async (roleId, _) => (await roleService.GetByIdAsync(roleId!.Value)) != null)

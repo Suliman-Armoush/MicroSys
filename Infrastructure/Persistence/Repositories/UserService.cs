@@ -51,18 +51,18 @@ namespace Infrastructure.Persistence.Repositories
             await _context.SaveChangesAsync();
         }
 
-        public async Task<bool> IsEmailUniqueAsync(string email, int? excludeId = null)
+        public async Task<bool> IsUserNameUniqueAsync(string UserName, int? excludeId = null)
         {
-            return !await _context.Users.AnyAsync(u => u.Email == email && u.Id != excludeId);
+            return !await _context.Users.AnyAsync(u => u.UserName == UserName && u.Id != excludeId);
         }
 
-        public async Task<User?> GetByEmailAsync(string email)
+        public async Task<User?> GetByUserNameAsync(string UserName)
         {
 
             return await _context.Users
                  .Include(u => u.Role)
                 .Include(u => u.Department)
-                .FirstOrDefaultAsync(u => u.Email == email);
+                .FirstOrDefaultAsync(u => u.UserName == UserName);
         }
     }
 }

@@ -24,7 +24,7 @@ namespace Infrastructure.Persistence.Repositories
     {
       var claims = new Claim[] {
                 new Claim(ClaimTypes.NameIdentifier, user.Id.ToString()),
-                new Claim(ClaimTypes.Email, user.Email),
+                new Claim(ClaimTypes.Email, user.UserName),
                 new Claim(ClaimTypes.Role, user.Role.Name)
             };
 
