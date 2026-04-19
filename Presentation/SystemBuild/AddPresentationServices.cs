@@ -2,7 +2,7 @@
 using Infrastructure;
 using Microsoft.OpenApi;
 
-namespace Presentation
+namespace Presentation.SystemBuild
 {
   public static class DependencyInjection
   {

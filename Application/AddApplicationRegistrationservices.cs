@@ -1,5 +1,4 @@
-﻿using Application.Behaviors;
-using Application.Features.Department.Command.Create;
+﻿using Application.Features.Department.Command.Create;
 using Application.Helper;
 using Application.Helper.Profiles;
 using AutoMapper;
