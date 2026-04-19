@@ -9,7 +9,7 @@ namespace Application.Interfaces
     public interface IUserService
     {
         Task<User?> GetByIdAsync(int id);
-        Task<bool> IsEmailUniqueAsync(string email, int? excludeId = null);
+        Task<bool> IsUserNameUniqueAsync(string UserName, int? excludeId = null);
         Task<List<User>> GetAllAsync();
         Task AddAsync(User user);
 
@@ -17,7 +17,7 @@ namespace Application.Interfaces
 
         Task DeleteAsync(User user);
 
-        Task<User?> GetByEmailAsync(string email);
+        Task<User?> GetByUserNameAsync(string UserName);
 
     }
 }

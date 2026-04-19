@@ -7,8 +7,8 @@ namespace Domain.Entities
     public class UserToken
     {
         public int Id { get; set; }
-        public string Token { get; set; } = string.Empty;
-        public int UserId { get; set; }
-        public User User { get; set; } = null!;
+        public required string Token { get; set; }
+        public required int UserId { get; set; }
+        public User? User { get; set; }
     }
 }
