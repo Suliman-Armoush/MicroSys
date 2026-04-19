@@ -6,6 +6,6 @@ namespace Application.DTOs.Request
 {
     public class RoleRequestDto
     {
-        public string Name { get; set; }
+        public required string Name { get; set; }
     }
 }
