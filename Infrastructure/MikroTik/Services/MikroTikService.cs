@@ -36,5 +36,26 @@ namespace Infrastructure.MikroTik.Services
 
             return result;
         }
+
+        public async Task<List<MikrotikProfileResponse>> GetAllProfilesAsync()
+        {
+            var result = new List<MikrotikProfileResponse>();
+
+            using var connection = _client.Connect();
+
+            var profiles = connection.LoadAll<HotspotUserProfile>();
+
+            foreach (var profile in profiles)
+            {
+                result.Add(new MikrotikProfileResponse
+                {
+                    Name = profile.Name,
+                    SharedUsers = profile.SharedUsers,
+                    RateLimit = profile.RateLimit
+                });
+            }
+
+            return result;
+        }
     }
 }
