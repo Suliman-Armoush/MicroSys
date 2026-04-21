@@ -4,7 +4,7 @@ using System;
 using System.Collections.Generic;
 using System.Text;
 
-namespace Application.Features.Mikrotik.Queries
+namespace Application.Features.Mikrotik.Queries.GetAllUser
 {
     public class GetAllMikrotikUsersQuery : IRequest<List<MikrotikUserResponse>>
     {

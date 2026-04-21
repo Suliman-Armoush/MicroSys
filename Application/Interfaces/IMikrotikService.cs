@@ -9,5 +9,6 @@ namespace Application.Interfaces
     public interface IMikrotikService
     {
         Task<List<MikrotikUserResponse>> GetAllUsersAsync();
+        Task<List<MikrotikProfileResponse>> GetAllProfilesAsync();
     }
 }
