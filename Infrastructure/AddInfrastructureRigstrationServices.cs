@@ -21,6 +21,16 @@ namespace Infrastructure
         services.AddScoped<IRoleService, RoleService>();
         services.AddScoped<IJwtService, JwtService>();
         services.AddScoped<ISysInfoService, SysInfoService>();
+    public static class AddInfrastructureRigstrationServices
+    {
+        public static IServiceCollection AddInfrastructureServices(this IServiceCollection services, IConfiguration configuration)
+        {
+            // تسجيل الـ Repositories (تنفيذ العقود)
+            services.AddScoped<IDepartmentService, DepartmentService>();
+            services.AddScoped<IUserService, UserService>();
+            services.AddScoped<IRoleService, RoleService>();
+            services.AddScoped<IJwtService, JwtService>();
+            services.AddScoped<IExcelService, ExcelService>();  
 
 
             services.AddSingleton<MikrotikClient>(sp =>
