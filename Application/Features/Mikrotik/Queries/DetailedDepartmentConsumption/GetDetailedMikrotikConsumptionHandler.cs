@@ -33,7 +33,7 @@ namespace Application.Features.Mikrotik.Queries.DetailedDepartmentConsumption
                     // ملء قائمة اليوزرات التابعين لهذا القسم (الاستهلاك الفردي لكل يوزر)
                     Users = g.Select(u => new UserConsumptionDetail
                     {
-                        UserName = u.Name,
+                        UserName = u.Username,
                         UsageGB = Math.Round((u.BytesInRaw + u.BytesOutRaw) / Math.Pow(1024, 3), 2)
                     })
                     .OrderByDescending(u => u.UsageGB) // ترتيب اليوزرات داخل القسم من الأكثر استهلاكاً
