@@ -22,6 +22,7 @@ namespace Infrastructure
             services.AddScoped<IUserService, UserService>();
             services.AddScoped<IRoleService, RoleService>();
             services.AddScoped<IJwtService, JwtService>();
+            services.AddScoped<IExcelService, ExcelService>();  
 
             services.AddScoped<IMikrotikService, MikrotikService>();
             services.Configure<MikrotikClient>(configuration.GetSection("MikrotikClient"));
