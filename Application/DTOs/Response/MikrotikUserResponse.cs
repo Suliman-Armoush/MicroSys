@@ -18,6 +18,6 @@ namespace Application.DTOs.Response
         public double BytesIn => Math.Round(BytesInRaw / Math.Pow(1024, 3), 2);
         public double BytesOut => Math.Round(BytesOutRaw / Math.Pow(1024, 3), 2);
 
-        public double Total => Math.Round((BytesInRaw + BytesOutRaw) / Math.Pow(1024, 3), 2);
+            public double Total => Math.Round((BytesInRaw + BytesOutRaw) / Math.Pow(1024, 3), 2);
     }
 }
