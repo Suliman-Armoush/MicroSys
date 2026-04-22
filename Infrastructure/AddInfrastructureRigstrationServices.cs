@@ -16,13 +16,14 @@ namespace Infrastructure
     public static IServiceCollection AddInfrastructureServices(this IServiceCollection services, IConfiguration configuration)
     {
       // تسجيل الـ Repositories (تنفيذ العقود)
-      services.AddScoped<IDepartmentService, DepartmentService>();
-      services.AddScoped<IUserService, UserService>();
-      services.AddScoped<IRoleService, RoleService>();
-      services.AddScoped<IJwtService, JwtService>();
+        services.AddScoped<IDepartmentService, DepartmentService>();
+        services.AddScoped<IUserService, UserService>();
+        services.AddScoped<IRoleService, RoleService>();
+        services.AddScoped<IJwtService, JwtService>();
+        services.AddScoped<ISysInfoService, SysInfoService>();
 
 
-      services.AddDbContext<DataContext>(opt =>
+            services.AddDbContext<DataContext>(opt =>
                                opt.UseSqlServer(configuration.GetConnectionString("Default")));
 
       services.AddAuthentication(options =>
