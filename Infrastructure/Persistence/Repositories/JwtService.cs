@@ -1,4 +1,4 @@
-﻿using Domain.Entities;
+﻿    using Domain.Entities;
 using Microsoft.Extensions.Configuration;
 using Microsoft.IdentityModel.Tokens;
 using System.IdentityModel.Tokens.Jwt;
@@ -26,6 +26,7 @@ namespace Infrastructure.Persistence.Repositories
                 new Claim(ClaimTypes.NameIdentifier, user.Id.ToString()),
                 new Claim(ClaimTypes.Email, user.UserName),
                 new Claim(ClaimTypes.Role, user.Role.Name),
+                new Claim("DepartmentId", user.DepartmentId.ToString()),
                 new Claim(JwtRegisteredClaimNames.Iat, DateTimeOffset.UtcNow.ToUnixTimeSeconds().ToString(),ClaimValueTypes.Integer64)            };
 
 

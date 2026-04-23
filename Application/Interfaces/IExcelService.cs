@@ -11,5 +11,10 @@ namespace Application.Interfaces
             List<DepartmentConsumptionResponse> atData,
             List<DepartmentConsumptionResponse> hashData,
             List<DepartmentConsumptionResponse> normalData);
+
+        byte[] GenerateDetailedExcelReport(
+                    List<DetailedDepartmentConsumptionResponse> atData,
+                    List<DetailedDepartmentConsumptionResponse> hashData,
+                    List<DetailedDepartmentConsumptionResponse> normalData);
     }
 }
