@@ -10,5 +10,6 @@ namespace Application.Interfaces
     {
         Task<List<MikrotikUserResponse>> GetAllUsersAsync();
         Task<List<MikrotikProfileResponse>> GetAllProfilesAsync();
+        Task<DetailedDepartmentConsumptionResponse> GetUsageByDepartmentNameAsync(string departmentName);
     }
 }

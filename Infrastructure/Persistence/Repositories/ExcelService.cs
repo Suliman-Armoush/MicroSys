@@ -3,6 +3,7 @@ using Application.Interfaces;
 using ClosedXML.Excel;
 using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Text;
 
 namespace Infrastructure.Persistence.Repositories
@@ -10,15 +11,15 @@ namespace Infrastructure.Persistence.Repositories
     public class ExcelService : IExcelService
     {
         public byte[] GenerateMikrotikReport(
-            List<DepartmentConsumptionResponse> atData,
-            List<DepartmentConsumptionResponse> hashData,
-            List<DepartmentConsumptionResponse> normalData)
+             List<DepartmentConsumptionResponse> atData,
+             List<DepartmentConsumptionResponse> hashData,
+             List<DepartmentConsumptionResponse> normalData)
         {
             using (var workbook = new XLWorkbook())
             {
-                AddSheet(workbook, "خدمي", atData);
-                AddSheet(workbook, "فعاليات ", hashData);
-                AddSheet(workbook, "الاستثمار", normalData);
+                AddSummarySheet(workbook, "خدمي", atData);
+                AddSummarySheet(workbook, "فعاليات", hashData);
+                AddSummarySheet(workbook, "استثمار", normalData);
 
                 using (var stream = new MemoryStream())
                 {
@@ -28,59 +29,103 @@ namespace Infrastructure.Persistence.Repositories
             }
         }
 
-        private void AddSheet(XLWorkbook workbook, string name, List<DepartmentConsumptionResponse> data)
+        // 2. التقرير التفصيلي (أقسام ويوزرات - 3 شيتات)
+        public byte[] GenerateDetailedExcelReport(
+            List<DetailedDepartmentConsumptionResponse> atData,
+            List<DetailedDepartmentConsumptionResponse> hashData,
+            List<DetailedDepartmentConsumptionResponse> normalData)
+        {
+            using (var workbook = new XLWorkbook())
+            {
+                AddDetailedSheet(workbook, "خدمي", atData);
+                AddDetailedSheet(workbook, "فعاليات", hashData);
+                AddDetailedSheet(workbook, "استثمار", normalData);
+
+                using (var stream = new MemoryStream())
+                {
+                    workbook.SaveAs(stream);
+                    return stream.ToArray();
+                }
+            }
+        }
+
+        // دالة بناء الشيت التفصيلي (أقسام + يوزرات)
+        private void AddDetailedSheet(XLWorkbook workbook, string name, List<DetailedDepartmentConsumptionResponse> data)
         {
             var ws = workbook.Worksheets.Add(name);
+            ws.RightToLeft = false;
 
-            // 1. العناوين
-            ws.Cell(1, 1).Value = "اسم القسم";
-            ws.Cell(1, 2).Value = "إجمالي الاستهلاك (GB)";
+            ws.Cell(1, 1).Value = "Department / User";
+            ws.Cell(1, 2).Value = "Consumption (GB)";
 
-            // تنسيق العناوين
+            var header = ws.Range(1, 1, 1, 2);
+            header.Style.Font.Bold = true;
+            header.Style.Font.FontColor = XLColor.White;
+            header.Style.Fill.BackgroundColor = XLColor.FromHtml("#003366");
+            ApplyCommonStyles(header);
+
+            int currentRow = 2;
+            foreach (var dept in data)
+            {
+                // سطر القسم
+                ws.Cell(currentRow, 1).Value = "DEPT: " + dept.DepartmentName;
+                ws.Cell(currentRow, 2).Value = dept.TotalConsumptionGB;
+                var deptRange = ws.Range(currentRow, 1, currentRow, 2);
+                deptRange.Style.Font.Bold = true;
+                deptRange.Style.Fill.BackgroundColor = XLColor.LightSkyBlue;
+                ApplyCommonStyles(deptRange);
+                currentRow++;
+
+                // أسطر اليوزرات
+                foreach (var user in dept.Users)
+                {
+                    ws.Cell(currentRow, 1).Value = "   • " + user.UserName;
+                    ws.Cell(currentRow, 2).Value = user.UsageGB;
+                    var userRange = ws.Range(currentRow, 1, currentRow, 2);
+                    userRange.Style.Fill.BackgroundColor = XLColor.AliceBlue;
+                    ApplyCommonStyles(userRange);
+                    currentRow++;
+                }
+                currentRow++;
+            }
+            ws.Columns().AdjustToContents();
+        }
+
+        // دالة بناء الشيت المختصر (أقسام فقط)
+        private void AddSummarySheet(XLWorkbook workbook, string name, List<DepartmentConsumptionResponse> data)
+        {
+            var ws = workbook.Worksheets.Add(name);
+            ws.RightToLeft = false;
+
+            ws.Cell(1, 1).Value = "Department Name";
+            ws.Cell(1, 2).Value = "Total Consumption (GB)";
+
             var header = ws.Range(1, 1, 1, 2);
             header.Style.Font.Bold = true;
             header.Style.Font.FontColor = XLColor.White;
             header.Style.Fill.BackgroundColor = XLColor.DarkBlue;
-            header.Style.Alignment.Horizontal = XLAlignmentHorizontalValues.Center;
+            ApplyCommonStyles(header);
 
-            // إضافة حدود غليظة للعنوان
-            header.Style.Border.OutsideBorder = XLBorderStyleValues.Medium;
-            header.Style.Border.InsideBorder = XLBorderStyleValues.Thin;
-
-            // 2. تعبئة البيانات وتنسيق الصفوف
             for (int i = 0; i < data.Count; i++)
             {
                 int currentRow = i + 2;
                 ws.Cell(currentRow, 1).Value = data[i].DepartmentName;
                 ws.Cell(currentRow, 2).Value = data[i].TotalConsumptionGB;
 
-                // تحديد النطاق (السطر الحالي) لتطبيق التنسيقات عليه
                 var rowRange = ws.Range(currentRow, 1, currentRow, 2);
-
-                // تلوين الأسطر بشكل تبادلي
-                if (currentRow % 2 == 0)
-                {
-                    rowRange.Style.Fill.BackgroundColor = XLColor.AliceBlue;
-                }
-                else
-                {
-                    rowRange.Style.Fill.BackgroundColor = XLColor.LightBlue;
-                }
-
-                rowRange.Style.Border.OutsideBorder = XLBorderStyleValues.Thin; // حدود خارجية للسطر
-                rowRange.Style.Border.InsideBorder = XLBorderStyleValues.Thin;  // حدود بين الأعمدة داخل السطر
-                rowRange.Style.Border.TopBorder = XLBorderStyleValues.Thin;    // حد علوي
-                rowRange.Style.Border.BottomBorder = XLBorderStyleValues.Thin; // حد سفلي
-                rowRange.Style.Border.LeftBorder = XLBorderStyleValues.Thin;   // حد أيسر
-                rowRange.Style.Border.RightBorder = XLBorderStyleValues.Thin;  // حد أيمن
-
-                rowRange.Style.Border.OutsideBorderColor = XLColor.Black;
-                rowRange.Style.Border.InsideBorderColor = XLColor.Black;
+                rowRange.Style.Fill.BackgroundColor = (currentRow % 2 == 0) ? XLColor.AliceBlue : XLColor.White;
+                ApplyCommonStyles(rowRange);
             }
-
-            ws.Columns(1, 2).Style.Alignment.Horizontal = XLAlignmentHorizontalValues.Center;
-
             ws.Columns().AdjustToContents();
+        }
+
+        // دالة التنسيق الموحد (توسيط + حدود)
+        private void ApplyCommonStyles(IXLRange range)
+        {
+            range.Style.Border.OutsideBorder = XLBorderStyleValues.Thin;
+            range.Style.Border.InsideBorder = XLBorderStyleValues.Thin;
+            range.Style.Alignment.Horizontal = XLAlignmentHorizontalValues.Center;
+            range.Style.Alignment.Vertical = XLAlignmentVerticalValues.Center;
         }
     }
 }
