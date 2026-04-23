@@ -8,8 +8,8 @@ namespace Application.DTOs.Response
     {
         public string DepartmentName { get; set; } = null!;
         public double TotalConsumptionGB { get; set; }
-
         public List<UserConsumptionDetail> Users { get; set; } = new();
+        public string Type { get; set; }
     }
 
     public class UserConsumptionDetail
@@ -18,4 +18,3 @@ namespace Application.DTOs.Response
         public double UsageGB { get; set; }
     }
 }
-
