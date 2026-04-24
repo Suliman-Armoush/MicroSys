@@ -3,57 +3,61 @@ using Application.Interfaces;
 using MediatR;
 using System;
 using System.Collections.Generic;
-using System.Text;
+using System.Linq;
+using System.Threading;
+using System.Threading.Tasks;
 
 namespace Application.Features.Mikrotik.Queries.ReportTotalConsumption
 {
+
+
     public class ExportMikrotikExcelHandler : IRequestHandler<ExportMikrotikExcelQuery, byte[]>
     {
         private readonly IMikrotikService _mikrotikService;
         private readonly IExcelService _excelService;
+        private readonly IDepartmentService _departmentService; // حقن السيرفس هنا
 
-        public ExportMikrotikExcelHandler(IMikrotikService mikrotikService, IExcelService excelService)
+        public ExportMikrotikExcelHandler(IMikrotikService mikrotikService, IExcelService excelService, IDepartmentService departmentService)
         {
             _mikrotikService = mikrotikService;
             _excelService = excelService;
+            _departmentService = departmentService;
         }
 
         public async Task<byte[]> Handle(ExportMikrotikExcelQuery request, CancellationToken cancellationToken)
         {
             var usersDto = await _mikrotikService.GetAllUsersAsync();
+            var dbDepartments = await _departmentService.GetAllAsync();
 
-            // دالة المعالجة المعدلة: تركز فقط على الاسم والإجمالي بالجيجابايت
-            List<DepartmentConsumptionResponse> ProcessData(IEnumerable<MikrotikUserResponse> source)
-            {
-                return source
-                    .Select(u => new {
-                        // تنظيف الاسم (أخذ الكلمة الأولى بعد حذف الرموز)
-                        DeptName = (u.Comment ?? "undefined").TrimStart('@', '#').Split(' ')[0],
-                        TotalBytes = u.BytesInRaw + u.BytesOutRaw
-                    })
-                    .GroupBy(x => x.DeptName)
-                    .Select(g => new DepartmentConsumptionResponse
+            var allProcessedData = usersDto
+                .Where(u => !string.IsNullOrEmpty(u.Comment))
+                .GroupBy(u =>
+                {
+                    var clean = u.Comment.TrimStart('@', '#', ' ').Trim();
+                    char[] delimiters = { ' ', '-', '.', '_' };
+                    return clean.Split(delimiters, StringSplitOptions.RemoveEmptyEntries)[0].Trim().ToLower();
+                })
+                // الفلترة لضمان ظهور الأقسام المعرفة لديك فقط وحذف العشوائي مثل "MotoBurger"
+                .Where(g => dbDepartments.Any(d => d.Name.Trim().ToLower() == g.Key))
+                .Select(g =>
+                {
+                    var deptKey = g.Key;
+                    var deptInfo = dbDepartments.First(d => d.Name.Trim().ToLower() == deptKey);
+
+                    return new DepartmentConsumptionResponse
                     {
-                        DepartmentName = g.Key,
-                        // حساب الإجمالي بالجيجابايت والتقريب لرقمين
-                        TotalConsumptionGB = Math.Round(g.Sum(x => x.TotalBytes) / Math.Pow(1024, 3), 2)
-                    })
-                    .OrderByDescending(r => r.TotalConsumptionGB)
-                    .ToList();
-            }
+                        DepartmentName = deptKey.ToUpper(),
+                        TotalConsumptionGB = Math.Round(g.Sum(x => x.BytesInRaw + x.BytesOutRaw) / Math.Pow(1024, 3), 2),
+                        Type = deptInfo.Type.ToString()
+                    };
+                }).ToList();
 
-            // تقسيم البيانات بناءً على الرمز الأول
-            var atRaw = usersDto.Where(u => (u.Comment ?? "").StartsWith("@"));
-            var hashRaw = usersDto.Where(u => (u.Comment ?? "").StartsWith("#"));
-            var normalRaw = usersDto.Where(u => !(u.Comment ?? "").StartsWith("@") && !(u.Comment ?? "").StartsWith("#"));
+            // تقسيم البيانات المفلترة بناءً على النوع الفعلي من قاعدة البيانات
+            var serviceData = allProcessedData.Where(x => x.Type == "Service").ToList();
+            var tcShopsData = allProcessedData.Where(x => x.Type == "TcShops").ToList();
+            var shopsData = allProcessedData.Where(x => x.Type == "Shops").ToList();
 
-            // المعالجة
-            var atData = ProcessData(atRaw);
-            var hashData = ProcessData(hashRaw);
-            var normalData = ProcessData(normalRaw);
-
-            // إرسال البيانات المجهزة لخدمة الإكسل
-            return _excelService.GenerateMikrotikReport(atData, hashData, normalData);
+            return _excelService.GenerateMikrotikReport(serviceData, tcShopsData, shopsData);
         }
     }
 }

@@ -64,16 +64,11 @@ namespace Infrastructure.MikroTik.Services
         public async Task<DetailedDepartmentConsumptionResponse> GetUsageByDepartmentNameAsync(string departmentName)
         {
             var allUsers = await GetAllUsersAsync();
-
-            // تحويل اسم القسم للأحرف الصغيرة وإزالة الفراغات لضمان دقة المقارنة
             var searchKey = departmentName.Trim().ToLower();
 
             var deptUsers = allUsers.Where(u =>
             {
-                // تنظيف الكومنت وتحويله للأحرف الصغيرة قبل الفحص
                 var comment = (u.Comment ?? "").Trim().ToLower();
-
-                // الفحص المرن للحالات الثلاث: @saray أو #saray أو saray مباشرة
                 return comment.StartsWith($"@{searchKey}") ||
                        comment.StartsWith($"#{searchKey}") ||
                        comment.StartsWith(searchKey);
@@ -85,11 +80,30 @@ namespace Infrastructure.MikroTik.Services
                 TotalConsumptionGB = Math.Round(deptUsers.Sum(x => x.BytesInRaw + x.BytesOutRaw) / Math.Pow(1024, 3), 2),
                 Users = deptUsers.Select(u => new UserConsumptionDetail
                 {
-                    UserName = u.Comment ?? u.Username,
+                    // نستخدم الدالة المساعدة هنا لتنظيف الاسم
+                    UserName = CleanUserName(u.Comment ?? u.Username, departmentName),
                     UsageGB = Math.Round((u.BytesInRaw + u.BytesOutRaw) / Math.Pow(1024, 3), 2)
                 }).OrderByDescending(u => u.UsageGB).ToList(),
-                Type = "DepartmentUsage" // تعبئة الحقل لتجنب الـ null إذا كنت تحتاجه
+                Type = "DepartmentUsage"
             };
+        }
+
+        // دالة مساعدة لتنظيف اسم المستخدم من اسم القسم والرموز
+        private string CleanUserName(string rawName, string deptName)
+        {
+            if (string.IsNullOrEmpty(rawName)) return "Unknown";
+
+            var cleaned = rawName.TrimStart('@', '#', ' ').Trim();
+
+            if (cleaned.ToLower().StartsWith(deptName.ToLower()))
+            {
+                // حذف طول اسم القسم من البداية
+                cleaned = cleaned.Substring(deptName.Length).Trim();
+
+                cleaned = cleaned.TrimStart('-', '_', ':', '.', ' ');
+            }
+
+            return string.IsNullOrWhiteSpace(cleaned) ? rawName : cleaned;
         }
     }
 }

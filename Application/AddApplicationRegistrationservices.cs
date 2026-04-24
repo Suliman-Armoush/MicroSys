@@ -10,6 +10,7 @@ using System;
 using System.Collections.Generic;
 using System.Reflection;
 using System.Text;
+using System.Text.Json.Serialization;
 
 namespace Application
 {
@@ -39,8 +40,14 @@ namespace Application
             });
             services.AddValidatorsFromAssembly(Assembly.GetExecutingAssembly());
 
+
+            services.AddControllers()
+                .AddJsonOptions(options =>
+                 {
+                     options.JsonSerializerOptions.Converters.Add(new JsonStringEnumConverter());
+                 });
             return services;
         }
     }
-   
+
 }

@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Text;
+using System.Text.Json.Serialization;
 
 namespace Application.DTOs.Response
 {
@@ -10,6 +11,10 @@ namespace Application.DTOs.Response
   
         public double TotalConsumptionGB { get; set; }
         public int ActiveUsersCount { get; set; }
+        [JsonIgnore]
+        public string Type { get; set; }
+
+
     }
 
     
