@@ -8,13 +8,12 @@ namespace Application.Interfaces
     public interface IExcelService
     {
         byte[] GenerateMikrotikReport(
-            List<DepartmentConsumptionResponse> atData,
-            List<DepartmentConsumptionResponse> hashData,
-            List<DepartmentConsumptionResponse> normalData);
-
+    List<DepartmentConsumptionResponse> serviceData,
+    List<DepartmentConsumptionResponse> tcShopsData,
+    List<DepartmentConsumptionResponse> shopsData);
         byte[] GenerateDetailedExcelReport(
-                    List<DetailedDepartmentConsumptionResponse> atData,
-                    List<DetailedDepartmentConsumptionResponse> hashData,
-                    List<DetailedDepartmentConsumptionResponse> normalData);
+         List<DetailedDepartmentConsumptionResponse> serviceData,
+         List<DetailedDepartmentConsumptionResponse> tcShopsData,
+         List<DetailedDepartmentConsumptionResponse> shopsData);
     }
 }

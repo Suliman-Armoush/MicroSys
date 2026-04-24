@@ -34,14 +34,14 @@ namespace Presentation.Controllers
             var result = await _mediator.Send(new GetAllMikrotikProfilesQuery());
             return Ok(result);
         }
-        [HttpGet("Departments-Consumption")]
+        [HttpGet("Departments/Consumption")]
         public async Task<IActionResult> GetDepartmentsConsumption()
         {
             var result = await _mediator.Send(new GetDepartmentsConsumptionQuery());
 
             return Ok(result);
         }
-        [HttpGet("Export-Departments-Consumption")]
+        [HttpGet("Export/Departments/Consumption")]
         public async Task<IActionResult> ExportExcel()
         {
             // 1. إرسال الكويري إلى الهاندلر الذي يعيد byte[]
@@ -58,7 +58,7 @@ namespace Presentation.Controllers
             );
         }
 
-        [HttpGet("Export-Detailed-Consumption")]
+        [HttpGet("Export/Detailed/Consumption")]
         public async Task<IActionResult> ExportDetailedReport()
         {
             var fileBytes = await _mediator.Send(new ExportDetailedMikrotikReportQuery());
@@ -69,7 +69,7 @@ namespace Presentation.Controllers
             );
         }
         [Authorize]
-        [HttpGet("My-Department-Usage")]
+        [HttpGet("My/Department/Usage")]
         public async Task<IActionResult> GetMyDepartmentUsage()
         {
             var deptIdClaim = User.FindFirst("DepartmentId")?.Value;
