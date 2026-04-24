@@ -10,16 +10,18 @@ namespace Infrastructure.Persistence.Repositories
 {
     public class ExcelService : IExcelService
     {
+        // 1. التقرير المختصر (أقسام فقط - 3 شيتات)
         public byte[] GenerateMikrotikReport(
-             List<DepartmentConsumptionResponse> atData,
-             List<DepartmentConsumptionResponse> hashData,
-             List<DepartmentConsumptionResponse> normalData)
+            List<DepartmentConsumptionResponse> serviceData,
+            List<DepartmentConsumptionResponse> tcShopsData,
+            List<DepartmentConsumptionResponse> shopsData)
         {
             using (var workbook = new XLWorkbook())
             {
-                AddSummarySheet(workbook, "خدمي", atData);
-                AddSummarySheet(workbook, "فعاليات", hashData);
-                AddSummarySheet(workbook, "استثمار", normalData);
+                // إضافة الشيتات بالمسميات التي طلبتها
+                AddSummarySheet(workbook, "خدمي", serviceData);
+                AddSummarySheet(workbook, "فعاليات", tcShopsData);
+                AddSummarySheet(workbook, "استثمار", shopsData);
 
                 using (var stream = new MemoryStream())
                 {
@@ -31,15 +33,15 @@ namespace Infrastructure.Persistence.Repositories
 
         // 2. التقرير التفصيلي (أقسام ويوزرات - 3 شيتات)
         public byte[] GenerateDetailedExcelReport(
-            List<DetailedDepartmentConsumptionResponse> atData,
-            List<DetailedDepartmentConsumptionResponse> hashData,
-            List<DetailedDepartmentConsumptionResponse> normalData)
+            List<DetailedDepartmentConsumptionResponse> serviceData,
+            List<DetailedDepartmentConsumptionResponse> tcShopsData,
+            List<DetailedDepartmentConsumptionResponse> shopsData)
         {
             using (var workbook = new XLWorkbook())
             {
-                AddDetailedSheet(workbook, "خدمي", atData);
-                AddDetailedSheet(workbook, "فعاليات", hashData);
-                AddDetailedSheet(workbook, "استثمار", normalData);
+                AddDetailedSheet(workbook, "خدمي", serviceData);
+                AddDetailedSheet(workbook, "فعاليات", tcShopsData);
+                AddDetailedSheet(workbook, "استثمار", shopsData);
 
                 using (var stream = new MemoryStream())
                 {
@@ -55,6 +57,7 @@ namespace Infrastructure.Persistence.Repositories
             var ws = workbook.Worksheets.Add(name);
             ws.RightToLeft = false;
 
+            // العناوين
             ws.Cell(1, 1).Value = "Department / User";
             ws.Cell(1, 2).Value = "Consumption (GB)";
 
@@ -67,25 +70,28 @@ namespace Infrastructure.Persistence.Repositories
             int currentRow = 2;
             foreach (var dept in data)
             {
-                // سطر القسم
+                // سطر القسم (تمييز بصري)
                 ws.Cell(currentRow, 1).Value = "DEPT: " + dept.DepartmentName;
                 ws.Cell(currentRow, 2).Value = dept.TotalConsumptionGB;
+
                 var deptRange = ws.Range(currentRow, 1, currentRow, 2);
                 deptRange.Style.Font.Bold = true;
                 deptRange.Style.Fill.BackgroundColor = XLColor.LightSkyBlue;
                 ApplyCommonStyles(deptRange);
                 currentRow++;
 
-                // أسطر اليوزرات
+                // أسطر اليوزرات (تنظيف الاسم تم في الهاندلر)
                 foreach (var user in dept.Users)
                 {
                     ws.Cell(currentRow, 1).Value = "   • " + user.UserName;
                     ws.Cell(currentRow, 2).Value = user.UsageGB;
+
                     var userRange = ws.Range(currentRow, 1, currentRow, 2);
                     userRange.Style.Fill.BackgroundColor = XLColor.AliceBlue;
                     ApplyCommonStyles(userRange);
                     currentRow++;
                 }
+                // ترك سطر فارغ بين الأقسام لجمالية العرض
                 currentRow++;
             }
             ws.Columns().AdjustToContents();
@@ -113,13 +119,13 @@ namespace Infrastructure.Persistence.Repositories
                 ws.Cell(currentRow, 2).Value = data[i].TotalConsumptionGB;
 
                 var rowRange = ws.Range(currentRow, 1, currentRow, 2);
+                // تلوين الأسطر بشكل متبادل (Zebra Stripes)
                 rowRange.Style.Fill.BackgroundColor = (currentRow % 2 == 0) ? XLColor.AliceBlue : XLColor.White;
                 ApplyCommonStyles(rowRange);
             }
             ws.Columns().AdjustToContents();
         }
 
-        // دالة التنسيق الموحد (توسيط + حدود)
         private void ApplyCommonStyles(IXLRange range)
         {
             range.Style.Border.OutsideBorder = XLBorderStyleValues.Thin;
