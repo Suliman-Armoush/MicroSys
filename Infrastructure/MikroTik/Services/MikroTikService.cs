@@ -278,5 +278,115 @@ namespace Infrastructure.MikroTik.Services
             }).ToList();
         }
 
+
+        public async Task<List<MikrotikHostResponse>> GetAllHostsAsync()
+        {
+            using var connection = _client.Connect();
+
+            var command = connection.CreateCommand("/ip/hotspot/host/print");
+            var result = command.ExecuteList();
+
+            return result.Select(sentence =>
+            {
+                sentence.Words.TryGetValue("mac-address", out string mac);
+                sentence.Words.TryGetValue("address", out string ip);
+                sentence.Words.TryGetValue("uptime", out string uptime); 
+                sentence.Words.TryGetValue("comment", out string comment);
+
+                return new MikrotikHostResponse
+                {
+                    Comment = comment ?? "",
+
+                    MacAddress = mac ?? "unknown",
+                    IpAddress = ip ?? "0.0.0.0",
+                    Uptime = uptime ?? "00:00:00"
+                };
+            }).ToList();
+        }
+
+        public async Task<List<MikrotikHostResponse>> SearchHostsAsync(string term)
+        {
+            var allHosts = await GetAllHostsAsync();
+
+            if (string.IsNullOrWhiteSpace(term))
+                return allHosts;
+
+            var searchKey = term.Trim().ToLower();
+
+            return allHosts.Where(h =>
+                (h.MacAddress != null && h.MacAddress.ToLower().Contains(searchKey)) ||
+                (h.IpAddress != null && h.IpAddress.ToLower().Contains(searchKey)) ||
+                (h.Comment != null && h.Comment.ToLower().Contains(searchKey))
+            ).ToList();
+        }
+
+
+
+        public async Task<bool> RemoveHostByMacAsync(string macAddress)
+        {
+            try
+            {
+                using var connection = _client.Connect();
+
+                var findCommand = connection.CreateCommand("/ip/hotspot/host/print");
+                findCommand.AddParameter("mac-address", macAddress);
+
+                var host = findCommand.ExecuteList().FirstOrDefault();
+
+                if (host == null) return false;
+
+                host.Words.TryGetValue(".id", out string internalId);
+                if (string.IsNullOrEmpty(internalId)) return false;
+
+                var deleteCommand = connection.CreateCommand("/ip/hotspot/host/remove");
+                deleteCommand.AddParameter(".id", internalId);
+                deleteCommand.ExecuteNonQuery();
+
+                return true;
+            }
+            catch (Exception ex) when (ex.Message.Contains("!empty") || ex.Message.Contains("not supported"))
+            {
+                
+                return false;
+            }
+        }
+
+
+        public async Task<bool> RemoveAllHostsAsync()
+        {
+            try
+            {
+                using var connection = _client.Connect();
+
+                var findCommand = connection.CreateCommand("/ip/hotspot/host/print");
+                var allHosts = findCommand.ExecuteList();
+
+                if (allHosts == null || !allHosts.Any())
+                    return true;
+
+               
+                var allIds = allHosts
+                    .Select(h => h.Words.TryGetValue(".id", out string id) ? id : null)
+                    .Where(id => !string.IsNullOrEmpty(id))
+                    .ToList();
+
+                if (!allIds.Any()) return true;
+
+               
+                var deleteCommand = connection.CreateCommand("/ip/hotspot/host/remove");
+                deleteCommand.AddParameter("numbers", string.Join(",", allIds));
+                deleteCommand.ExecuteNonQuery();
+
+                return true;
+            }
+            catch (Exception ex)
+            {
+                if (ex.Message.Contains("!empty") || ex.Message.Contains("not supported"))
+                    return true;
+
+                return false;
+            }
+        }
+
     }
 }

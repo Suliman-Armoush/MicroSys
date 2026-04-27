@@ -2,16 +2,20 @@
 using Application.DTOs.Response;
 using Application.Features.Mikrotik.Command.Create;
 using Application.Features.Mikrotik.Command.Delete;
+using Application.Features.Mikrotik.Command.DeleteAllFromHost;
+using Application.Features.Mikrotik.Command.DeleteFromHost;
 using Application.Features.Mikrotik.Command.DisableUser;
 using Application.Features.Mikrotik.Command.EnableUser;
 using Application.Features.Mikrotik.Command.Update;
 using Application.Features.Mikrotik.Queries.DepartmentConsumption;
+using Application.Features.Mikrotik.Queries.GetAllHosts;
 using Application.Features.Mikrotik.Queries.GetAllProfile;
 using Application.Features.Mikrotik.Queries.GetAllServer;
 using Application.Features.Mikrotik.Queries.GetAllUser;
 using Application.Features.Mikrotik.Queries.GetMyDepartmentConsumption;
 using Application.Features.Mikrotik.Queries.ReportDetailedConsumption;
 using Application.Features.Mikrotik.Queries.ReportTotalConsumption;
+using Application.Features.Mikrotik.Queries.SearchInHost;
 using Application.Features.Mikrotik.Queries.SearchUser;
 using MediatR;
 using Microsoft.AspNetCore.Authorization;
@@ -149,6 +153,40 @@ namespace Presentation.Controllers
         {
             var servers = await _mediator.Send(new GetAllMikrotikServersQuery());
             return Ok(servers);
+        }
+
+
+        [HttpGet("Hosts")]
+        public async Task<ActionResult<List<MikrotikHostResponse>>> GetHosts()
+        {
+            var hosts = await _mediator.Send(new GetAllMikrotikHostsQuery());
+            return Ok(hosts);
+        }
+
+        [HttpGet("Hosts/Search")]
+        public async Task<ActionResult<List<MikrotikHostResponse>>> SearchHosts([FromQuery] string term)
+        {
+            var hosts = await _mediator.Send(new SearchMikrotikHostsQuery(term));
+            return Ok(hosts);
+        }
+
+        [HttpDelete("Hosts/Delete/{macAddress}")]
+        public async Task<IActionResult> RemoveHost(string macAddress)
+        {
+            var result = await _mediator.Send(new RemoveMikrotikHostCommand(macAddress));
+
+            if (!result) return NotFound("Host not found or already disconnected.");
+
+            return Ok(new { Message = $"Host with MAC {macAddress} has been kicked successfully." });
+        }
+
+        [HttpDelete("Hosts/All")]
+        public async Task<IActionResult> ClearAllHosts()
+        {
+            var result = await _mediator.Send(new RemoveAllMikrotikHostsCommand());
+            if (!result) return BadRequest("Could not clear hosts list.");
+
+            return Ok(new { Message = "All hosts have been disconnected successfully." });
         }
     }
 }
