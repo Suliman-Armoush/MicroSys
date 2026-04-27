@@ -22,5 +22,10 @@ namespace Application.Interfaces
 
         Task<bool> UpdateUserStatusAsync(string username, bool isDisabled);
         Task<List<MikrotikServerResponse>> GetAllServersAsync();
+
+        Task<List<MikrotikHostResponse>> GetAllHostsAsync();
+        Task<List<MikrotikHostResponse>> SearchHostsAsync(string term);
+        Task<bool> RemoveHostByMacAsync(string macAddress);
+        Task<bool> RemoveAllHostsAsync(); 
     }
 }
