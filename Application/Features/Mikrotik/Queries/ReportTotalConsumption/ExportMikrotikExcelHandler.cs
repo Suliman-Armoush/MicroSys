@@ -48,7 +48,8 @@ namespace Application.Features.Mikrotik.Queries.ReportTotalConsumption
                     {
                         DepartmentName = deptKey.ToUpper(),
                         TotalConsumptionGB = Math.Round(g.Sum(x => x.BytesInRaw + x.BytesOutRaw) / Math.Pow(1024, 3), 2),
-                        Type = deptInfo.Type.ToString()
+                        Type = deptInfo.Type.ToString(),
+                        DvrNum = deptInfo.DvrNum,
                     };
                 }).ToList();
 

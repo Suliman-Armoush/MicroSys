@@ -18,7 +18,7 @@ namespace Presentation.SystemBuild
         {
           Title = "MicroSys",
           Version = "v1",
-          Description = "Full-featured Swagger API documentation",
+          Description = "featured API",
           Contact = new OpenApiContact
           {
             Name = "Suliman Armoush",
@@ -28,7 +28,7 @@ namespace Presentation.SystemBuild
 
         c.AddSecurityDefinition("Bearer", new OpenApiSecurityScheme
         {
-          Description = "Enter: Bearer {your token}",
+          Description = "Enter: {your token} without {Bearer}",
           Name = "Authorization",
           In = ParameterLocation.Header,
           Type = SecuritySchemeType.Http, 

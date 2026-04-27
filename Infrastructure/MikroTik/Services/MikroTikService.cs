@@ -1,8 +1,6 @@
 ﻿using Application.DTOs.Request;
 using Application.DTOs.Response;
-using Application.Features.Mikrotik.Queries.GetMyDepartmentConsumption;
 using Application.Interfaces;
-using Infrastructure.MikroTik.Client;
 using MediatR;
 using tik4net.Objects;
 using tik4net.Objects.Ip.Hotspot;

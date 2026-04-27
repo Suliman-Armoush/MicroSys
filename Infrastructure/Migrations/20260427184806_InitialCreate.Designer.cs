@@ -11,7 +11,7 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace Infrastructure.Migrations
 {
     [DbContext(typeof(DataContext))]
-    [Migration("20260422104752_InitialCreate")]
+    [Migration("20260427184806_InitialCreate")]
     partial class InitialCreate
     {
         /// <inheritdoc />
@@ -32,9 +32,15 @@ namespace Infrastructure.Migrations
 
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
 
+                    b.Property<int>("DvrNum")
+                        .HasColumnType("int");
+
                     b.Property<string>("Name")
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
+
+                    b.Property<int>("Type")
+                        .HasColumnType("int");
 
                     b.HasKey("Id");
 
@@ -69,14 +75,38 @@ namespace Infrastructure.Migrations
 
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
 
+                    b.Property<double>("DvrPrice")
+                        .HasColumnType("float");
+
                     b.Property<string>("MikroTikIp")
+                        .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
                     b.Property<string>("Password")
+                        .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
                     b.Property<string>("Username")
+                        .IsRequired()
                         .HasColumnType("nvarchar(max)");
+
+                    b.Property<int>("segment1")
+                        .HasColumnType("int");
+
+                    b.Property<int>("segment2")
+                        .HasColumnType("int");
+
+                    b.Property<int>("segment3")
+                        .HasColumnType("int");
+
+                    b.Property<int>("segment4")
+                        .HasColumnType("int");
+
+                    b.Property<int>("segment5")
+                        .HasColumnType("int");
+
+                    b.Property<int>("segment6")
+                        .HasColumnType("int");
 
                     b.HasKey("Id");
 

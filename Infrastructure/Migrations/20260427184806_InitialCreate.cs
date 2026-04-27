@@ -16,7 +16,9 @@ namespace Infrastructure.Migrations
                 {
                     Id = table.Column<int>(type: "int", nullable: false)
                         .Annotation("SqlServer:Identity", "1, 1"),
-                    Name = table.Column<string>(type: "nvarchar(max)", nullable: false)
+                    Name = table.Column<string>(type: "nvarchar(max)", nullable: false),
+                    Type = table.Column<int>(type: "int", nullable: false),
+                    DvrNum = table.Column<int>(type: "int", nullable: false)
                 },
                 constraints: table =>
                 {
@@ -42,9 +44,16 @@ namespace Infrastructure.Migrations
                 {
                     Id = table.Column<int>(type: "int", nullable: false)
                         .Annotation("SqlServer:Identity", "1, 1"),
-                    MikroTikIp = table.Column<string>(type: "nvarchar(max)", nullable: true),
-                    Username = table.Column<string>(type: "nvarchar(max)", nullable: true),
-                    Password = table.Column<string>(type: "nvarchar(max)", nullable: true)
+                    MikroTikIp = table.Column<string>(type: "nvarchar(max)", nullable: false),
+                    Username = table.Column<string>(type: "nvarchar(max)", nullable: false),
+                    Password = table.Column<string>(type: "nvarchar(max)", nullable: false),
+                    DvrPrice = table.Column<double>(type: "float", nullable: false),
+                    segment1 = table.Column<int>(type: "int", nullable: false),
+                    segment2 = table.Column<int>(type: "int", nullable: false),
+                    segment3 = table.Column<int>(type: "int", nullable: false),
+                    segment4 = table.Column<int>(type: "int", nullable: false),
+                    segment5 = table.Column<int>(type: "int", nullable: false),
+                    segment6 = table.Column<int>(type: "int", nullable: false)
                 },
                 constraints: table =>
                 {

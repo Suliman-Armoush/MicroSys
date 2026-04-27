@@ -72,14 +72,38 @@ namespace Infrastructure.Migrations
 
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
 
+                    b.Property<double>("DvrPrice")
+                        .HasColumnType("float");
+
                     b.Property<string>("MikroTikIp")
+                        .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
                     b.Property<string>("Password")
+                        .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
                     b.Property<string>("Username")
+                        .IsRequired()
                         .HasColumnType("nvarchar(max)");
+
+                    b.Property<int>("segment1")
+                        .HasColumnType("int");
+
+                    b.Property<int>("segment2")
+                        .HasColumnType("int");
+
+                    b.Property<int>("segment3")
+                        .HasColumnType("int");
+
+                    b.Property<int>("segment4")
+                        .HasColumnType("int");
+
+                    b.Property<int>("segment5")
+                        .HasColumnType("int");
+
+                    b.Property<int>("segment6")
+                        .HasColumnType("int");
 
                     b.HasKey("Id");
 
