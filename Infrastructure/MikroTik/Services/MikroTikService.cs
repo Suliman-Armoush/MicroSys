@@ -262,14 +262,23 @@ namespace Infrastructure.MikroTik.Services
         {
             using var connection = _client.Connect();
 
-            var servers = connection.LoadAll<HotspotServer>();
+            var command = connection.CreateCommand("/ip/hotspot/print");
+            var result = command.ExecuteList();
 
-            return servers.Select(s => new MikrotikServerResponse
+            return result.Select(sentence =>
             {
-                Name = s.Name,
-                Interface = s.Interface,
-                IsEnabled = !s.Disabled
+                sentence.Words.TryGetValue("name", out string name);
+                sentence.Words.TryGetValue("interface", out string @interface);
+                sentence.Words.TryGetValue("disabled", out string disabled);
+
+                return new MikrotikServerResponse
+                {
+                    Name = name ?? "unknown",
+                    Interface = @interface ?? "unknown",
+                    IsEnabled = disabled != "true"
+                };
             }).ToList();
         }
+
     }
 }
