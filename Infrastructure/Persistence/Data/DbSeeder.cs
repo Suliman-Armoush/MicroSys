@@ -34,6 +34,16 @@ namespace Infrastructure.Persistence.Data
         context.Users.Add(admin);
         await context.SaveChangesAsync();
       }
+
+      if (!context.SysInfos.Any())
+      {
+        context.SysInfos.AddRange(
+            new SysInfo { MikroTikIp = "10.10.10.88" , Username = "it", Password = "it@123456" , DvrPrice = 10000 }
+        );
+
+        await context.SaveChangesAsync();
+      }
+
     }
   }
 

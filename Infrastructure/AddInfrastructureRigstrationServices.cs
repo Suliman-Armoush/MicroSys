@@ -1,5 +1,5 @@
 ﻿using Application.Interfaces;
-using Infrastructure.MikroTik.Client;
+using Infrastructure.MikroTik;
 using Infrastructure.MikroTik.Services;
 using Infrastructure.Persistence.Data;
 using Infrastructure.Persistence.Repositories;
@@ -25,14 +25,7 @@ namespace Infrastructure
       services.AddScoped<ISysInfoService, SysInfoService>();
       services.AddScoped<IExcelService, ExcelService>();
       services.AddScoped<IMikrotikService, MikrotikService>();
-
-
-      services.AddSingleton<MikrotikClient>(sp =>
-      {
-        var client = new MikrotikClient();
-        configuration.GetSection("MikrotikClient").Bind(client);
-        return client;
-      });
+      services.AddScoped<MikrotikClient>();
 
       services.AddDbContext<DataContext>(opt =>
                          opt.UseSqlServer(configuration.GetConnectionString("Default")));

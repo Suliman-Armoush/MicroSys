@@ -4,17 +4,18 @@ using System.Text;
 
 namespace Application.DTOs.Response
 {
-    public class DetailedDepartmentConsumptionResponse
-    {
-        public string DepartmentName { get; set; } = null!;
-        public double TotalConsumptionGB { get; set; }
-        public List<UserConsumptionDetail> Users { get; set; } = new();
-        public string Type { get; set; }
-    }
+  public class DetailedDepartmentConsumptionResponse
+  {
+    public string DepartmentName { get; set; } = null!;
+    public double TotalConsumptionGB { get; set; }
+    public List<UserConsumptionDetail> Users { get; set; } = new();
+    public string Type { get; set; }
+    public int DvrNum { get; set; }
+  }
 
-    public class UserConsumptionDetail
-    {
-        public string UserName { get; set; } = null!;
-        public double UsageGB { get; set; }
-    }
+  public class UserConsumptionDetail
+  {
+    public string UserName { get; set; } = null!;
+    public double UsageGB { get; set; }
+  }
 }
