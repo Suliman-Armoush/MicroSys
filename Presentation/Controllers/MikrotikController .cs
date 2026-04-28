@@ -24,7 +24,7 @@ using Microsoft.AspNetCore.Mvc;
 namespace Presentation.Controllers
 {
     [ApiController]
-    [Route("api/mikrotik")]
+    [Route("api/Mikrotik")]
     public class MikrotikController : ControllerBase
     {
         private readonly IMediator _mediator;
@@ -41,59 +41,13 @@ namespace Presentation.Controllers
             return Ok(result);
         }
 
-        [HttpGet("profiles")]
+        [HttpGet("Profiles")]
         public async Task<IActionResult> GetAllProfiles()
         {
             var result = await _mediator.Send(new GetAllMikrotikProfilesQuery());
             return Ok(result);
         }
-        [HttpGet("Departments/Consumption")]
-        public async Task<IActionResult> GetDepartmentsConsumption()
-        {
-            var result = await _mediator.Send(new GetDepartmentsConsumptionQuery());
-
-            return Ok(result);
-        }
-        [HttpGet("Export/Departments/Consumption")]
-        public async Task<IActionResult> ExportExcel()
-        {
-            // 1. إرسال الكويري إلى الهاندلر الذي يعيد byte[]
-            var fileBytes = await _mediator.Send(new ExportMikrotikExcelQuery());
-
-            // 2. اسم الملف الذي سيظهر للمستخدم عند التحميل
-            string fileName = $"Mikrotik_Consumption_{DateTime.Now:yyyyMMdd}.xlsx";
-
-            // 3. تحديد نوع الملف (Excel) وإرجاعه كـ File
-            return File(
-                fileBytes,
-                "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
-                fileName
-            );
-        }
-
-        [HttpGet("Export/Detailed/Consumption")]
-        public async Task<IActionResult> ExportDetailedReport()
-        {
-            var fileBytes = await _mediator.Send(new ExportDetailedMikrotikReportQuery());
-            return File(
-                fileBytes,
-                "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
-                "Detailed_Mikrotik_Report.xlsx"
-            );
-        }
-        [Authorize]
-        [HttpGet("My/Department/Usage")]
-        public async Task<IActionResult> GetMyDepartmentUsage()
-        {
-            var deptIdClaim = User.FindFirst("DepartmentId")?.Value;
-
-            if (string.IsNullOrEmpty(deptIdClaim))
-                return Unauthorized("لم يتم العثور على معرف القسم في بيانات الدخول.");
-
-            var result = await _mediator.Send(new GetMyDepartmentConsumptionQuery(int.Parse(deptIdClaim)));
-
-            return Ok(result);
-        }
+     
 
         [HttpPost("Create")]
         public async Task<ActionResult<MikrotikUserInformationResponse>> CreateUser([FromBody] CreateMikrotikUserCommand command)
@@ -110,7 +64,7 @@ namespace Presentation.Controllers
             return Ok(result);
         }
 
-        [HttpGet("search")]
+        [HttpGet("Search")]
         public async Task<ActionResult<List<MikrotikUserInformationResponse>>> Search([FromQuery] string term)
         {
             var results = await _mediator.Send(new SearchMikrotikUsersQuery(term));
@@ -156,37 +110,6 @@ namespace Presentation.Controllers
         }
 
 
-        [HttpGet("Hosts")]
-        public async Task<ActionResult<List<MikrotikHostResponse>>> GetHosts()
-        {
-            var hosts = await _mediator.Send(new GetAllMikrotikHostsQuery());
-            return Ok(hosts);
-        }
-
-        [HttpGet("Hosts/Search")]
-        public async Task<ActionResult<List<MikrotikHostResponse>>> SearchHosts([FromQuery] string term)
-        {
-            var hosts = await _mediator.Send(new SearchMikrotikHostsQuery(term));
-            return Ok(hosts);
-        }
-
-        [HttpDelete("Hosts/Delete/{macAddress}")]
-        public async Task<IActionResult> RemoveHost(string macAddress)
-        {
-            var result = await _mediator.Send(new RemoveMikrotikHostCommand(macAddress));
-
-            if (!result) return NotFound("Host not found or already disconnected.");
-
-            return Ok(new { Message = $"Host with MAC {macAddress} has been kicked successfully." });
-        }
-
-        [HttpDelete("Hosts/All")]
-        public async Task<IActionResult> ClearAllHosts()
-        {
-            var result = await _mediator.Send(new RemoveAllMikrotikHostsCommand());
-            if (!result) return BadRequest("Could not clear hosts list.");
-
-            return Ok(new { Message = "All hosts have been disconnected successfully." });
-        }
+       
     }
 }
