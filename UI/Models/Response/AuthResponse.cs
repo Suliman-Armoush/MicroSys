@@ -1,7 +1,6 @@
-﻿// Application/DTOs/Response/AuthResponseDto.cs
-namespace Application.DTOs.Response
+﻿namespace UI.Models.Response
 {
-    public class AuthResponseDto
+    public class AuthResponse
     {
         public bool Success { get; set; }
         public string Message { get; set; } = string.Empty;

@@ -1,0 +1,421 @@
+﻿@page "/"
+@attribute [Authorize]
+@inject IJSRuntime JS
+
+<PageTitle>Home - MicroSys 🤪</PageTitle>
+
+<div class="cheesy-container">
+    <div class="content-card">
+        <h1 id="dynamicGreeting" class="cheesy-headline"></h1>
+
+        <div class="welcome-fun">
+            ✨ Welcome to your new app. ✨ <span>🐣🤡</span>
+        </div>
+
+        <div id="microSysContainer" class="dancing-name"></div>
+
+        <button id="extraSillyBtn" class="silly-button">🤪 اضغط للمزيد من الابتذال 🤪</button>
+        <div id="glitchMessage" class="glitch-text">⚡ CHEESE MODE: ACTIVE ⚡</div>
+        <div class="micro-label">🎉 MicroSys | KhoLimMam™️ | حركة كتابة + اسم مضحك 🎉</div>
+    </div>
+</div>
+
+<style>
+    * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+        user-select: none;
+    }
+
+    .cheesy-container {
+        min-height: 100vh;
+        background: repeating-radial-gradient(circle at 20% 30%, #ffe6b0, #ffc2e0 30px, #b6f0ff 60px);
+        background-blend-mode: overlay;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        font-family: 'Comic Neue', 'Comic Sans MS', 'Chalkboard SE', cursive, sans-serif;
+        padding: 1.5rem;
+        animation: bgPulsate 0.8s infinite alternate ease-in-out;
+        cursor: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="24" height="27" viewBox="0 0 24 27"><polygon points="2,2 22,13 12,17 2,22" fill="%23ff44cc" stroke="%23000" stroke-width="1.5"/><circle cx="12" cy="12" r="2" fill="yellow"/></svg>'), auto;
+    }
+
+    .content-card {
+        background: rgba(255, 250, 210, 0.92);
+        backdrop-filter: blur(3px);
+        border-radius: 80px 40px 80px 40px;
+        box-shadow: 0 25px 40px rgba(0,0,0,0.3), 0 0 0 8px #ffd966, 0 0 0 12px #ff9f4a;
+        padding: 3rem 2rem;
+        max-width: 850px;
+        width: 100%;
+        text-align: center;
+        transition: all 0.2s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+        transform: rotate(0.5deg);
+    }
+
+    .content-card:hover {
+        transform: scale(1.01) rotate(-0.6deg);
+        box-shadow: 0 30px 50px rgba(255, 20, 147, 0.5), 0 0 0 10px #ffab2e, 0 0 0 16px #ff4081;
+    }
+
+    .cheesy-headline {
+        font-size: 3rem;
+        font-weight: 900;
+        letter-spacing: 0.03em;
+        margin-bottom: 0.9rem;
+        min-height: 5rem;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        flex-wrap: wrap;
+        gap: 0.2rem;
+        background: linear-gradient(135deg, #f7971e, #ffd200);
+        background-clip: text;
+        -webkit-background-clip: text;
+        color: transparent;
+        text-shadow: 4px 4px 0 #ffb347, 6px 6px 0 rgba(0,0,0,0.2);
+    }
+
+    .type-cursor {
+        display: inline-block;
+        width: 8px;
+        height: 2.8rem;
+        background-color: #ff6600;
+        margin-left: 6px;
+        border-radius: 20px;
+        animation: blinkCheese 0.9s step-start infinite;
+        box-shadow: 0 0 5px orange;
+    }
+
+    .typed-done {
+        animation: wobbleTacky 0.8s ease-in-out, rainbowGlow 2s infinite alternate;
+    }
+
+    .welcome-fun {
+        font-size: 1.65rem;
+        background: #222;
+        display: inline-block;
+        padding: 0.5rem 1.8rem;
+        border-radius: 60px;
+        color: #ffee99;
+        margin: 1.3rem 0 1rem;
+        font-weight: bold;
+        box-shadow: 0 5px 0 #aa4f1e;
+        transform: rotate(-1deg);
+        transition: all 0.2s;
+        animation: slideSilly 0.6s cubic-bezier(0.34, 1.56, 0.64, 1) forwards, colorWave 1.2s infinite alternate;
+    }
+
+    .welcome-fun span {
+        display: inline-block;
+        animation: emojiShake 1.2s infinite;
+    }
+
+    .dancing-name {
+        font-size: 4rem;
+        font-weight: 900;
+        margin-top: 1rem;
+        margin-bottom: 0.5rem;
+        display: flex;
+        justify-content: center;
+        flex-wrap: wrap;
+        gap: 0.15rem;
+        filter: drop-shadow(0 8px 6px rgba(0,0,0,0.3));
+    }
+
+    .funny-letter {
+        display: inline-block;
+        animation: bounceRotateCheese 0.9s infinite alternate ease-in-out;
+        transition: all 0.1s;
+        cursor: pointer;
+        text-shadow: 3px 3px 0px #f0f, 0px 0px 10px #ffd966;
+        background: linear-gradient(45deg, #ff416c, #ff4b2b);
+        background-clip: text;
+        -webkit-background-clip: text;
+        color: transparent;
+        font-weight: 900;
+    }
+
+    .funny-letter:hover {
+        animation: none;
+        transform: scale(1.8) rotate(15deg);
+        transition: 0.1s;
+        filter: drop-shadow(0 0 8px cyan);
+        color: #ff00aa;
+    }
+
+    .silly-button {
+        margin-top: 2rem;
+        background: #ffd966;
+        border: none;
+        font-size: 1.3rem;
+        font-family: inherit;
+        font-weight: bold;
+        padding: 0.7rem 1.8rem;
+        border-radius: 60px;
+        color: #a13300;
+        cursor: pointer;
+        transition: 0.1s linear;
+        box-shadow: 0 6px 0 #b45f1b;
+        transform: rotate(0deg);
+        animation: pulseGlitch 1.5s infinite;
+    }
+
+    .silly-button:active {
+        transform: translateY(5px);
+        box-shadow: 0 1px 0 #b45f1b;
+    }
+
+    .glitch-text {
+        font-size: 0.9rem;
+        margin-top: 1.5rem;
+        opacity: 0.9;
+        background: black;
+        display: inline-block;
+        padding: 0.3rem 1rem;
+        border-radius: 30px;
+        color: #0f0;
+        font-family: monospace;
+        letter-spacing: 2px;
+    }
+
+    .micro-label {
+        font-size: 0.85rem;
+        background: yellowgreen;
+        display: inline-flex;
+        border-radius: 50px;
+        padding: 0.2rem 1rem;
+        gap: 8px;
+        margin-top: 20px;
+        font-weight: bold;
+    }
+
+    @@keyframes blinkCheese {
+        0%, 100% { opacity: 1; }
+        50% { opacity: 0; transform: scaleY(0.7); background-color: cyan; }
+    }
+
+    @@keyframes wobbleTacky {
+        0% { transform: translateX(0px) rotate(0deg); }
+        25% { transform: translateX(-12px) rotate(-3deg); text-shadow: 6px 6px 0 red; }
+        50% { transform: translateX(12px) rotate(3deg); text-shadow: -4px 4px 0 lime; }
+        75% { transform: translateX(-6px) rotate(-2deg); }
+        100% { transform: translateX(0px) rotate(0deg); }
+    }
+
+    @@keyframes rainbowGlow {
+        0% { text-shadow: 2px 2px 0 #ff0000, 4px 4px 0 #ff7700; }
+        25% { text-shadow: 2px 2px 0 #ffff00, 4px 4px 0 #00ff00; }
+        50% { text-shadow: 2px 2px 0 #00ffff, 4px 4px 0 #0000ff; }
+        75% { text-shadow: 2px 2px 0 #ff00ff, 4px 4px 0 #ff0080; }
+        100% { text-shadow: 4px 4px 0 #ffaa22, 8px 8px 0 #00aaff; }
+    }
+
+    @@keyframes slideSilly {
+        0% { opacity: 0; transform: translateX(-90px) rotate(-15deg); letter-spacing: 10px; }
+        70% { transform: translateX(8px) rotate(2deg); }
+        100% { opacity: 1; transform: translateX(0) rotate(-1deg); }
+    }
+
+    @@keyframes colorWave {
+        0% { background-color: #2c1e0f; color: #ffcc88; box-shadow: 0 5px 0 #84613a; }
+        100% { background-color: #ff1166; color: #ffefb9; box-shadow: 0 5px 0 #ff9100; }
+    }
+
+    @@keyframes bounceRotateCheese {
+        0% { transform: translateY(0px) rotate(0deg) scale(1); }
+        100% { transform: translateY(-15px) rotate(8deg) scale(1.15); filter: hue-rotate(25deg); }
+    }
+
+    @@keyframes bgPulsate {
+        0% { background-position: 0% 0%; background-size: 100% 100%;}
+        100% { background-position: 10% 20%; background-size: 110% 110%;}
+    }
+
+    @@keyframes pulseGlitch {
+        0% { background: #ffaa33; box-shadow: 0 6px 0 #a1410b; }
+        80% { background: #ff5566; box-shadow: 0 6px 0 #b42f2f; }
+        100% { background: #ffcc44; box-shadow: 0 6px 0 #ff8000; }
+    }
+
+    @@keyframes emojiShake {
+        0% { transform: rotate(0deg); }
+        25% { transform: rotate(20deg) scale(1.2); }
+        75% { transform: rotate(-15deg); }
+        100% { transform: rotate(5deg); }
+    }
+
+    @@media (max-width: 600px) {
+        .cheesy-headline { font-size: 2rem; }
+        .dancing-name { font-size: 2.3rem; }
+        .welcome-fun { font-size: 1.1rem; }
+        .content-card { padding: 2rem 1rem; }
+    }
+
+    ::selection {
+        background: hotpink;
+        color: yellow;
+    }
+</style>
+
+<script>
+    window.initMicroSysAnimations = function() {
+        const originalNameText = "Hello, KhoLimMam!";
+        const greetingElement = document.getElementById('dynamicGreeting');
+        if (!greetingElement) return;
+
+        greetingElement.innerHTML = '';
+        let i = 0;
+        let currentText = '';
+        const cursorSpan = document.createElement('span');
+        cursorSpan.classList.add('type-cursor');
+        greetingElement.appendChild(cursorSpan);
+
+        function typeNext() {
+            if (i < originalNameText.length) {
+                currentText += originalNameText.charAt(i);
+                greetingElement.innerHTML = '';
+                const textNode = document.createTextNode(currentText);
+                greetingElement.appendChild(textNode);
+                greetingElement.appendChild(cursorSpan);
+                i++;
+                setTimeout(typeNext, 90);
+            } else {
+                if (cursorSpan && cursorSpan.parentNode) cursorSpan.remove();
+                greetingElement.classList.add('typed-done');
+                const joyEmoji = document.createElement('span');
+                joyEmoji.textContent = ' 🤡💥';
+                joyEmoji.style.display = 'inline-block';
+                joyEmoji.style.animation = 'emojiShake 0.8s infinite';
+                greetingElement.appendChild(joyEmoji);
+                setInterval(() => {
+                    if (greetingElement) {
+                        greetingElement.style.transform = 'scale(1.02)';
+                        setTimeout(() => { if(greetingElement) greetingElement.style.transform = ''; }, 200);
+                    }
+                }, 3800);
+            }
+        }
+        typeNext();
+
+        function makeMicroSysDance() {
+            const container = document.getElementById('microSysContainer');
+            if (!container) return;
+            const originalMicro = "MicroSys";
+            container.innerHTML = '';
+            for (let j = 0; j < originalMicro.length; j++) {
+                const letter = originalMicro[j];
+                const span = document.createElement('span');
+                span.textContent = letter;
+                span.classList.add('funny-letter');
+                const randomDelay = (Math.random() * 0.8).toFixed(2) + 's';
+                const randomDuration = (0.7 + Math.random() * 0.7).toFixed(2) + 's';
+                span.style.animationDelay = randomDelay;
+                span.style.animationDuration = randomDuration;
+                const hue = Math.floor(Math.random() * 360);
+                span.style.background = `linear-gradient(45deg, hsl(${hue}, 80%, 60%), hsl(${hue + 40}, 90%, 55%))`;
+                span.style.webkitBackgroundClip = 'text';
+                span.style.backgroundClip = 'text';
+                container.appendChild(span);
+            }
+            const exclaimSpan = document.createElement('span');
+            exclaimSpan.textContent = '! 🤘';
+            exclaimSpan.classList.add('funny-letter');
+            exclaimSpan.style.animation = 'bounceRotateCheese 0.5s infinite alternate';
+            exclaimSpan.style.fontSize = '3rem';
+            container.appendChild(exclaimSpan);
+        }
+        makeMicroSysDance();
+
+        setInterval(() => {
+            const letters = document.querySelectorAll('.funny-letter');
+            letters.forEach((letter, idx) => {
+                const newHue = (Date.now() / 50 + idx * 30) % 360;
+                letter.style.background = `linear-gradient(145deg, hsl(${newHue}, 85%, 65%), hsl(${newHue + 60}, 90%, 55%))`;
+                letter.style.webkitBackgroundClip = 'text';
+                letter.style.backgroundClip = 'text';
+                letter.style.color = 'transparent';
+            });
+        }, 900);
+
+        const sillyBtn = document.getElementById('extraSillyBtn');
+        const glitchSpan = document.getElementById('glitchMessage');
+        if (sillyBtn && glitchSpan) {
+            sillyBtn.addEventListener('click', () => {
+                const jokes = [
+                    "🤣 طباعة بحركات بهلوانية! 🤣", "🍕 كود بيتزا مضحك 🍕", "💩 اسم مرقص على السحاب 💩",
+                    "🕺 MicroSys رقص شرقي 💃", "✨ KhoLimMam يتمايل مع الجاذبية ✨", "🎈 ابتذال عالي الدقة 🎈", "🤪 أنا كود مضحك جداً 🤪"
+                ];
+                const randomJoke = jokes[Math.floor(Math.random() * jokes.length)];
+                glitchSpan.innerHTML = `⚡ ${randomJoke} ⚡`;
+                glitchSpan.style.animation = 'none';
+                setTimeout(() => { glitchSpan.style.animation = 'pulseGlitch 0.6s'; }, 10);
+                setTimeout(() => { glitchSpan.style.animation = ''; }, 600);
+
+                sillyBtn.style.transform = 'scale(0.95)';
+                setTimeout(() => { sillyBtn.style.transform = ''; }, 150);
+
+                const greet = document.getElementById('dynamicGreeting');
+                if (greet) {
+                    greet.style.animation = 'wobbleTacky 0.5s ease';
+                    setTimeout(() => { if(greet) greet.style.animation = ''; }, 500);
+                }
+
+                const dancingContainer = document.getElementById('microSysContainer');
+                if (dancingContainer) {
+                    dancingContainer.style.filter = 'drop-shadow(0 0 8px magenta)';
+                    setTimeout(() => { if(dancingContainer) dancingContainer.style.filter = ''; }, 400);
+                }
+
+                const welcomeDiv = document.querySelector('.welcome-fun');
+                const originalWelcomeText = welcomeDiv.innerHTML;
+                welcomeDiv.innerHTML = '🤪 جاري تحميل الضحك المبتذل 🤪 <span>🌀🌀</span>';
+                setTimeout(() => { welcomeDiv.innerHTML = originalWelcomeText; }, 1300);
+            });
+        }
+
+        const containerMicro = document.getElementById('microSysContainer');
+        if (containerMicro) {
+            containerMicro.addEventListener('mouseenter', () => {
+                const lettersAll = document.querySelectorAll('.funny-letter');
+                lettersAll.forEach(letr => {
+                    letr.style.animation = 'bounceRotateCheese 0.2s infinite alternate';
+                    setTimeout(() => { if(letr) letr.style.animation = ''; }, 600);
+                });
+            });
+        }
+
+        const typedHeading = document.getElementById('dynamicGreeting');
+        if (typedHeading) {
+            typedHeading.addEventListener('mouseenter', () => {
+                typedHeading.style.textShadow = '8px 8px 0 #ff00c1, -2px -2px 0 #00ffea';
+            });
+            typedHeading.addEventListener('mouseleave', () => {
+                typedHeading.style.textShadow = '4px 4px 0 #ffb347, 6px 6px 0 rgba(0,0,0,0.2)';
+            });
+        }
+
+        setInterval(() => {
+            const welcomeTag = document.querySelector('.welcome-fun');
+            if (welcomeTag) {
+                welcomeTag.style.transform = 'rotate(1deg) scale(1.02)';
+                setTimeout(() => { if(welcomeTag) welcomeTag.style.transform = 'rotate(-1deg)'; }, 200);
+                setTimeout(() => { if(welcomeTag) welcomeTag.style.transform = 'rotate(0deg)'; }, 400);
+            }
+        }, 3300);
+    };
+</script>
+
+@code {
+    private bool isInitialized = false;
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender && !isInitialized)
+        {
+            isInitialized = true;
+            await JS.InvokeVoidAsync("initMicroSysAnimations");
+        }
+    }
+}
