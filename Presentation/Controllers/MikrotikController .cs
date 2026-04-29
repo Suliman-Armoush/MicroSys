@@ -13,6 +13,7 @@ using Application.Features.Mikrotik.Queries.GetAllProfile;
 using Application.Features.Mikrotik.Queries.GetAllServer;
 using Application.Features.Mikrotik.Queries.GetAllUser;
 using Application.Features.Mikrotik.Queries.GetMyDepartmentConsumption;
+using Application.Features.Mikrotik.Queries.GetUser;
 using Application.Features.Mikrotik.Queries.ReportDetailedConsumption;
 using Application.Features.Mikrotik.Queries.ReportTotalConsumption;
 using Application.Features.Mikrotik.Queries.SearchInHost;
@@ -61,6 +62,15 @@ namespace Presentation.Controllers
             command.CurrentUsername = currentUsername;
 
             var result = await _mediator.Send(command);
+            return Ok(result);
+        }
+
+        [HttpGet("Get/User/{username}")]
+        public async Task<ActionResult<MikrotikUserInformationResponse>> GetUser(string username)
+        {
+            // الهاندلر سيتكفل بالتحقق ورمي خطأ إذا لم يجد اليوزر
+            var result = await _mediator.Send(new GetMikrotikUserByNameQuery(username));
+
             return Ok(result);
         }
 

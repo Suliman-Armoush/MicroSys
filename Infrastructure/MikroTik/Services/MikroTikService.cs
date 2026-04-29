@@ -184,17 +184,27 @@ namespace Infrastructure.MikroTik.Services
         public async Task<MikrotikUserInformationResponse> GetUserByNameAsync(string username)
         {
             using var connection = _client.Connect();
+
+            // استخدام LoadAll بما أنها شغالة عندك
             var user = connection.LoadAll<HotspotUser>().FirstOrDefault(u => u.Name == username);
 
             if (user == null) return null;
 
+            // حساب الـ LimitGB من الـ LimitBytesTotal الموجود في كلاس HotspotUser
+            double? limitGb = null;
+            if (user.LimitBytesTotal > 0)
+            {
+                limitGb = Math.Round(user.LimitBytesTotal / (1024.0 * 1024.0 * 1024.0), 2);
+            }
+
             return new MikrotikUserInformationResponse
             {
                 Username = user.Name,
-                Comment = user.Comment, 
                 Profile = user.Profile,
                 Server = user.Server,
+                Comment = user.Comment,
                 IsDisabled = user.Disabled,
+                LimitGB = limitGb
             };
         }
 
