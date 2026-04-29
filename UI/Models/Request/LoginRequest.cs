@@ -1,7 +1,6 @@
-﻿// Application/DTOs/Request/LoginRequestDto.cs
-namespace Application.DTOs.Request
+﻿namespace UI.Models.Request
 {
-    public class LoginRequestDto
+    public class LoginRequest
     {
         public string UserName { get; set; } = string.Empty;
         public string Password { get; set; } = string.Empty;
