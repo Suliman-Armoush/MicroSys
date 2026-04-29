@@ -53,7 +53,7 @@ namespace Presentation.Controllers
         }
 
         [Authorize]
-        [HttpGet("My/Department/Usage")]
+        [HttpGet("MyDepartment/Usage")]
         public async Task<IActionResult> GetMyDepartmentUsage()
         {
             var deptIdClaim = User.FindFirst("DepartmentId")?.Value;
