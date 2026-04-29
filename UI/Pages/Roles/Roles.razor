@@ -1,0 +1,162 @@
+﻿@page "/roles"
+@* @attribute [Authorize(Roles = "Admin")] *@
+@attribute [Authorize(Roles = "Admin")]
+@inject IRoleService RoleService
+@inject NavigationManager Navigation
+@inject IJSRuntime JS
+
+<PageTitle>إدارة الأدوار</PageTitle>
+
+<div class="container mt-4">
+    <div class="row">
+        <div class="col-12">
+            <h2>الأدوار</h2>
+            <button class="btn btn-primary mb-3" @onclick="OpenCreateModal">+ إضافة دور جديد</button>
+
+            @if (isLoading)
+            {
+                <p>جاري التحميل...</p>
+            }
+            else
+            {
+                <table class="table table-striped">
+                    <thead>
+                        <tr><th>#</th><th>اسم الدور</th><th>الإجراءات</th></tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var role in roles)
+                        {
+                            <tr>
+                                <td>@role.Id</td>
+                                <td>@role.Name</td>
+                                <td>
+                                    <button class="btn btn-sm btn-warning" @onclick="() => OpenEditModal(role)">تعديل</button>
+                                    <button class="btn btn-sm btn-danger" @onclick="() => DeleteRole(role.Id)">حذف</button>
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            }
+        </div>
+    </div>
+</div>
+
+@* Modal لإضافة/تعديل الدور *@
+<div class="modal fade" id="roleModal" tabindex="-1" aria-labelledby="roleModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="roleModalLabel">@(isEditMode ? "تعديل دور" : "إضافة دور جديد")</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <EditForm Model="@currentRole" OnValidSubmit="@SaveRole">
+                    <DataAnnotationsValidator />
+                    <div class="mb-3">
+                        <label for="roleName" class="form-label">اسم الدور</label>
+                        <InputText id="roleName" class="form-control" @bind-Value="currentRole.Name" />
+                        <ValidationMessage For="@(() => currentRole.Name)" />
+                    </div>
+                    <button type="submit" class="btn btn-primary" disabled="@isSaving">
+                        @(isSaving ? "جاري الحفظ..." : "حفظ")
+                    </button>
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">إلغاء</button>
+                </EditForm>
+            </div>
+        </div>
+    </div>
+</div>
+
+@code {
+    private List<RoleResponseDto> roles = new();
+    private bool isLoading = true;
+    private bool isSaving = false;
+    private bool isEditMode = false;
+    private int editingRoleId = 0;          // المتغير المفقود
+    private RoleRequestDto currentRole = new();
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadRoles();
+    }
+
+    private async Task LoadRoles()
+    {
+        isLoading = true;
+        roles = await RoleService.GetAllAsync();
+        isLoading = false;
+    }
+
+    private void OpenCreateModal()
+    {
+        isEditMode = false;
+        editingRoleId = 0;
+        currentRole = new RoleRequestDto();
+        ShowModal();
+    }
+
+    private void OpenEditModal(RoleResponseDto role)
+    {
+        isEditMode = true;
+        editingRoleId = role.Id;
+        currentRole = new RoleRequestDto { Name = role.Name };
+        ShowModal();
+    }
+
+    private async Task SaveRole()
+    {
+        isSaving = true;
+        try
+        {
+            if (isEditMode)
+            {
+                await RoleService.UpdateAsync(editingRoleId, currentRole);
+            }
+            else
+            {
+                await RoleService.CreateAsync(currentRole);
+            }
+            await LoadRoles();
+            CloseModal();
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Error: {ex.Message}");
+            await JS.InvokeVoidAsync("alert", "حدث خطأ: " + ex.Message);
+        }
+        finally
+        {
+            isSaving = false;
+        }
+    }
+
+    private async Task DeleteRole(int id)
+    {
+        bool confirmed = await JS.InvokeAsync<bool>("confirm", "هل أنت متأكد من حذف هذا الدور؟");
+        if (confirmed)
+        {
+            try
+            {
+                await RoleService.DeleteAsync(id);
+                await LoadRoles();
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Error deleting: {ex.Message}");
+                await JS.InvokeVoidAsync("alert", "فشل الحذف: " + ex.Message);
+            }
+        }
+    }
+
+    // دوال لعرض وإخفاء Modal باستخدام Bootstrap JS
+    private async void ShowModal()
+    {
+        await JS.InvokeVoidAsync("eval", "var myModal = new bootstrap.Modal(document.getElementById('roleModal')); myModal.show();");
+    }
+
+    private async void CloseModal()
+    {
+        await JS.InvokeVoidAsync("eval", "var myModal = bootstrap.Modal.getInstance(document.getElementById('roleModal')); if(myModal) myModal.hide();");
+    }
+}

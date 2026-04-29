@@ -1,0 +1,62 @@
+﻿@page "/roleform/{id:int?}"
+
+@inject IRoleService RoleService
+@inject NavigationManager Navigation
+
+<PageTitle>@(IsNew ? "إضافة دور" : "تعديل دور")</PageTitle>
+
+<div class="container mt-4">
+    <div class="row justify-content-center">
+        <div class="col-md-6">
+            <h3>@(IsNew ? "إضافة دور جديد" : "تعديل الدور")</h3>
+            <EditForm Model="@roleDto" OnValidSubmit="@HandleSubmit">
+                <DataAnnotationsValidator />
+                <div class="mb-3">
+                    <label class="form-label">اسم الدور</label>
+                    <InputText class="form-control" @bind-Value="roleDto.Name" />
+                    <ValidationMessage For="@(() => roleDto.Name)" />
+                </div>
+                <button type="submit" class="btn btn-success" disabled="@isSubmitting">@(isSubmitting ? "جاري الحفظ..." : "حفظ")</button>
+                <a href="/roles" class="btn btn-secondary">إلغاء</a>
+            </EditForm>
+        </div>
+    </div>
+</div>
+
+@code {
+    [Parameter] public int? Id { get; set; }
+    private bool IsNew => Id == null || Id == 0;
+    private bool isSubmitting = false;
+
+    private RoleRequestDto roleDto = new();
+
+    protected override async Task OnInitializedAsync()
+    {
+        if (!IsNew && Id.HasValue)
+        {
+            var existing = await RoleService.GetByIdAsync(Id.Value);
+            roleDto.Name = existing.Name;
+        }
+    }
+
+    private async Task HandleSubmit()
+    {
+        isSubmitting = true;
+        try
+        {
+            if (IsNew)
+                await RoleService.CreateAsync(roleDto);
+            else
+                await RoleService.UpdateAsync(Id!.Value, roleDto);
+            Navigation.NavigateTo("/roles");
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Error: {ex.Message}");
+        }
+        finally
+        {
+            isSubmitting = false;
+        }
+    }
+}

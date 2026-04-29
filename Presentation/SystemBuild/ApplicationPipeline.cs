@@ -6,20 +6,25 @@ namespace Presentation.SystemBuild
   {
     public static IApplicationBuilder UseApplicationPipeline(this IApplicationBuilder app)
     {
-      app.UseMiddleware<ExceptionMiddleware>();
+            app.UseMiddleware<ExceptionMiddleware>();
 
-      app.UseSwagger();
-      app.UseSwaggerUI(c =>
-      {
-        c.SwaggerEndpoint("/swagger/v1/swagger.json", "MycroSys");
-        c.DocumentTitle = "MycroSys";
-      });
+            app.UseCors("AllowBlazor");
 
-      app.UseHttpsRedirection();
-      app.UseAuthentication();
-      app.UseAuthorization();
+            app.UseSwagger();
+            app.UseSwaggerUI(c =>
+            {
+            c.SwaggerEndpoint("/swagger/v1/swagger.json", "MycroSys");
+            c.DocumentTitle = "MycroSys";
+            });
 
-      return app;
+            app.UseHttpsRedirection();
+            app.UseAuthentication();
+            app.UseAuthorization();
+
+     
+      
+
+            return app;
     }
   }
 }
