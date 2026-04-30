@@ -21,6 +21,8 @@ namespace UI
             services.AddScoped<AuthenticationStateProvider, CustomAuthStateProvider>();
             services.AddScoped<IAuthService, AuthService>();
             services.AddScoped<IRoleService, RoleService>();
+            services.AddScoped<IMikrotikService, MikrotikService>();
+            services.AddScoped<IDepartmentService, DepartmentService>();
 
             // يمكنك إضافة أي خدمات أخرى هنا مستقبلاً مثل IDepartmentService, IUserService إلخ.
         }
