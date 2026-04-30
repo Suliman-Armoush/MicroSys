@@ -10,7 +10,6 @@ namespace Application.Features.SysInfo.Command.Update
         public UpdateSysInfoValidator()
         {
             RuleFor(x => x.Id).GreaterThan(0);
-            RuleFor(x => x.Dto.MikroTikIp).NotEmpty();
         }
     }
 }

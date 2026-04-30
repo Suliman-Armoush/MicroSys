@@ -14,7 +14,8 @@ namespace Application.Helper.Profiles
         {
             CreateMap<SysInfo, SysInfoResponseDto>();
 
-            CreateMap<SysInfoRequestDto, SysInfo>();
-        }
+      CreateMap<SysInfoRequestDto, SysInfo>()
+          .ForAllMembers(opt => opt.Condition((src, dest, srcMember) => srcMember != null));
     }
+  }
 }
