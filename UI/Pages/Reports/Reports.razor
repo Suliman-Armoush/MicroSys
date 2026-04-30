@@ -1,0 +1,168 @@
+﻿@page "/reports"
+@using UI.Models.Response
+@using UI.Services.Interfaces
+@inject IReportService ReportService
+@inject IJSRuntime JS
+@inject NavigationManager Navigation
+
+<style>
+    .report-card {
+        transition: all 0.3s ease-in-out;
+    }
+
+        .report-card:hover {
+            transform: translateY(-5px);
+        }
+
+    .btn-download {
+        transition: transform 0.1s active;
+    }
+
+        .btn-download:active {
+            transform: scale(0.98);
+        }
+    /* تنسيق الجدول من اليسار لليمين */
+    .ltr-table {
+        direction: ltr !important;
+        text-align: left !important;
+    }
+
+        .ltr-table th, .ltr-table td {
+            text-align: center !important;
+        }
+
+            .ltr-table td:first-child, .ltr-table th:first-child {
+                text-align: left !important;
+                padding-left: 1.5rem !important;
+            }
+</style>
+
+<div class="container mt-5" dir="rtl">
+    @* العناوين *@
+    <div class="d-flex justify-content-between align-items-center mb-5">
+        <button class="btn btn-outline-secondary px-4 shadow-sm" @onclick="GoBack">رجوع</button>
+        <h2 class="fw-bold m-0">مركز التقارير</h2>
+    </div>
+
+    @* كروت التصدير *@
+    <div class="row g-4 justify-content-center mb-5">
+        @* التقرير المختصر *@
+        <div class="col-md-5">
+            <div class="card h-100 border-0 shadow-sm report-card p-4">
+                <div class="card-body text-center">
+                    <div class="d-flex justify-content-end mb-2">
+                        <span class="p-3 rounded-circle bg-primary bg-opacity-10"></span>
+                    </div>
+                    <h4 class="fw-bold mb-3">تقرير الأقسام المختصر</h4>
+                    <p class="text-muted mb-4 small">ملف Excel يحتوي على ملخص استهلاك الأقسام ككتلة واحدة مع حساب التكاليف.</p>
+                    <button class="btn btn-primary btn-lg w-100 py-3 fw-bold shadow btn-download"
+                            @onclick="() => DownloadReport(false)"
+                            disabled="@isExporting">
+                        @if (isExporting && !isDetailedAction)
+                        {
+                            <span class="spinner-border spinner-border-sm me-2"></span>
+                            <span>جاري توليد البيانات...</span>
+                        }
+                        else
+                        {
+                            <span>تصدير المختصر</span>
+                        }
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        @* التقرير التفصيلي *@
+        <div class="col-md-5">
+            <div class="card h-100 border-0 shadow-sm report-card p-4 border-start border-success border-5">
+                <div class="card-body text-center">
+                    <div class="d-flex justify-content-end mb-2">
+                        <span class="p-3 rounded-circle bg-success bg-opacity-10"></span>
+                    </div>
+                    <h4 class="fw-bold mb-3 text-success">تقرير الأقسام التفصيلي</h4>
+                    <p class="text-muted mb-4 small">ملف Excel شامل يعرض استهلاك كل مستخدم (User) داخل الأقسام بشكل مفصل.</p>
+                    <button class="btn btn-success btn-lg w-100 py-3 fw-bold shadow btn-download"
+                            @onclick="() => DownloadReport(true)"
+                            disabled="@isExporting">
+                        @if (isExporting && isDetailedAction)
+                        {
+                            <span class="spinner-border spinner-border-sm me-2"></span>
+                            <span>جاري توليد البيانات...</span>
+                        }
+                        else
+                        {
+                            <span>تصدير التفصيلي</span>
+                        }
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    @* الجدول بعد إزالة عمود الـ DVR *@
+    @if (summaryData != null)
+    {
+        <div class="card border-0 shadow-sm mt-4">
+            <div class="card-body p-0">
+                <div class="table-responsive">
+                    <table class="table table-hover align-middle ltr-table mb-0">
+                        <thead class="bg-light text-muted">
+                            <tr>
+                                <th>القسم (Department)</th>
+                                <th>المشتركين</th>
+                                <th>الاستهلاك (GB)</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach (var item in summaryData)
+                            {
+                                <tr>
+                                    <td class="fw-bold text-dark">@item.DepartmentName.ToUpper()</td>
+                                    <td><span class="badge bg-light text-dark border px-3">@item.ActiveUsersCount</span></td>
+                                    <td class="fw-bold text-primary">@item.TotalConsumptionGB.ToString("N2")</td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    }
+</div>
+
+@code {
+    private List<DepartmentConsumptionResponseDto>? summaryData;
+    private bool isExporting = false;
+    private bool isDetailedAction = false;
+
+    protected override async Task OnInitializedAsync()
+    {
+        summaryData = await ReportService.GetDepartmentsSummaryAsync();
+    }
+
+    private async Task DownloadReport(bool isDetailed)
+    {
+        isExporting = true;
+        isDetailedAction = isDetailed;
+        try
+        {
+            byte[]? fileBytes;
+            string fileName = isDetailed ? "Detailed_Report.xlsx" : "Summary_Report.xlsx";
+
+            if (isDetailed)
+                fileBytes = await ReportService.DownloadDetailedConsumptionExcelAsync();
+            else
+                fileBytes = await ReportService.DownloadDepartmentConsumptionExcelAsync();
+
+            if (fileBytes != null)
+                await JS.InvokeVoidAsync("downloadFileFromBytes", fileName, Convert.ToBase64String(fileBytes));
+        }
+        finally
+        {
+            isExporting = false;
+            isDetailedAction = false;
+        }
+    }
+
+    private void GoBack() => Navigation.NavigateTo("/");
+}
