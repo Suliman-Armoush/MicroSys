@@ -1,0 +1,206 @@
+﻿@page "/departments"
+@attribute [Authorize(Roles = "Admin")]
+@using UI.Models
+@using UI.Models.Enums
+@using UI.Services.Interfaces
+@inject IDepartmentService DepartmentService
+@inject NavigationManager Navigation
+@inject IJSRuntime JS
+
+<PageTitle>إدارة الأقسام</PageTitle>
+
+<div class="container mt-4">
+    <div class="row">
+        <div class="col-12">
+            <h2>الأقسام</h2>
+            <button class="btn btn-primary mb-3" @onclick="OpenCreateModal">+ إضافة قسم جديد</button>
+
+            @if (isLoading)
+            {
+                <p>جاري التحميل...</p>
+            }
+            else
+            {
+                <table class="table table-striped table-bordered">
+                    <thead>
+                        <tr>
+                            <th>#</th>
+                            <th>اسم القسم</th>
+                            <th>النوع</th>
+                            <th>رقم DVR</th>
+                            <th>الإجراءات</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var department in departments)
+                        {
+                            <tr>
+                                <td>@department.Id</td>
+                                <td>@department.Name</td>
+                                <td>@GetTypeName(department.Type)</td>
+                                <td>@department.DvrNum</td>
+                                <td>
+                                    <button class="btn btn-sm btn-warning" @onclick="() => OpenEditModal(department)">تعديل</button>
+                                    <button class="btn btn-sm btn-danger" @onclick="() => DeleteDepartment(department.Id)">حذف</button>
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            }
+        </div>
+    </div>
+</div>
+
+@* Modal لإضافة/تعديل القسم *@
+<div class="modal fade" id="departmentModal" tabindex="-1" aria-labelledby="departmentModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="departmentModalLabel">@(isEditMode ? "تعديل قسم" : "إضافة قسم جديد")</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <EditForm Model="@currentDepartment" OnValidSubmit="@SaveDepartment">
+                    <DataAnnotationsValidator />
+                    <div class="mb-3">
+                        <label for="deptName" class="form-label">اسم القسم</label>
+                        <InputText id="deptName" class="form-control" @bind-Value="currentDepartment.Name" />
+                        <ValidationMessage For="@(() => currentDepartment.Name)" />
+                    </div>
+                    <div class="mb-3">
+                        <label for="deptType" class="form-label">نوع القسم</label>
+                        <InputSelect id="deptType" class="form-control" @bind-Value="currentDepartment.Type">
+                            <option value="">-- اختر النوع --</option>
+                            <option value="@DepartmentTypes.Service">Service</option>
+                            <option value="@DepartmentTypes.TcShops">TcShops</option>
+                            <option value="@DepartmentTypes.Shops">Shops</option>
+                        </InputSelect>
+                        <ValidationMessage For="@(() => currentDepartment.Type)" />
+                    </div>
+                    <div class="mb-3">
+                        <label for="dvrNum" class="form-label">رقم DVR</label>
+                        <InputNumber id="dvrNum" class="form-control" @bind-Value="currentDepartment.DvrNum" />
+                        <ValidationMessage For="@(() => currentDepartment.DvrNum)" />
+                    </div>
+                    <button type="submit" class="btn btn-primary" disabled="@isSaving">
+                        @(isSaving ? "جاري الحفظ..." : "حفظ")
+                    </button>
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">إلغاء</button>
+                </EditForm>
+            </div>
+        </div>
+    </div>
+</div>
+
+@code {
+    private List<DepartmentResponseDto> departments = new();
+    private bool isLoading = true;
+    private bool isSaving = false;
+    private bool isEditMode = false;
+    private int editingDepartmentId = 0;
+    private DepartmentRequestDto currentDepartment = new();
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadDepartments();
+    }
+
+    private async Task LoadDepartments()
+    {
+        isLoading = true;
+        departments = await DepartmentService.GetAllAsync();
+        isLoading = false;
+    }
+
+    private void OpenCreateModal()
+    {
+        isEditMode = false;
+        editingDepartmentId = 0;
+        currentDepartment = new DepartmentRequestDto
+        {
+            Type = DepartmentTypes.Service,
+            DvrNum = 0
+        };
+        ShowModal();
+    }
+
+    private void OpenEditModal(DepartmentResponseDto department)
+    {
+        isEditMode = true;
+        editingDepartmentId = department.Id;
+        currentDepartment = new DepartmentRequestDto
+        {
+            Name = department.Name,
+            Type = department.Type,
+            DvrNum = department.DvrNum
+        };
+        ShowModal();
+    }
+
+    private async Task SaveDepartment()
+    {
+        isSaving = true;
+        try
+        {
+            if (isEditMode)
+            {
+                await DepartmentService.UpdateAsync(editingDepartmentId, currentDepartment);
+            }
+            else
+            {
+                await DepartmentService.CreateAsync(currentDepartment);
+            }
+            await LoadDepartments();
+            CloseModal();
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Error: {ex.Message}");
+            await JS.InvokeVoidAsync("alert", "حدث خطأ: " + ex.Message);
+        }
+        finally
+        {
+            isSaving = false;
+        }
+    }
+
+    private async Task DeleteDepartment(int id)
+    {
+        bool confirmed = await JS.InvokeAsync<bool>("confirm", "هل أنت متأكد من حذف هذا القسم؟");
+        if (confirmed)
+        {
+            try
+            {
+                await DepartmentService.DeleteAsync(id);
+                await LoadDepartments();
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Error deleting: {ex.Message}");
+                await JS.InvokeVoidAsync("alert", "فشل الحذف: " + ex.Message);
+            }
+        }
+    }
+
+    private string GetTypeName(DepartmentTypes type)
+    {
+        return type switch
+        {
+            DepartmentTypes.Service => "Service",
+            DepartmentTypes.TcShops => "TcShops",
+            DepartmentTypes.Shops => "Shops",
+            _ => type.ToString()
+        };
+    }
+
+    private async void ShowModal()
+    {
+        await JS.InvokeVoidAsync("eval", "var myModal = new bootstrap.Modal(document.getElementById('departmentModal')); myModal.show();");
+    }
+
+    private async void CloseModal()
+    {
+        await JS.InvokeVoidAsync("eval", "var myModal = bootstrap.Modal.getInstance(document.getElementById('departmentModal')); if(myModal) myModal.hide();");
+    }
+}
