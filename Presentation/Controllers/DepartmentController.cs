@@ -50,7 +50,6 @@ namespace Presentation.Controllers
             var result = await _mediator.Send(new GetDepartmentByIdQuery(id));
             return Ok(result);
         }
-        [Authorize]
         [HttpGet("GetAll")]
         public async Task<ActionResult<List<DepartmentResponseDto>>> GetAll()
         {

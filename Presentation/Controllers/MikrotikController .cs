@@ -113,13 +113,13 @@ namespace Presentation.Controllers
         }
 
         [HttpGet("Get/Servers")]
-        public async Task<ActionResult<List<string>>> GetServers()
+        public async Task<ActionResult<List<MikrotikServerResponse>>> GetServers()
         {
             var servers = await _mediator.Send(new GetAllMikrotikServersQuery());
             return Ok(servers);
         }
 
 
-       
+
     }
 }

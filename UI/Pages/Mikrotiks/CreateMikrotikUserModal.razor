@@ -1,0 +1,154 @@
+﻿@using UI.Models.Request
+@using UI.Models.Response
+@using UI.Services.Interfaces
+@inject IMikrotikService MikrotikService
+@inject IDepartmentService DepartmentService
+
+@if (IsVisible)
+{
+    <div class="modal fade show d-block" tabindex="-1" style="background: rgba(0,0,0,0.5); backdrop-filter: blur(4px);">
+        <div class="modal-dialog modal-dialog-centered modal-lg">
+            <div class="modal-content border-0 shadow-lg text-end" dir="rtl">
+                
+                <div class="modal-header bg-primary text-white d-flex">
+                    <h5 class="modal-title fw-bold flex-grow-1">إضافة مستخدم ميكروتيك جديد</h5>
+                    <button type="button" class="btn-close btn-close-white" @onclick="Close"></button>
+                </div>
+
+                <EditForm Model="createModel" OnValidSubmit="HandleSave">
+                    <DataAnnotationsValidator />
+                    
+                    <div class="modal-body p-4">
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label fw-bold small">اسم المستخدم</label>
+                                <InputText @bind-Value="createModel.Username" class="form-control" />
+                                <ValidationMessage For="@(() => createModel.Username)" />
+                            </div>
+
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label fw-bold small">كلمة المرور</label>
+                                <InputText @bind-Value="createModel.Password" class="form-control" type="password" />
+                            </div>
+
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label fw-bold small">السيرفر (Server)</label>
+                                <InputSelect @bind-Value="createModel.Server" class="form-select text-center">
+                                    <option value="">-- اختر السيرفر --</option>
+                                    @if (servers != null)
+                                    {
+                                        @foreach (var srv in servers)
+                                        {
+                                            <option value="@srv.Name">@srv.Name</option>
+                                        }
+                                    }
+                                </InputSelect>
+                            </div>
+
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label fw-bold small">البروفايل (Profile)</label>
+                                <InputSelect @bind-Value="createModel.Profile" class="form-select text-center">
+                                    <option value="">-- اختر البروفايل --</option>
+                                    @if (profiles != null)
+                                    {
+                                        @foreach (var prof in profiles)
+                                        {
+                                            <option value="@prof.Name">@prof.Name</option>
+                                        }
+                                    }
+                                </InputSelect>
+                            </div>
+
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label fw-bold small">القسم (Department)</label>
+                                <InputSelect @bind-Value="createModel.DepartmentId" class="form-select text-center">
+                                    <option value="0">-- اختر القسم --</option>
+                                    @if (departments != null)
+                                    {
+                                        @foreach (var dept in departments)
+                                        {
+                                            <option value="@dept.Id">@dept.Name</option>
+                                        }
+                                    }
+                                </InputSelect>
+                            </div>
+
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label fw-bold small">الحد الأقصى (Limit GB)</label>
+                                <div class="input-group" dir="ltr">
+                                    <span class="input-group-text">GB</span>
+                                    <InputNumber @bind-Value="createModel.LimitGB" class="form-control text-end" />
+                                </div>
+                            </div>
+
+                            <div class="col-12 mb-3">
+                                <label class="form-label fw-bold small">ملاحظات (Comment)</label>
+                                <InputTextArea @bind-Value="createModel.UserDetails" class="form-control" rows="2" />
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="modal-footer bg-light flex-row-reverse">
+                        <button type="submit" class="btn btn-primary px-4 fw-bold">حفظ المستخدم</button>
+                        <button type="button" class="btn btn-secondary px-4 fw-bold" @onclick="Close">إلغاء</button>
+                    </div>
+                </EditForm>
+            </div>
+        </div>
+    </div>
+}
+
+@code {
+    [Parameter] public bool IsVisible { get; set; }
+    [Parameter] public EventCallback OnClose { get; set; }
+    [Parameter] public EventCallback OnUserCreated { get; set; }
+
+    private CreateMikrotikUserRequestDto createModel = new();
+    private List<MikrotikProfileResponseDto> profiles = new();
+    private List<MikrotikServerResponseDto> servers = new();
+    private List<DepartmentResponseDto> departments = new();
+
+    protected override async Task OnParametersSetAsync()
+    {
+        if (IsVisible)
+        {
+            createModel = new();
+            await LoadInitialData();
+        }
+    }
+
+    private async Task LoadInitialData()
+    {
+        try
+        {
+            var pTask = MikrotikService.GetAllProfilesAsync();
+            var sTask = MikrotikService.GetServersListAsync();
+            var dTask = DepartmentService.GetAllAsync();
+
+            profiles = await pTask ?? new();
+            StateHasChanged();
+
+            servers = await sTask ?? new();
+            StateHasChanged();
+
+            departments = await dTask ?? new();
+            StateHasChanged();
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Error: {ex.Message}");
+        }
+    }
+
+    private async Task HandleSave()
+    {
+        var result = await MikrotikService.CreateUserAsync(createModel);
+        if (result != null)
+        {
+            await OnUserCreated.InvokeAsync();
+            await Close();
+        }
+    }
+
+    private async Task Close() => await OnClose.InvokeAsync();
+}
