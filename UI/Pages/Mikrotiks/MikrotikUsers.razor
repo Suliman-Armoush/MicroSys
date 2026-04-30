@@ -6,43 +6,36 @@
 <PageTitle>مستخدمي الميكروتيك</PageTitle>
 
 <div class="container-fluid mt-4">
-    @* قسم العنوان وزر الإضافة *@
-    <div class="d-flex justify-content-between align-items-center mb-4">
+    @* رأس الصفحة *@
+    <div class="d-flex justify-content-between align-items-center mb-4" dir="rtl">
         <h3 class="fw-bold text-dark m-0">مستخدمي الميكروتيك</h3>
-        <button class="btn btn-primary shadow-sm px-4 fw-bold" @onclick="() => showModal = true">
-            <i class="bi bi-plus-lg"></i> إضافة مستخدم جديد
+        <button class="btn btn-primary shadow-sm px-4 fw-bold" @onclick="() => showCreateModal = true">
+            إضافة مستخدم جديد
         </button>
     </div>
 
-    @* جدول العرض المصمم حسب الصورة *@
+    @* الجدول المقلوب بالكامل *@
     <div class="card shadow-sm border-0 rounded-3">
         <div class="card-body p-0">
             <div class="table-responsive">
-                <table class="table table-hover align-middle mb-0">
+                <table class="table table-hover align-middle mb-0 text-end" dir="rtl">
                     <thead class="bg-light">
-                        <tr class="text-muted">
-                            <th class="ps-4 py-3 text-start">المستخدم (Username)</th>
-                            <th class="text-start">الملاحظات (Comment)</th>
-                            <th class="text-center">رفع (Upload GB)</th>
-                            <th class="text-center">تحميل (Download GB)</th>
-                            <th class="text-end pe-4">الإجمالي (Total GB)</th>
+                        <tr class="text-dark fw-bold">
+                            @* عكس ترتيب العناوين *@
+                            <th class="py-3 pe-4 text-center" style="width: 10%;">الإجراءات</th>
+                            <th class="text-center" style="width: 15%;">الإجمالي (Total GB)</th>
+                            <th class="text-center" style="width: 12%;">تحميل (Download GB)</th>
+                            <th class="text-center" style="width: 12%;">رفع (Upload GB)</th>
+                            <th class="text-start" style="width: 25%;">الملاحظات (Comment)</th>
+                            <th class="text-start ps-4" style="width: 20%;">المستخدم (Username)</th>
                         </tr>
                     </thead>
                     <tbody>
                         @if (users == null)
                         {
                             <tr>
-                                <td colspan="5" class="text-center py-5">
+                                <td colspan="6" class="text-center py-5">
                                     <div class="spinner-border text-primary" role="status"></div>
-                                    <p class="mt-2 text-muted">جاري تحميل البيانات من السيرفر...</p>
-                                </td>
-                            </tr>
-                        }
-                        else if (!users.Any())
-                        {
-                            <tr>
-                                <td colspan="5" class="text-center py-5 text-muted">
-                                    لا يوجد مستخدمين لعرضهم حالياً.
                                 </td>
                             </tr>
                         }
@@ -51,21 +44,37 @@
                             @foreach (var user in users)
                             {
                                 <tr>
-                                    <td class="ps-4 py-3 text-start">
-                                        <span class="text-primary fw-bold" style="cursor: pointer;">@user.Username</span>
+                                    @* 1. الإجراءات (أصبحت في أقصى اليمين) *@
+                                    <td class="pe-4 text-center">
+                                        <button class="btn btn-sm btn-outline-warning fw-bold px-3 shadow-sm" 
+                                                @onclick="() => OpenEditModal(user.Username)">
+                                            تعديل
+                                        </button>
                                     </td>
-                                    <td class="text-muted small text-start">@user.Comment</td>
-                                    @* البيانات تعرض مباشرة لأن الباك إند يرسلها مقسومة على 1024^3 *@
-                                    <td class="text-center text-danger">
-                                        @user.BytesIn.ToString("N2")
+
+                                    @* 2. الإجمالي *@
+                                    <td class="text-center">
+                                        <span class="badge bg-primary px-3 py-2 rounded-pill shadow-sm" style="min-width: 95px;">
+                                            GB @user.Total.ToString("N2")
+                                        </span>
                                     </td>
-                                    <td class="text-center text-success">
+
+                                    @* 3. تحميل (أخضر) *@
+                                    <td class="text-center text-success fw-bold">
                                         @user.BytesOut.ToString("N2")
                                     </td>
-                                    <td class="text-end pe-4">
-                                        <span class="badge bg-primary px-3 py-2 rounded-pill shadow-sm" style="min-width: 100px; font-size: 0.9rem;">
-                                            @user.Total.ToString("N2") GB
-                                        </span>
+
+                                    @* 4. رفع (أحمر) *@
+                                    <td class="text-center text-danger fw-bold">
+                                        @user.BytesIn.ToString("N2")
+                                    </td>
+
+                                    @* 5. الملاحظات *@
+                                    <td class="text-start text-muted small">@user.Comment</td>
+
+                                    @* 6. المستخدم (أصبح في أقصى اليسار) *@
+                                    <td class="text-start ps-4">
+                                        <span class="text-primary fw-bold">@user.Username</span>
                                     </td>
                                 </tr>
                             }
@@ -77,41 +86,37 @@
     </div>
 </div>
 
-@* استدعاء الـ Component المستقل للإضافة *@
+@* المودالات *@
 <CreateMikrotikUserModal 
-    IsVisible="showModal" 
-    OnClose="() => showModal = false" 
+    IsVisible="showCreateModal" 
+    OnClose="() => showCreateModal = false" 
     OnUserCreated="ReloadUsers" />
+
+<EditMikrotikUserModal 
+    IsVisible="showEditModal" 
+    CurrentUsername="@selectedUsername" 
+    OnClose="() => showEditModal = false" 
+    OnUserUpdated="ReloadUsers" />
 
 @code {
     private List<MikrotikUserResponseDto>? users;
-    private bool showModal = false;
+    private bool showCreateModal = false;
+    private bool showEditModal = false;
+    private string selectedUsername = "";
 
-    // جلب البيانات عند تشغيل الصفحة لأول مرة
-    protected override async Task OnInitializedAsync()
+    protected override async Task OnInitializedAsync() => await ReloadUsers();
+
+    private void OpenEditModal(string username)
     {
-        await ReloadUsers();
+        selectedUsername = username;
+        showEditModal = true;
     }
 
-    // دالة إعادة تحميل البيانات وتحديث الواجهة
     private async Task ReloadUsers()
     {
-        try 
-        {
-            // نضع نول لإظهار علامة التحميل أثناء الجلب الجديد
-            users = null; 
-            StateHasChanged();
-
-            users = await MikrotikService.GetAllUsersAsync();
-        }
-        catch (Exception ex)
-        {
-            Console.WriteLine($"Error reloading users: {ex.Message}");
-            users = new List<MikrotikUserResponseDto>();
-        }
-        finally
-        {
-            StateHasChanged();
-        }
+        users = null;
+        StateHasChanged();
+        users = await MikrotikService.GetAllUsersAsync();
+        StateHasChanged();
     }
 }

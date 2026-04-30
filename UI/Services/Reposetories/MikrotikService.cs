@@ -44,7 +44,19 @@ namespace UI.Services.Reposetories
             return null;
         }
 
+        public async Task<MikrotikUserInformationResponseDto?> GetUserByNameAsync(string username)
+        {
+            // تأكد من المسار: في الـ Controller الأصلي هو "api/Mikrotik/Get/User/{username}"
+            return await _httpClient.GetFromJsonAsync<MikrotikUserInformationResponseDto>($"api/Mikrotik/Get/User/{username}");
+        }
 
+        public async Task<MikrotikUserInformationResponseDto?> UpdateUserAsync(string currentUsername, UpdateMikrotikUserRequestDto model)
+        {
+            var response = await _httpClient.PutAsJsonAsync($"api/Mikrotik/update/{currentUsername}", model);
+            return response.IsSuccessStatusCode
+                ? await response.Content.ReadFromJsonAsync<MikrotikUserInformationResponseDto>()
+                : null;
+        }
 
 
     }
