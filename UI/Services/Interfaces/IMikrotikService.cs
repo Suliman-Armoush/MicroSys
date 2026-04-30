@@ -10,6 +10,7 @@ namespace UI.Services.Interfaces
         Task<List<MikrotikServerResponseDto>> GetServersListAsync();
         Task<MikrotikUserInformationResponseDto?> CreateUserAsync(CreateMikrotikUserRequestDto user);
 
-
+        Task<MikrotikUserInformationResponseDto?> GetUserByNameAsync(string username);
+        Task<MikrotikUserInformationResponseDto?> UpdateUserAsync(string currentUsername, UpdateMikrotikUserRequestDto model);
     }
 }

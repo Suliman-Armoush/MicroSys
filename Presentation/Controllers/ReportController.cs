@@ -1,4 +1,5 @@
-﻿using Application.Features.Mikrotik.Queries.DepartmentConsumption;
+﻿using Application.Features.Mikrotik.Command.DeleteAllFromHost;
+using Application.Features.Mikrotik.Queries.DepartmentConsumption;
 using Application.Features.Mikrotik.Queries.GetMyDepartmentConsumption;
 using Application.Features.Mikrotik.Queries.ReportDetailedConsumption;
 using Application.Features.Mikrotik.Queries.ReportTotalConsumption;
@@ -22,6 +23,9 @@ namespace Presentation.Controllers
         [HttpGet("Export/Departments/Consumption")]
         public async Task<IActionResult> ExportExcel()
         {
+            var result = await _mediator.Send(new RemoveAllMikrotikHostsCommand());
+            if (!result) return BadRequest("Could not clear hosts list.");
+
             var fileBytes = await _mediator.Send(new ExportMikrotikExcelQuery());
 
             string fileName = $"Mikrotik_Consumption_{DateTime.Now:yyyyMMdd}.xlsx";
@@ -36,6 +40,9 @@ namespace Presentation.Controllers
         [HttpGet("Export/Detailed/Consumption")]
         public async Task<IActionResult> ExportDetailedReport()
         {
+            var result = await _mediator.Send(new RemoveAllMikrotikHostsCommand());
+            if (!result) return BadRequest("Could not clear hosts list.");
+
             var fileBytes = await _mediator.Send(new ExportDetailedMikrotikReportQuery());
             return File(
                 fileBytes,

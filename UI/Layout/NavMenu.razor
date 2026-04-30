@@ -32,9 +32,17 @@
                 @if (expandMikrotik)
                 {
                     <div class="submenu-container">
+                        @* رابط المستخدمين *@
                         <div class="nav-item px-3 ms-4">
                             <NavLink class="nav-link submenu-link" href="mikrotik-users">
                                 <span class="oi oi-people me-2" aria-hidden="true"></span> Users
+                            </NavLink>
+                        </div>
+                        
+                        @* رابط التقارير - الإضافة الجديدة هنا *@
+                        <div class="nav-item px-3 ms-4">
+                            <NavLink class="nav-link submenu-link" href="reports">
+                                <span class="oi oi-document me-2" aria-hidden="true"></span> Reports
                             </NavLink>
                         </div>
                     </div>
@@ -91,6 +99,7 @@
 }
 
 <style>
+    /* التنسيقات القديمة كما هي دون تغيير */
     .dropdown-toggle-custom {
         display: flex;
         align-items: center;
@@ -117,6 +126,7 @@
         background-color: rgba(0, 0, 0, 0.15);
         margin: 2px 8px;
         border-radius: 4px;
+        padding-bottom: 5px; /* مسافة بسيطة من الأسفل */
     }
 
     .submenu-link {
