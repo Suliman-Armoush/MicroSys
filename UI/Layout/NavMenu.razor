@@ -11,27 +11,57 @@
     <nav class="flex-column">
         <AuthorizeView Context="authContext">
             <Authorized>
+                @* Home *@
                 <div class="nav-item px-3">
                     <NavLink class="nav-link" href="" Match="NavLinkMatch.All">
-                        <span class="oi oi-home"></span> Home
+                        <span class="oi oi-home" aria-hidden="true"></span> Home
                     </NavLink>
                 </div>
-               @*  {{-- رابط الأدوار يظهر لكل المستخدمين المسجلين --}} *@
+
+                @* Mikrotik Dropdown *@
+                <div class="nav-item px-3">
+                    <div class="nav-link dropdown-toggle-custom @(expandMikrotik ? "active-parent" : "")"
+                         @onclick="ToggleMikrotikMenu" @onclick:stopPropagation>
+                        <span class="oi oi-wifi" aria-hidden="true"></span>
+                        <span class="flex-grow-1 ms-2">Mikrotik</span>
+                        <span class="oi @(expandMikrotik ? "oi-chevron-bottom" : "oi-chevron-left")"
+                              style="font-size: 0.7rem; transition: transform 0.3s;"></span>
+                    </div>
+                </div>
+
+                @if (expandMikrotik)
+                {
+                    <div class="submenu-container">
+                        <div class="nav-item px-3 ms-4">
+                            <NavLink class="nav-link submenu-link" href="mikrotik-users">
+                                <span class="oi oi-people me-2" aria-hidden="true"></span> Users
+                            </NavLink>
+                        </div>
+                    </div>
+                }
+
+                @* Role *@
                 <div class="nav-item px-3">
                     <NavLink class="nav-link" href="roles">
-                        <span class="oi oi-people"></span> Role
+                        <span class="oi oi-person" aria-hidden="true"></span> Role
                     </NavLink>
                 </div>
-                <div class="nav-item px-3">
-                    <NavLink class="nav-link" href="logout">
-                        <span class="oi oi-account-logout"></span> Logout (@authContext.User.FindFirst(System.Security.Claims.ClaimTypes.Email)?.Value)
+
+                @* Logout *@
+                <div class="nav-item px-3 mt-auto">
+                    <NavLink class="nav-link logout-link text-danger" href="logout">
+                        <span class="oi oi-account-logout" aria-hidden="true"></span>
+                        <small class="ms-1 text-truncate">
+                            Logout (@authContext.User.FindFirst(System.Security.Claims.ClaimTypes.Email)?.Value)
+                        </small>
                     </NavLink>
                 </div>
             </Authorized>
+            
             <NotAuthorized>
                 <div class="nav-item px-3">
                     <NavLink class="nav-link" href="login">
-                        <span class="oi oi-account-login"></span> Login
+                        <span class="oi oi-account-login" aria-hidden="true"></span> Login
                     </NavLink>
                 </div>
             </NotAuthorized>
@@ -41,6 +71,67 @@
 
 @code {
     private bool collapseNavMenu = true;
+    private bool expandMikrotik = false;
+
     private string? NavMenuCssClass => collapseNavMenu ? "collapse" : null;
-    private void ToggleNavMenu() => collapseNavMenu = !collapseNavMenu;
+
+    private void ToggleNavMenu()
+    {
+        collapseNavMenu = !collapseNavMenu;
+    }
+
+    private void ToggleMikrotikMenu()
+    {
+        expandMikrotik = !expandMikrotik;
+        if (expandMikrotik)
+        {
+            collapseNavMenu = false;
+        }
+    }
 }
+
+<style>
+    .dropdown-toggle-custom {
+        display: flex;
+        align-items: center;
+        cursor: pointer;
+        padding: 0.5rem 1rem;
+        border-radius: 4px;
+        transition: all 0.2s ease;
+        color: #d7d7d7;
+    }
+
+        .dropdown-toggle-custom:hover {
+            background-color: rgba(255, 255, 255, 0.1);
+            color: white;
+        }
+
+    .active-parent {
+        background-color: rgba(255, 255, 255, 0.05);
+        border-left: 4px solid #007bff;
+        color: white;
+        font-weight: 500;
+    }
+
+    .submenu-container {
+        background-color: rgba(0, 0, 0, 0.15);
+        margin: 2px 8px;
+        border-radius: 4px;
+    }
+
+    .submenu-link {
+        font-size: 0.85rem !important;
+        opacity: 0.85;
+        padding: 0.4rem 1rem !important;
+    }
+
+        .submenu-link:hover {
+            opacity: 1;
+            padding-left: 1.5rem !important;
+            color: #007bff !important;
+        }
+
+    .logout-link:hover {
+        background-color: rgba(220, 53, 69, 0.1) !important;
+    }
+</style>
