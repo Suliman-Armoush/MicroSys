@@ -39,10 +39,6 @@ public class SysInfoController : ControllerBase
     public async Task<IActionResult> Update(int id, [FromBody] SysInfoRequestDto dto)
     {
         var result = await _mediator.Send(new UpdateSysInfoCommand(id, dto));
-
-        if (!result)
-            return NotFound("SysInfo not found");
-
         return Ok("Updated Successfully");
     }
 
