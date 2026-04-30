@@ -4,13 +4,19 @@ using System.Text;
 
 namespace Application.DTOs.Response
 {
-    public class SysInfoResponseDto
-    {
-        public int Id { get; set; }
-        public string? MikroTikIp { get; set; }
-        public string? Username { get; set; }
-        public string? Password { get; set; }
+  public class SysInfoResponseDto
+  {
+    public int Id { get; set; }
+    public string MikroTikIp { get; set; }
+    public string Username { get; set; }
+    public string Password { get; set; }
+    public double DvrPrice { get; set; }
 
-    public int? DvrPrice { get; set; }
-    }
+    public int segment1 { get; set; }
+    public int segment2 { get; set; }
+    public int segment3 { get; set; }
+    public int segment4 { get; set; }
+    public int segment5 { get; set; }
+    public int segment6 { get; set; }
+  }
 }
