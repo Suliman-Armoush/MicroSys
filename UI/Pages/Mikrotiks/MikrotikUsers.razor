@@ -7,33 +7,39 @@
 <div class="container-fluid mt-4">
     @* --- Header Section --- *@
     <div class="d-flex justify-content-between align-items-center mb-4" dir="rtl">
+
+        <!-- اليمين: الرجوع + العنوان -->
         <div class="d-flex align-items-center gap-3">
-            @* زر الرجوع بنص صريح *@
             <button class="btn btn-outline-dark px-3 shadow-sm d-flex align-items-center gap-2"
                     @onclick='() => Navigation.NavigateTo("/")'>
                 <i class="bi bi-arrow-right"></i>
                 <span>الرجوع</span>
             </button>
+
             <h3 class="fw-bold m-0">مستخدمي الميكروتيك</h3>
         </div>
 
-        @* تصميم البحث الجديد والأنيق *@
+        <!-- الوسط: البحث -->
         <div class="search-wrapper position-relative" style="width: 350px;">
             <input type="text"
                    class="form-control rounded-pill ps-5 py-2 border-primary shadow-none"
                    placeholder="بحث عن مستخدم..."
                    @bind="searchTerm"
                    @bind:event="oninput"
-                   @onkeyup="HandleSearch"
-                   style="border-width: 2px;" />
-            <i class="bi bi-search position-absolute top-50 start-0 translate-middle-y ms-3 text-primary"></i>
-            @if (isSearching)
-            {
-                <div class="spinner-border spinner-border-sm text-primary position-absolute top-50 end-0 translate-middle-y me-3"></div>
-            }
+                   @onkeyup="HandleSearch" />
         </div>
 
-        <button class="btn btn-primary shadow-sm px-4 fw-bold" @onclick="() => showCreateModal = true">إضافة مستخدم جديد</button>
+        <!-- اليسار: الأزرار -->
+        <div class="d-flex gap-2">
+            <button class="btn btn-primary shadow-sm px-4 fw-bold"
+                    @onclick="() => showCreateModal = true">
+                إضافة مستخدم جديد
+            </button>
+            <button class="btn btn-danger shadow-sm px-4 fw-bold"
+                    @onclick="() => showResetAllCountersModal = true">
+                ترسيت جميع العدادات
+            </button>
+        </div>
     </div>
 
     @* --- Table Section (نفس تصميمك الأصلي) --- *@
@@ -92,7 +98,54 @@
 <DeleteMikrotikUserModal IsVisible="showDeleteModal" Username="@selectedUsername" OnClose="() => showDeleteModal = false" OnUserDeleted="ReloadUsers" />
 <EnableUserModal IsVisible="showEnableModal" Username="@selectedUsername" OnClose="() => showEnableModal = false" OnUserEnabled="ReloadUsers" />
 <DisableUserModal IsVisible="showDisableModal" Username="@selectedUsername" OnClose="() => showDisableModal = false" OnUserDisabled="ReloadUsers" />
+@if (showResetAllCountersModal)
+{
+    <div class="modal fade show d-block" tabindex="-1" style="background: rgba(0,0,0,0.5);" dir="rtl">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content border-0 shadow-lg rounded-4">
 
+                <div class="modal-header bg-danger text-white">
+                    <h5 class="modal-title fw-bold">تأكيد ترسيت جميع العدادات</h5>
+                    <button type="button" class="btn-close btn-close-white"
+                            @onclick="CloseResetModal"></button>
+                </div>
+
+                <div class="modal-body text-center p-4">
+                    <p class="fw-bold text-danger mb-3">
+                        هذا الإجراء سيقوم بترسيت جميع عدادات المستخدمين نهائيًا
+                    </p>
+
+                    <p class="text-muted">
+                        للمتابعة اكتب الكلمة التالية:
+                    </p>
+
+                    <div class="alert alert-light border fw-bold fs-5">
+                        reset
+                    </div>
+
+                    <input type="text"
+                           class="form-control text-center"
+                           placeholder="اكتب reset هنا"
+                           @bind="resetConfirmationText" />
+                </div>
+
+                <div class="modal-footer">
+                    <button class="btn btn-secondary"
+                            @onclick="CloseResetModal">
+                        إلغاء
+                    </button>
+
+                    <button class="btn btn-danger"
+                            disabled="@(resetConfirmationText?.Trim().ToLower() != "reset")"
+                            @onclick="ConfirmResetAllCounters">
+                        تنفيذ الترسيت
+                    </button>
+                </div>
+
+            </div>
+        </div>
+    </div>
+}
 <style>
     /* لمسة جمالية إضافية لصندوق البحث */
     .search-wrapper input:focus {
@@ -108,6 +161,9 @@
     private System.Timers.Timer? debounceTimer;
     private bool showCreateModal, showEditModal, showDeleteModal, showEnableModal, showDisableModal;
     private string selectedUsername = "";
+    private bool showResetAllCountersModal = false;
+    private string resetConfirmationText = "";
+
 
     protected override async Task OnInitializedAsync() => await ReloadUsers();
 
@@ -134,6 +190,24 @@
         users = null; StateHasChanged();
         users = await MikrotikService.GetAllUsersAsync();
         StateHasChanged();
+    }
+
+    private void CloseResetModal()
+    {
+        showResetAllCountersModal = false;
+        resetConfirmationText = "";
+    }
+
+    private async Task ConfirmResetAllCounters()
+    {
+        var result = await MikrotikService.ResetAllCountersAsync();
+
+        if (result)
+        {
+            await ReloadUsers();
+        }
+
+        CloseResetModal();
     }
 
     private void OpenEditModal(string u) { selectedUsername = u; showEditModal = true; }

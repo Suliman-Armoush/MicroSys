@@ -22,8 +22,10 @@ namespace UI.Models.Response
     {
         public int Id { get; set; }
         public string Name { get; set; } = string.Empty;
+    public string ArName { get; set; } = string.Empty;
 
-        [JsonConverter(typeof(JsonStringEnumConverter))]
+
+    [JsonConverter(typeof(JsonStringEnumConverter))]
         public DepartmentTypes Type { get; set; }
 
         public int DvrNum { get; set; }
