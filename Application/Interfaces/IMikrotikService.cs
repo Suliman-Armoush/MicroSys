@@ -29,5 +29,7 @@ namespace Application.Interfaces
         Task<bool> RemoveAllHostsAsync();
         Task<bool> DisableUserAsync(string username);
         Task<bool> EnableUserAsync(string username);
+    Task<bool> ResetAllUserCountersAsync();
+
     }
 }

@@ -26,6 +26,8 @@ namespace UI.Services.Interfaces
         Task<bool> RemoveHostAsync(string macAddress);
 
         Task<bool> RemoveAllHostsAsync();
+    Task<bool> ResetAllCountersAsync();
+
 
 
     }

@@ -26,6 +26,7 @@
                         <tr>
                             <th>#</th>
                             <th>اسم القسم</th>
+                            <th>(اسم القسم (عربي</th>
                             <th>النوع</th>
                             <th>رقم DVR</th>
                             <th>الإجراءات</th>
@@ -37,6 +38,7 @@
                             <tr>
                                 <td>@department.Id</td>
                                 <td>@department.Name</td>
+                                <td>@department.ArName</td>
                                 <td>@GetTypeName(department.Type)</td>
                                 <td>@department.DvrNum</td>
                                 <td>
@@ -67,6 +69,11 @@
                         <label for="deptName" class="form-label">اسم القسم</label>
                         <InputText id="deptName" class="form-control" @bind-Value="currentDepartment.Name" />
                         <ValidationMessage For="@(() => currentDepartment.Name)" />
+                    </div>
+                    <div class="mb-3">
+                        <label for="deptName" class="form-label">(اسم القسم (عربي</label>
+                        <InputText id="deptName" class="form-control" @bind-Value="currentDepartment.ArName" />
+                        <ValidationMessage For="@(() => currentDepartment.ArName)" />
                     </div>
                     <div class="mb-3">
                         <label for="deptType" class="form-label">نوع القسم</label>
@@ -132,6 +139,7 @@
         currentDepartment = new DepartmentRequestDto
         {
             Name = department.Name,
+            ArName = department.ArName,
             Type = department.Type,
             DvrNum = department.DvrNum
         };
