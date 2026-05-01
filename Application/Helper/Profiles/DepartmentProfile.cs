@@ -8,16 +8,20 @@ using AutoMapper;
 
 namespace Application.Helper.Profiles
 {
-    public class DepartmentProfile : Profile
+  public class DepartmentProfile : Profile
+  {
+
+    public DepartmentProfile()
     {
 
-        public DepartmentProfile()
-        {
-          
-            CreateMap<Department, DepartmentResponseDto>().ReverseMap();
-            CreateMap<DepartmentRequestDto, Department>().ReverseMap();
-        }
+      CreateMap<Department, DepartmentResponseDto>().ReverseMap()
+      .ForAllMembers(opt => opt.Condition((src, dest, srcMember) => srcMember != null));
 
 
+      CreateMap<DepartmentRequestDto, Department>()
+    .ForAllMembers(opt => opt.Condition((src, dest, srcMember) => srcMember != null));
     }
+
+
+  }
 }
