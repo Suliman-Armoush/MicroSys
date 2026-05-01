@@ -117,6 +117,12 @@ namespace UI.Services.Reposetories
             return response.IsSuccessStatusCode;
         }
 
+    public async Task<bool> ResetAllCountersAsync()
+    {
+      var response = await _httpClient.DeleteAsync("api/Mikrotik/ResetAllCounters");
+      return response.IsSuccessStatusCode;
     }
+
+  }
 }
 

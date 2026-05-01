@@ -22,6 +22,7 @@ using MediatR;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using FluentValidation;
+using Application.Features.Mikrotik.Command.ResetAllCounters;
 namespace Presentation.Controllers
 {
     [ApiController]
@@ -139,7 +140,33 @@ namespace Presentation.Controllers
             return Ok(servers);
         }
 
+    [HttpDelete("ResetAllCounters")]
+    public async Task<IActionResult> ResetAllCounters()
+    {
+      try
+      {
+        var result = await _mediator.Send(new ResetAllUserCountersCommand());
 
+        if (!result)
+          return BadRequest(new { success = false, message = "Failed to reset all counters." });
 
+        return Ok(new
+        {
+          success = true,
+          message = "All user counters have been reset successfully."
+        });
+      }
+      catch (Exception ex)
+      {
+        return StatusCode(500, new
+        {
+          success = false,
+          message = ex.Message
+        });
+      }
     }
+
+
+
+  }
 }
