@@ -1,4 +1,4 @@
-﻿@page "/"
+﻿@page "/sysInfos"
 @attribute [Authorize(Roles = "Admin")]
 
 @using UI.Models.Request
@@ -8,7 +8,7 @@
 @inject ISysInfosService SysInfosService
 @inject IJSRuntime JS
 
-<PageTitle>Home - MicroSys 🤪</PageTitle>
+<PageTitle>System Settings</PageTitle>
 
 <div class="container mt-4">
 
@@ -78,17 +78,17 @@
                         </div>
                     </div>
 
-                    <div class="col-md-12">
-                        <div class="info-box highlight dvr-box d-flex justify-content-between align-items-center">
-                            <div>
-                                <small>DVR Price</small>
-                            </div>
+                        <div class="col-md-12">
+                            <div class="info-box highlight dvr-box d-flex justify-content-between align-items-center">
+                                <div>
+                                    <small>DVR Price</small>
+                                </div>
 
-                            <div class="price">
-                                @sysInfo.DvrPrice
+                                <div class="price">
+                                    @sysInfo.DvrPrice
+                                </div>
                             </div>
                         </div>
-                    </div>
 
                 </div>
             </div>
@@ -116,7 +116,7 @@
                             <tr>
                                 <td>Segment @i</td>
                                 <td>@GetRange(i)</td>
-                                <td class="fw-bold text-success">@GetPrice(i) </td>
+                                <td class="fw-bold text-success">@GetPrice(i)</td>
                             </tr>
                         }
                     </tbody>
@@ -347,33 +347,33 @@
 }
 
 <style>
-    .info-box {
-        background: #f8f9fa;
-        padding: 15px;
-        border-radius: 10px;
-        border: 1px solid #e3e3e3;
-    }
+.info-box {
+background: #f8f9fa;
+padding: 15px;
+border-radius: 10px;
+border: 1px solid #e3e3e3;
+}
 
-        .info-box small {
-            color: #6c757d;
-        }
+.info-box small {
+color: #6c757d;
+}
 
-        .info-box div {
-            font-size: 18px;
-            font-weight: bold;
-        }
+.info-box div {
+font-size: 18px;
+font-weight: bold;
+}
 
-    .highlight {
-        background: linear-gradient(45deg, #007bff, #6610f2);
-        color: white;
-        text-align: center;
-    }
+.highlight {
+background: linear-gradient(45deg, #007bff, #6610f2);
+color: white;
+text-align: center;
+}
 
-        .highlight .price {
-            font-size: 20px;
-        }
+.highlight .price {
+font-size: 20px;
+}
 
-    .dvr-box {
+    .dvr-box {[]
         padding: 10px;
     }
 

@@ -24,9 +24,10 @@ namespace UI
             services.AddScoped<IMikrotikService, MikrotikService>();
             services.AddScoped<IDepartmentService, DepartmentService>();
             services.AddScoped<IReportService, ReportService>();
+      services.AddScoped<ISysInfosService, SysInfosService>();
 
-            // يمكنك إضافة أي خدمات أخرى هنا مستقبلاً مثل IDepartmentService, IUserService إلخ.
-        }
+      // يمكنك إضافة أي خدمات أخرى هنا مستقبلاً مثل IDepartmentService, IUserService إلخ.
+    }
     }
 
 }
