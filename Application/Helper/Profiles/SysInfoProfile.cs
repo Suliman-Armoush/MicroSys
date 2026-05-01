@@ -8,14 +8,16 @@ using System.Text;
 
 namespace Application.Helper.Profiles
 {
-    public class SysInfoProfile : Profile
+  public class SysInfoProfile : Profile
+  {
+    public SysInfoProfile()
     {
-        public SysInfoProfile()
-        {
-            CreateMap<SysInfo, SysInfoResponseDto>();
+      CreateMap<SysInfo, SysInfoResponseDto>()
+      .ForAllMembers(opt => opt.Condition((src, dest, srcMember) => srcMember != null));
+
 
       CreateMap<SysInfoRequestDto, SysInfo>()
-          .ForAllMembers(opt => opt.Condition((src, dest, srcMember) => srcMember != null));
+    .ForAllMembers(opt => opt.Condition((src, dest, srcMember) => srcMember != null));
     }
   }
 }

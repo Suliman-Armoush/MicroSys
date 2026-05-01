@@ -50,6 +50,7 @@ namespace Application.Features.Mikrotik.Queries.ReportDetailedConsumption
             return new DetailedDepartmentConsumptionResponse
             {
               DepartmentName = deptKey.ToUpper(), // عرض اسم القسم بأحرف كبيرة للتنسيق
+              ArName = deptInfo?.ArName ?? "Unknown",
               TotalConsumptionGB = Math.Round(g.Sum(x => x.BytesInRaw + x.BytesOutRaw) / Math.Pow(1024, 3), 2),
               Users = g.Select(u => new UserConsumptionDetail
               {
