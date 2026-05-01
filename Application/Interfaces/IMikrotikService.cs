@@ -17,7 +17,7 @@ namespace Application.Interfaces
         Task<MikrotikUserInformationResponse> UpdateUserAsync(UpdateMikrotikUserRequest request, string currentUsername);
         Task<bool> IsUserExistsAsync(string username);
         Task<MikrotikUserInformationResponse> GetUserByNameAsync(string username);
-        Task<List<MikrotikUserInformationResponse>> SearchUsersAsync(string term);
+        Task<List<MikrotikUserResponse>> SearchUsersAsync(string term);
         Task<bool> DeleteUserAsync(string username);
 
         Task<bool> UpdateUserStatusAsync(string username, bool isDisabled);
@@ -26,6 +26,8 @@ namespace Application.Interfaces
         Task<List<MikrotikHostResponse>> GetAllHostsAsync();
         Task<List<MikrotikHostResponse>> SearchHostsAsync(string term);
         Task<bool> RemoveHostByMacAsync(string macAddress);
-        Task<bool> RemoveAllHostsAsync(); 
+        Task<bool> RemoveAllHostsAsync();
+        Task<bool> DisableUserAsync(string username);
+        Task<bool> EnableUserAsync(string username);
     }
 }

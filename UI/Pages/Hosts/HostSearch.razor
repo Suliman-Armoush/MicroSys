@@ -1,0 +1,28 @@
+﻿<div class="search-wrapper position-relative" style="width: 350px;">
+    <input type="text"
+           class="form-control rounded-pill ps-5 py-2 border-primary shadow-none"
+           placeholder="بحث بالعنوان الفيزيائي، IP أو الملاحظات..."
+           @bind="SearchTerm"
+           @bind:event="oninput"
+           @onkeyup="OnSearchChanged"
+           style="border-width: 2px;" />
+    
+    <i class="bi bi-search position-absolute top-50 start-0 translate-middle-y ms-3 text-primary"></i>
+
+    @if (IsLoading)
+    {
+        <div class="spinner-border spinner-border-sm text-primary position-absolute top-50 end-0 translate-middle-y me-3"></div>
+    }
+</div>
+
+@code {
+    private string SearchTerm { get; set; } = "";
+    
+    [Parameter] public bool IsLoading { get; set; }
+    [Parameter] public EventCallback<string> OnSearch { get; set; }
+
+    private async Task OnSearchChanged()
+    {
+        await OnSearch.InvokeAsync(SearchTerm);
+    }
+}

@@ -2,80 +2,80 @@
 @using UI.Models.Response
 @using UI.Services.Interfaces
 @inject IMikrotikService MikrotikService
-
-<PageTitle>مستخدمي الميكروتيك</PageTitle>
+@inject NavigationManager Navigation
 
 <div class="container-fluid mt-4">
-    @* رأس الصفحة *@
+    @* --- Header Section --- *@
     <div class="d-flex justify-content-between align-items-center mb-4" dir="rtl">
-        <h3 class="fw-bold text-dark m-0">مستخدمي الميكروتيك</h3>
-        <button class="btn btn-primary shadow-sm px-4 fw-bold" @onclick="() => showCreateModal = true">
-            إضافة مستخدم جديد
-        </button>
+        <div class="d-flex align-items-center gap-3">
+            @* زر الرجوع بنص صريح *@
+            <button class="btn btn-outline-dark px-3 shadow-sm d-flex align-items-center gap-2"
+                    @onclick='() => Navigation.NavigateTo("/")'>
+                <i class="bi bi-arrow-right"></i>
+                <span>الرجوع</span>
+            </button>
+            <h3 class="fw-bold m-0">مستخدمي الميكروتيك</h3>
+        </div>
+
+        @* تصميم البحث الجديد والأنيق *@
+        <div class="search-wrapper position-relative" style="width: 350px;">
+            <input type="text"
+                   class="form-control rounded-pill ps-5 py-2 border-primary shadow-none"
+                   placeholder="بحث عن مستخدم..."
+                   @bind="searchTerm"
+                   @bind:event="oninput"
+                   @onkeyup="HandleSearch"
+                   style="border-width: 2px;" />
+            <i class="bi bi-search position-absolute top-50 start-0 translate-middle-y ms-3 text-primary"></i>
+            @if (isSearching)
+            {
+                <div class="spinner-border spinner-border-sm text-primary position-absolute top-50 end-0 translate-middle-y me-3"></div>
+            }
+        </div>
+
+        <button class="btn btn-primary shadow-sm px-4 fw-bold" @onclick="() => showCreateModal = true">إضافة مستخدم جديد</button>
     </div>
 
-    @* الجدول المقلوب بالكامل *@
-    <div class="card shadow-sm border-0 rounded-3">
+    @* --- Table Section (نفس تصميمك الأصلي) --- *@
+    <div class="card shadow-sm border-0">
         <div class="card-body p-0">
             <div class="table-responsive">
-                <table class="table table-hover align-middle mb-0 text-end" dir="rtl">
-                    <thead class="bg-light">
-                        <tr class="text-dark fw-bold">
-                            @* عكس ترتيب العناوين *@
-                            <th class="py-3 pe-4 text-center" style="width: 10%;">الإجراءات</th>
-                            <th class="text-center" style="width: 15%;">الإجمالي (Total GB)</th>
-                            <th class="text-center" style="width: 12%;">تحميل (Download GB)</th>
-                            <th class="text-center" style="width: 12%;">رفع (Upload GB)</th>
-                            <th class="text-start" style="width: 25%;">الملاحظات (Comment)</th>
-                            <th class="text-start ps-4" style="width: 20%;">المستخدم (Username)</th>
+                <table class="table align-middle mb-0 text-end" dir="rtl">
+                    <thead class="bg-light fw-bold">
+                        <tr>
+                            <th class="py-3 text-center">الإجراءات</th>
+                            <th class="text-center">الإجمالي (Total GB)</th>
+                            <th class="text-center">تحميل (Download GB)</th>
+                            <th class="text-center">رفع (Upload GB)</th>
+                            <th class="text-start">الملاحظات (Comment)</th>
+                            <th class="text-start ps-3">المستخدم (Username)</th>
                         </tr>
                     </thead>
                     <tbody>
                         @if (users == null)
                         {
-                            <tr>
-                                <td colspan="6" class="text-center py-5">
-                                    <div class="spinner-border text-primary" role="status"></div>
-                                </td>
-                            </tr>
+                            <tr><td colspan="6" class="text-center py-5"><div class="spinner-border text-primary"></div></td></tr>
                         }
                         else
                         {
                             @foreach (var user in users)
                             {
                                 <tr>
-                                    @* 1. الإجراءات (أصبحت في أقصى اليمين) *@
-                                    <td class="pe-4 text-center">
-                                        <button class="btn btn-sm btn-outline-warning fw-bold px-3 shadow-sm" 
-                                                @onclick="() => OpenEditModal(user.Username)">
-                                            تعديل
-                                        </button>
-                                    </td>
-
-                                    @* 2. الإجمالي *@
                                     <td class="text-center">
-                                        <span class="badge bg-primary px-3 py-2 rounded-pill shadow-sm" style="min-width: 95px;">
-                                            GB @user.Total.ToString("N2")
-                                        </span>
+                                        <div class="d-flex justify-content-center gap-1">
+                                            <button class="btn btn-sm btn-outline-success" @onclick="() => OpenEnableModal(user.Username)">تفعيل</button>
+                                            <button class="btn btn-sm btn-outline-secondary" @onclick="() => OpenDisableModal(user.Username)">تعطيل</button>
+                                            <button class="btn btn-sm btn-outline-warning" @onclick="() => OpenEditModal(user.Username)">تعديل</button>
+                                            <button class="btn btn-sm btn-outline-danger" @onclick="() => OpenDeleteModal(user.Username)">حذف</button>
+                                        </div>
                                     </td>
-
-                                    @* 3. تحميل (أخضر) *@
-                                    <td class="text-center text-success fw-bold">
-                                        @user.BytesOut.ToString("N2")
+                                    <td class="text-center">
+                                        <span class="badge rounded-pill bg-primary px-3 py-2">GB @user.Total.ToString("N2")</span>
                                     </td>
-
-                                    @* 4. رفع (أحمر) *@
-                                    <td class="text-center text-danger fw-bold">
-                                        @user.BytesIn.ToString("N2")
-                                    </td>
-
-                                    @* 5. الملاحظات *@
-                                    <td class="text-start text-muted small">@user.Comment</td>
-
-                                    @* 6. المستخدم (أصبح في أقصى اليسار) *@
-                                    <td class="text-start ps-4">
-                                        <span class="text-primary fw-bold">@user.Username</span>
-                                    </td>
+                                    <td class="text-center fw-bold" style="color: #28a745;">@user.BytesOut.ToString("N2")</td>
+                                    <td class="text-center fw-bold" style="color: #dc3545;">@user.BytesIn.ToString("N2")</td>
+                                    <td class="text-start text-muted">@user.Comment</td>
+                                    <td class="text-start ps-3 fw-bold text-primary">@user.Username</td>
                                 </tr>
                             }
                         }
@@ -87,36 +87,57 @@
 </div>
 
 @* المودالات *@
-<CreateMikrotikUserModal 
-    IsVisible="showCreateModal" 
-    OnClose="() => showCreateModal = false" 
-    OnUserCreated="ReloadUsers" />
+<CreateMikrotikUserModal IsVisible="showCreateModal" OnClose="() => showCreateModal = false" OnUserCreated="ReloadUsers" />
+<EditMikrotikUserModal IsVisible="showEditModal" CurrentUsername="@selectedUsername" OnClose="() => showEditModal = false" OnUserUpdated="ReloadUsers" />
+<DeleteMikrotikUserModal IsVisible="showDeleteModal" Username="@selectedUsername" OnClose="() => showDeleteModal = false" OnUserDeleted="ReloadUsers" />
+<EnableUserModal IsVisible="showEnableModal" Username="@selectedUsername" OnClose="() => showEnableModal = false" OnUserEnabled="ReloadUsers" />
+<DisableUserModal IsVisible="showDisableModal" Username="@selectedUsername" OnClose="() => showDisableModal = false" OnUserDisabled="ReloadUsers" />
 
-<EditMikrotikUserModal 
-    IsVisible="showEditModal" 
-    CurrentUsername="@selectedUsername" 
-    OnClose="() => showEditModal = false" 
-    OnUserUpdated="ReloadUsers" />
+<style>
+    /* لمسة جمالية إضافية لصندوق البحث */
+    .search-wrapper input:focus {
+        background-color: #f8f9fa;
+        box-shadow: 0 4px 10px rgba(13, 110, 253, 0.15) !important;
+    }
+</style>
 
 @code {
     private List<MikrotikUserResponseDto>? users;
-    private bool showCreateModal = false;
-    private bool showEditModal = false;
+    private string searchTerm = "";
+    private bool isSearching = false;
+    private System.Timers.Timer? debounceTimer;
+    private bool showCreateModal, showEditModal, showDeleteModal, showEnableModal, showDisableModal;
     private string selectedUsername = "";
 
     protected override async Task OnInitializedAsync() => await ReloadUsers();
 
-    private void OpenEditModal(string username)
+    private void HandleSearch()
     {
-        selectedUsername = username;
-        showEditModal = true;
+        debounceTimer?.Stop();
+        debounceTimer = new System.Timers.Timer(400);
+        debounceTimer.Elapsed += async (s, e) =>
+        {
+            isSearching = true;
+            await InvokeAsync(StateHasChanged);
+            users = string.IsNullOrWhiteSpace(searchTerm)
+                ? await MikrotikService.GetAllUsersAsync()
+                : await MikrotikService.SearchUsersAsync(searchTerm);
+            isSearching = false;
+            await InvokeAsync(StateHasChanged);
+        };
+        debounceTimer.AutoReset = false;
+        debounceTimer.Start();
     }
 
     private async Task ReloadUsers()
     {
-        users = null;
-        StateHasChanged();
+        users = null; StateHasChanged();
         users = await MikrotikService.GetAllUsersAsync();
         StateHasChanged();
     }
+
+    private void OpenEditModal(string u) { selectedUsername = u; showEditModal = true; }
+    private void OpenDeleteModal(string u) { selectedUsername = u; showDeleteModal = true; }
+    private void OpenEnableModal(string u) { selectedUsername = u; showEnableModal = true; }
+    private void OpenDisableModal(string u) { selectedUsername = u; showDisableModal = true; }
 }

@@ -7,7 +7,7 @@ using System.Text;
 
 namespace Application.Features.Mikrotik.Queries.SearchUser
 {
-    public class SearchMikrotikUsersHandler : IRequestHandler<SearchMikrotikUsersQuery, List<MikrotikUserInformationResponse>>
+    public class SearchMikrotikUsersHandler : IRequestHandler<SearchMikrotikUsersQuery, List<MikrotikUserResponse>>
     {
         private readonly IMikrotikService _mikrotikService;
 
@@ -16,7 +16,7 @@ namespace Application.Features.Mikrotik.Queries.SearchUser
             _mikrotikService = mikrotikService;
         }
 
-        public async Task<List<MikrotikUserInformationResponse>> Handle(SearchMikrotikUsersQuery request, CancellationToken cancellationToken)
+        public async Task<List<MikrotikUserResponse>> Handle(SearchMikrotikUsersQuery request, CancellationToken cancellationToken)
         {
             return await _mikrotikService.SearchUsersAsync(request.Term);
         }
