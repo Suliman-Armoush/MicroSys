@@ -7,6 +7,8 @@ namespace Application.DTOs.Response
   public class DetailedDepartmentConsumptionResponse
   {
     public string DepartmentName { get; set; } = null!;
+    public string ArName { get; set; }
+
     public double TotalConsumptionGB { get; set; }
     public List<UserConsumptionDetail> Users { get; set; } = new();
     public string Type { get; set; }

@@ -5,11 +5,13 @@ using System.Text;
 
 namespace Application.DTOs.Response
 {
-    public class DepartmentResponseDto
-    {
-        public int Id { get; set; }
-        public string Name { get; set; }
-        public DepartmentTypes Type { get; set; }
-        public int DvrNum { get; set; } = 0;
-    }
+  public class DepartmentResponseDto
+  {
+    public int Id { get; set; }
+    public string Name { get; set; }
+    public string ArName { get; set; }
+
+    public DepartmentTypes Type { get; set; }
+    public int DvrNum { get; set; } = 0;
+  }
 }
