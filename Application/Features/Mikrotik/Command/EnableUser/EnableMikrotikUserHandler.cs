@@ -17,7 +17,7 @@ namespace Application.Features.Mikrotik.Command.EnableUser
 
         public async Task<bool> Handle(EnableMikrotikUserCommand request, CancellationToken cancellationToken)
         {
-            return await _mikrotikService.UpdateUserStatusAsync(request.Username, isDisabled: false);
+            return await _mikrotikService.EnableUserAsync(request.Username);
         }
     }
 }

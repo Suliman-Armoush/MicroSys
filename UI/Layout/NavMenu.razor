@@ -32,15 +32,22 @@
                 @if (expandMikrotik)
                 {
                     <div class="submenu-container">
-                        @* رابط المستخدمين *@
-                        <div class="nav-item px-3 ms-4">
+                        @* 1. Users *@
+                        <div class="nav-item px-3 ms-3">
                             <NavLink class="nav-link submenu-link" href="mikrotik-users">
                                 <span class="oi oi-people me-2" aria-hidden="true"></span> Users
                             </NavLink>
                         </div>
                         
-                        @* رابط التقارير - الإضافة الجديدة هنا *@
-                        <div class="nav-item px-3 ms-4">
+                        @* 2. Hosts *@
+                        <div class="nav-item px-3 ms-3">
+                            <NavLink class="nav-link submenu-link" href="mikrotik-hosts">
+                                <span class="bi bi-laptop me-2" aria-hidden="true"></span> Hosts
+                            </NavLink>
+                        </div>
+
+                        @* 3. Reports *@
+                        <div class="nav-item px-3 ms-3">
                             <NavLink class="nav-link submenu-link" href="reports">
                                 <span class="oi oi-document me-2" aria-hidden="true"></span> Reports
                             </NavLink>
@@ -71,8 +78,6 @@
                         </small>
                     </NavLink>
                 </div>
-
-               
             </Authorized>
             
             <NotAuthorized>
@@ -108,49 +113,46 @@
 }
 
 <style>
-    /* التنسيقات القديمة كما هي دون تغيير */
+    /* تنسيق الحاوية الرئيسية للقائمة الفرعية */
+    .submenu-container {
+        background-color: rgba(0, 0, 0, 0.2);
+        margin: 5px 15px;
+        border-radius: 8px;
+        padding: 5px 0;
+        border: 1px solid rgba(255, 255, 255, 0.05);
+    }
+
+    /* توحيد شكل الروابط الفرعية */
+    .submenu-link {
+        color: #adb5bd !important;
+        font-size: 0.85rem !important;
+        padding: 8px 15px !important;
+        display: flex !important;
+        align-items: center;
+        transition: all 0.2s ease;
+    }
+
+        .submenu-link:hover {
+            color: white !important;
+            background-color: rgba(255, 255, 255, 0.1);
+            border-radius: 5px;
+            padding-left: 20px !important;
+        }
+
+    /* تنسيق زر القائمة المنسدلة الرئيسي */
     .dropdown-toggle-custom {
         display: flex;
         align-items: center;
         cursor: pointer;
         padding: 0.5rem 1rem;
         border-radius: 4px;
-        transition: all 0.2s ease;
         color: #d7d7d7;
+        transition: all 0.2s ease;
     }
-
-        .dropdown-toggle-custom:hover {
-            background-color: rgba(255, 255, 255, 0.1);
-            color: white;
-        }
 
     .active-parent {
-        background-color: rgba(255, 255, 255, 0.05);
-        border-left: 4px solid #007bff;
+        background-color: rgba(0, 123, 255, 0.2);
+        border-right: 4px solid #007bff; /* لتحديد القائمة المفتوحة */
         color: white;
-        font-weight: 500;
-    }
-
-    .submenu-container {
-        background-color: rgba(0, 0, 0, 0.15);
-        margin: 2px 8px;
-        border-radius: 4px;
-        padding-bottom: 5px; /* مسافة بسيطة من الأسفل */
-    }
-
-    .submenu-link {
-        font-size: 0.85rem !important;
-        opacity: 0.85;
-        padding: 0.4rem 1rem !important;
-    }
-
-        .submenu-link:hover {
-            opacity: 1;
-            padding-left: 1.5rem !important;
-            color: #007bff !important;
-        }
-
-    .logout-link:hover {
-        background-color: rgba(220, 53, 69, 0.1) !important;
     }
 </style>

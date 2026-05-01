@@ -152,7 +152,7 @@ namespace Infrastructure.MikroTik.Services
                 existingUser.Server = request.Server;
             }
 
-           
+
             if (request.LimitBytes.HasValue && request.LimitBytes.Value > 0)
             {
                 existingUser.LimitBytesTotal = request.LimitBytes.Value;
@@ -168,7 +168,7 @@ namespace Infrastructure.MikroTik.Services
             return new MikrotikUserInformationResponse
             {
                 Username = existingUser.Name,
-                Server = existingUser.Server, 
+                Server = existingUser.Server,
                 Profile = existingUser.Profile,
                 Comment = existingUser.Comment,
                 LimitGB = existingUser.LimitBytesTotal > 0 ? (double)existingUser.LimitBytesTotal / 1073741824 : 0
@@ -185,12 +185,10 @@ namespace Infrastructure.MikroTik.Services
         {
             using var connection = _client.Connect();
 
-            // استخدام LoadAll بما أنها شغالة عندك
             var user = connection.LoadAll<HotspotUser>().FirstOrDefault(u => u.Name == username);
 
             if (user == null) return null;
 
-            // حساب الـ LimitGB من الـ LimitBytesTotal الموجود في كلاس HotspotUser
             double? limitGb = null;
             if (user.LimitBytesTotal > 0)
             {
@@ -209,14 +207,14 @@ namespace Infrastructure.MikroTik.Services
         }
 
 
-        public async Task<List<MikrotikUserInformationResponse>> SearchUsersAsync(string term)
+        public async Task<List<MikrotikUserResponse>> SearchUsersAsync(string term)
         {
             using var connection = _client.Connect();
 
             var allUsers = connection.LoadAll<HotspotUser>();
 
             if (string.IsNullOrWhiteSpace(term))
-                return MapToResponseList(allUsers.Take(20).ToList()); 
+                return MapToResponseList(allUsers.Take(20).ToList());
 
             var filteredUsers = allUsers.Where(u =>
                 (u.Name != null && u.Name.Contains(term, StringComparison.OrdinalIgnoreCase)) ||
@@ -226,15 +224,14 @@ namespace Infrastructure.MikroTik.Services
             return MapToResponseList(filteredUsers);
         }
 
-        private List<MikrotikUserInformationResponse> MapToResponseList(List<HotspotUser> users)
+        private List<MikrotikUserResponse> MapToResponseList(List<HotspotUser> users)
         {
-            return users.Select(u => new MikrotikUserInformationResponse
+            return users.Select(u => new MikrotikUserResponse
             {
-                Username = u.Name,
-                Profile = u.Profile,
-                Server = u.Server,
                 Comment = u.Comment,
-                LimitGB = u.LimitBytesTotal > 0 ? (double)u.LimitBytesTotal / 1073741824 : 0
+                Username = u.Name,
+                BytesInRaw = u.BytesIn,
+                BytesOutRaw = u.BytesOut
             }).ToList();
         }
 
@@ -260,7 +257,7 @@ namespace Infrastructure.MikroTik.Services
 
             if (user == null) return false;
 
-            user.Disabled = isDisabled; 
+            user.Disabled = isDisabled;
             connection.Save(user);
             return true;
         }
@@ -288,6 +285,15 @@ namespace Infrastructure.MikroTik.Services
             }).ToList();
         }
 
+        public async Task<bool> DisableUserAsync(string username)
+        {
+            return await UpdateUserStatusAsync(username, true);
+        }
+
+        public async Task<bool> EnableUserAsync(string username)
+        {
+            return await UpdateUserStatusAsync(username, false);
+        }
 
         public async Task<List<MikrotikHostResponse>> GetAllHostsAsync()
         {
@@ -300,7 +306,7 @@ namespace Infrastructure.MikroTik.Services
             {
                 sentence.Words.TryGetValue("mac-address", out string mac);
                 sentence.Words.TryGetValue("address", out string ip);
-                sentence.Words.TryGetValue("uptime", out string uptime); 
+                sentence.Words.TryGetValue("uptime", out string uptime);
                 sentence.Words.TryGetValue("comment", out string comment);
 
                 return new MikrotikHostResponse
@@ -356,7 +362,7 @@ namespace Infrastructure.MikroTik.Services
             }
             catch (Exception ex) when (ex.Message.Contains("!empty") || ex.Message.Contains("not supported"))
             {
-                
+
                 return false;
             }
         }
@@ -374,7 +380,7 @@ namespace Infrastructure.MikroTik.Services
                 if (allHosts == null || !allHosts.Any())
                     return true;
 
-               
+
                 var allIds = allHosts
                     .Select(h => h.Words.TryGetValue(".id", out string id) ? id : null)
                     .Where(id => !string.IsNullOrEmpty(id))
@@ -382,7 +388,7 @@ namespace Infrastructure.MikroTik.Services
 
                 if (!allIds.Any()) return true;
 
-               
+
                 var deleteCommand = connection.CreateCommand("/ip/hotspot/host/remove");
                 deleteCommand.AddParameter("numbers", string.Join(",", allIds));
                 deleteCommand.ExecuteNonQuery();

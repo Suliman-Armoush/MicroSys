@@ -3,7 +3,7 @@ using MediatR;
 using System;
 using System.Collections.Generic;
 using System.Text;
-
+using FluentValidation;
 namespace Application.Features.Mikrotik.Command.DisableUser
 {
     public class DisableMikrotikUserHandler : IRequestHandler<DisableMikrotikUserCommand, bool>
@@ -13,7 +13,7 @@ namespace Application.Features.Mikrotik.Command.DisableUser
 
         public async Task<bool> Handle(DisableMikrotikUserCommand request, CancellationToken ct)
         {
-            return await _service.UpdateUserStatusAsync(request.Username, isDisabled: true);
+            return await _service.DisableUserAsync(request.Username);
         }
     }
 }

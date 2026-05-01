@@ -6,5 +6,5 @@ using System.Text;
 
 namespace Application.Features.Mikrotik.Queries.SearchUser
 {
-    public record SearchMikrotikUsersQuery(string Term) : IRequest<List<MikrotikUserInformationResponse>>;
+    public record SearchMikrotikUsersQuery(string Term) : IRequest<List<MikrotikUserResponse>>;
 }
