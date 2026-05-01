@@ -21,7 +21,7 @@ using Application.Features.Mikrotik.Queries.SearchUser;
 using MediatR;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-
+using FluentValidation;
 namespace Presentation.Controllers
 {
     [ApiController]
@@ -48,7 +48,7 @@ namespace Presentation.Controllers
             var result = await _mediator.Send(new GetAllMikrotikProfilesQuery());
             return Ok(result);
         }
-     
+
 
         [HttpPost("Create")]
         public async Task<ActionResult<MikrotikUserInformationResponse>> CreateUser([FromBody] CreateMikrotikUserCommand command)
@@ -75,7 +75,7 @@ namespace Presentation.Controllers
         }
 
         [HttpGet("Search")]
-        public async Task<ActionResult<List<MikrotikUserInformationResponse>>> Search([FromQuery] string term)
+        public async Task<ActionResult<List<MikrotikUserResponse>>> Search([FromQuery] string term)
         {
             var results = await _mediator.Send(new SearchMikrotikUsersQuery(term));
 
@@ -96,20 +96,40 @@ namespace Presentation.Controllers
         [HttpPut("{username}/Disable")]
         public async Task<IActionResult> DisableUser(string username)
         {
-            var result = await _mediator.Send(new DisableMikrotikUserCommand(username));
-
-                return Ok(new { message = "User disabled successfully." });
-
+            try
+            {
+                // لاحظ هنا: الـ Command يحتاج Username
+                var result = await _mediator.Send(new DisableMikrotikUserCommand(username));
+                return Ok(new { success = true, message = "User disabled successfully." });
+            }
+            catch (ValidationException ex)
+            {
+                // هذا الجزء هو المسؤول عن إرسال رسالة "This user is already disabled" للفرونت
+                return BadRequest(ex.Errors.FirstOrDefault()?.ErrorMessage ?? "Validation failed");
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, ex.Message);
+            }
         }
-
 
         [HttpPut("{username}/Enable")]
         public async Task<IActionResult> EnableUser(string username)
         {
-            var result = await _mediator.Send(new EnableMikrotikUserCommand(username));
+            try
+            {
+                var result = await _mediator.Send(new EnableMikrotikUserCommand(username));
 
-                return Ok(new { message = "User enabled successfully." });
-
+                return Ok(new { success = true, message = "User enabled successfully." });
+            }
+            catch (ValidationException ex)
+            {
+                return BadRequest(ex.Errors.FirstOrDefault()?.ErrorMessage ?? "Validation failed");
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, "Internal server error: " + ex.Message);
+            }
         }
 
         [HttpGet("Get/Servers")]

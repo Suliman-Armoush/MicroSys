@@ -12,5 +12,21 @@ namespace UI.Services.Interfaces
 
         Task<MikrotikUserInformationResponseDto?> GetUserByNameAsync(string username);
         Task<MikrotikUserInformationResponseDto?> UpdateUserAsync(string currentUsername, UpdateMikrotikUserRequestDto model);
+
+        Task<bool> DeleteUserAsync(string username);
+
+        Task<string?> DisableUserAsync(string username);
+        Task<string?> EnableUserAsync(string username);
+        Task<List<MikrotikUserResponseDto>> SearchUsersAsync(string term);
+
+
+        Task<List<MikrotikHostResponse>> GetAllHostsAsync();
+        Task<List<MikrotikHostResponse>> SearchHostsAsync(string term);
+
+        Task<bool> RemoveHostAsync(string macAddress);
+
+        Task<bool> RemoveAllHostsAsync();
+
+
     }
 }

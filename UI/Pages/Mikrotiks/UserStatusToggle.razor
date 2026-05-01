@@ -1,0 +1,93 @@
+﻿@* UI/Shared/Components/UserStatusToggle.razor *@
+@using UI.Services.Interfaces
+@inject IMikrotikService MikrotikService
+
+<div class="d-inline-block">
+    @if (IsDisabled)
+    {
+        <button class="btn btn-sm btn-success fw-bold px-3 shadow-sm"
+                @onclick="HandleEnable" disabled="@isPending" title="تفعيل المستخدم">
+            @if (isPending)
+            {
+                <span class="spinner-border spinner-border-sm"></span>
+            }
+            else
+            {
+                <i class="bi bi-play-fill"></i> <span>تفعيل</span>
+            }
+        </button>
+    }
+    else
+    {
+        <button class="btn btn-sm btn-outline-secondary fw-bold px-3 shadow-sm"
+                @onclick="HandleDisable" disabled="@isPending" title="تعطيل المستخدم">
+            @if (isPending)
+            {
+                <span class="spinner-border spinner-border-sm"></span>
+            }
+            else
+            {
+                <i class="bi bi-pause-fill"></i> <span>تعطيل</span>
+            }
+        </button>
+    }
+
+    @* عرض رسالة خطأ صغيرة أسفل الزر في حال الفشل *@
+    @if (!string.IsNullOrEmpty(localError))
+    {
+        <div class="position-absolute badge bg-danger mt-1" style="z-index:100; font-size: 0.7rem;">
+            @localError
+        </div>
+    }
+</div>
+
+@code {
+    [Parameter] public string Username { get; set; } = "";
+    [Parameter] public bool IsDisabled { get; set; }
+    [Parameter] public EventCallback OnStatusChanged { get; set; }
+
+    private bool isPending = false;
+    private string? localError;
+
+    private async Task HandleEnable()
+    {
+        await ExecuteStatusChange(async () => await MikrotikService.EnableUserAsync(Username));
+    }
+
+    private async Task HandleDisable()
+    {
+        await ExecuteStatusChange(async () => await MikrotikService.DisableUserAsync(Username));
+    }
+
+    private async Task ExecuteStatusChange(Func<Task<string?>> action)
+    {
+        isPending = true;
+        localError = null;
+        
+        try
+        {
+            var error = await action();
+            
+            if (string.IsNullOrEmpty(error))
+            {
+                // نجاح
+                await OnStatusChanged.InvokeAsync();
+            }
+            else
+            {
+                // فشل (مثل: المستخدم مفعل بالفعل)
+                localError = error;
+                // إخفاء الخطأ تلقائياً بعد 3 ثواني
+                _ = Task.Delay(3000).ContinueWith(_ => { localError = null; InvokeAsync(StateHasChanged); });
+            }
+        }
+        catch (Exception)
+        {
+            localError = "خطأ في الاتصال";
+        }
+        finally
+        {
+            isPending = false;
+        }
+    }
+}

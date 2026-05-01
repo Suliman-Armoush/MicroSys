@@ -1,0 +1,65 @@
+﻿@* DeleteAllHostsButton.razor *@
+<button class="btn-clear-all-styled shadow-sm" @onclick="RequestDelete">
+    <div class="d-flex align-items-center gap-2">
+        <i class="bi bi-trash3-fill"></i>
+        <span>حذف القائمة</span>
+    </div>
+</button>
+
+<style>
+    .btn-clear-all-styled {
+        background: linear-gradient(135deg, #f8d7da 0%, #dc3545 100%);
+        border: 1px solid #dc3545;
+        color: white;
+        padding: 10px 24px;
+        border-radius: 50px;
+        font-weight: bold;
+        position: relative;
+        overflow: hidden;
+        transition: all 0.3s ease;
+        cursor: pointer;
+        border: none;
+    }
+
+        .btn-clear-all-styled span, .btn-clear-all-styled i {
+            position: relative;
+            z-index: 2;
+            color: white;
+        }
+
+        /* تأثير الطبقة اللامعة */
+        .btn-clear-all-styled::before {
+            content: "";
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.2), transparent);
+            transition: 0.5s;
+            z-index: 1;
+        }
+
+        .btn-clear-all-styled:hover::before {
+            left: 100%; /* ومضة تمر عبر الزر عند تمرير الماوس */
+        }
+
+        .btn-clear-all-styled:hover {
+            transform: translateY(-3px); /* يرتفع للأعلى قليلاً */
+            box-shadow: 0 8px 20px rgba(220, 53, 69, 0.4) !important;
+        }
+
+        .btn-clear-all-styled:active {
+            transform: translateY(1px); /* ينخفض عند الضغط */
+            box-shadow: 0 2px 5px rgba(220, 53, 69, 0.2) !important;
+        }
+</style>
+
+@code {
+    [Parameter] public EventCallback OnClickRequest { get; set; }
+
+    private async Task RequestDelete()
+    {
+        await OnClickRequest.InvokeAsync();
+    }
+}

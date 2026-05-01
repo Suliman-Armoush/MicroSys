@@ -1,0 +1,153 @@
+﻿@page "/mikrotik-hosts"
+@using UI.Models.Response
+@using UI.Services.Interfaces
+@inject IMikrotikService MikrotikService
+@inject NavigationManager Navigation
+
+<div class="container-fluid mt-4" dir="rtl">
+    @* --- Header Section --- *@
+    <div class="d-flex justify-content-between align-items-center mb-4 px-2">
+        <div class="d-flex align-items-center gap-3">
+            <button class="btn btn-dark rounded-pill px-4 shadow-sm fw-bold" @onclick='() => Navigation.NavigateTo("/")'>
+                الرجوع
+            </button>
+            <h3 class="fw-bold m-0 text-dark">الأجهزة المتصلة <span class="text-primary">(Hosts)</span></h3>
+        </div>
+
+        @* حقل البحث *@
+        <div class="search-wrapper position-relative" style="flex-grow: 1; max-width: 450px; margin: 0 30px;">
+            <input type="text" class="form-control rounded-pill ps-5 py-2 border-0 shadow-sm custom-search-input"
+                   placeholder="ابحث عن جهاز، عنوان IP، أو ماك..." @bind="searchTerm" @bind:event="oninput" @onkeyup="HandleSearch" />
+            <i class="bi bi-search position-absolute top-50 start-0 translate-middle-y ms-3 text-muted"></i>
+        </div>
+
+        <div class="d-flex gap-3 align-items-center">
+            <button class="btn-gradient-blue shadow-sm" @onclick="ReloadHosts">
+                تحديث القائمة
+            </button>
+            <DeleteAllHostsButton OnClickRequest="() => OpenModal(true)" />
+        </div>
+    </div>
+
+    @* --- Table Section --- *@
+    <div class="card border-0 shadow-lg rounded-4 overflow-hidden main-table-card">
+        <div class="card-body p-0">
+            <div class="table-responsive">
+                <table class="table table-hover align-middle mb-0 text-end">
+                    <thead>
+                        <tr class="table-header-row">
+                            <th class="py-3 text-center" style="width: 120px;">العمليات</th>
+                            <th class="text-center">وقت الاتصال</th>
+                            <th class="text-center">عنوان IP</th>
+                            <th class="text-start">العنوان الفيزيائي (MAC)</th>
+                            <th class="text-start">الملاحظات</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @if (hosts == null)
+                        {
+                            <tr><td colspan="5" class="text-center py-5"><div class="spinner-border text-primary"></div></td></tr>
+                        }
+                        else
+                        {
+                            @foreach (var host in hosts)
+                            {
+                                <tr class="host-row-item">
+                                    <td class="text-center">
+                                        @* تم تعديل الاسم هنا ليطابق HostDeleteButton.razor *@
+                                        <HostDeleteButton OnClickRequest="() => OpenModal(false, host.MacAddress)" />
+                                    </td>
+                                    <td class="text-center fw-medium text-secondary">@host.Uptime</td>
+                                    <td class="text-center">
+                                        <span class="badge shadow-sm ip-badge-lux">@host.IpAddress</span>
+                                    </td>
+                                    <td class="text-start fw-bold font-monospace text-dark">@host.MacAddress</td>
+                                    <td class="text-start text-muted italic">@host.Comment</td>
+                                </tr>
+                            }
+                        }
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+
+@* --- Modal التأكيد --- *@
+@if (isModalOpen)
+{
+    <div class="modal fade show d-block" tabindex="-1" style="background: rgba(15, 23, 42, 0.7); backdrop-filter: blur(5px); z-index: 9999;">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content border-0 shadow-lg rounded-4">
+                <div class="modal-body p-5 text-center">
+                    <i class="bi bi-trash3 text-danger fs-1 mb-3"></i>
+                    <h4 class="fw-bold mb-3">هل أنت متأكد؟</h4>
+                    <p class="text-muted mb-4">@modalMessage</p>
+                    <div class="d-flex justify-content-center gap-3">
+                        <button class="btn btn-danger px-5 rounded-pill fw-bold" @onclick="ExecuteAction">حذف</button>
+                        <button class="btn btn-light px-5 rounded-pill border" @onclick="() => isModalOpen = false">تراجع</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+}
+
+<style>
+    .main-table-card { background: white; border: 1px solid rgba(0,0,0,0.05); }
+    .table-header-row { background: #f9fafb; border-bottom: 2px solid #edf2f7; }
+    .host-row-item:hover { background-color: #f8fbff !important; }
+    .btn-gradient-blue {
+        background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
+        color: white; border: none; padding: 10px 25px; border-radius: 50px; font-weight: 600;
+    }
+    .ip-badge-lux {
+        background: #f1f5f9; color: #334155; border: 1px solid #e2e8f0;
+        padding: 8px 15px; border-radius: 10px; font-weight: 600;
+    }
+    .custom-search-input { background: #f3f4f6; border: 1px solid transparent; }
+</style>
+
+@code {
+    private List<MikrotikHostResponse>? hosts;
+    private string searchTerm = "";
+    private bool isModalOpen = false, deleteModeAll = false;
+    private string selectedMac = "", modalMessage = "";
+    private System.Timers.Timer? debounceTimer;
+
+    protected override async Task OnInitializedAsync() => await ReloadHosts();
+
+    private async Task ReloadHosts() {
+        hosts = null;
+        hosts = await MikrotikService.GetAllHostsAsync();
+    }
+
+    private void OpenModal(bool all, string mac = "") {
+        deleteModeAll = all;
+        selectedMac = mac;
+        modalMessage = all ? "حذف جميع الأجهزة من القائمة؟" : $"حذف الجهاز {mac}؟";
+        isModalOpen = true;
+    }
+
+    private async Task ExecuteAction() {
+        if (deleteModeAll) await MikrotikService.RemoveAllHostsAsync();
+        else await MikrotikService.RemoveHostAsync(selectedMac);
+        isModalOpen = false;
+        await ReloadHosts();
+    }
+
+    private void HandleSearch() {
+        debounceTimer?.Stop();
+        debounceTimer = new System.Timers.Timer(400);
+        debounceTimer.Elapsed += async (s, e) => {
+            await InvokeAsync(async () => {
+                hosts = string.IsNullOrWhiteSpace(searchTerm) 
+                    ? await MikrotikService.GetAllHostsAsync() 
+                    : await MikrotikService.SearchHostsAsync(searchTerm);
+                StateHasChanged();
+            });
+        };
+        debounceTimer.AutoReset = false;
+        debounceTimer.Start();
+    }
+}

@@ -22,13 +22,11 @@ namespace UI.Services.Reposetories
 
         public async Task<List<MikrotikProfileResponseDto>> GetAllProfilesAsync()
         {
-            // المسار الصحيح حسب كود الباك إند
             return await _httpClient.GetFromJsonAsync<List<MikrotikProfileResponseDto>>("api/Mikrotik/Profiles") ?? new();
         }
 
         public async Task<List<MikrotikServerResponseDto>> GetServersListAsync()
         {
-            // نستخدم GetFromJsonAsync مع النوع الجديد لضمان تحويل البيانات بشكل صحيح
             return await _httpClient.GetFromJsonAsync<List<MikrotikServerResponseDto>>("api/Mikrotik/Get/Servers") ?? new();
         }
 
@@ -46,7 +44,6 @@ namespace UI.Services.Reposetories
 
         public async Task<MikrotikUserInformationResponseDto?> GetUserByNameAsync(string username)
         {
-            // تأكد من المسار: في الـ Controller الأصلي هو "api/Mikrotik/Get/User/{username}"
             return await _httpClient.GetFromJsonAsync<MikrotikUserInformationResponseDto>($"api/Mikrotik/Get/User/{username}");
         }
 
@@ -58,6 +55,67 @@ namespace UI.Services.Reposetories
                 : null;
         }
 
+        public async Task<bool> DeleteUserAsync(string username)
+        {
+            var response = await _httpClient.DeleteAsync($"api/Mikrotik/Delete/{username}");
+            return response.IsSuccessStatusCode;
+        }
+
+        // في ملف UI/Services/Repositories/MikrotikService.cs
+
+        public async Task<string?> DisableUserAsync(string username)
+        {
+            var response = await _httpClient.PutAsync($"api/mikrotik/{username}/Disable", null);
+
+            if (!response.IsSuccessStatusCode)
+            {
+                // قراءة الرسالة القادمة من الباك إند (مثل: This user is already disabled)
+                return await response.Content.ReadAsStringAsync();
+            }
+
+            return null; // نجاح
+        }
+
+        public async Task<string?> EnableUserAsync(string username)
+        {
+            var response = await _httpClient.PutAsync($"api/mikrotik/{username}/Enable", null);
+
+            if (!response.IsSuccessStatusCode)
+            {
+                return await response.Content.ReadAsStringAsync();
+            }
+
+            return null; // نجاح
+        }
+
+        public async Task<List<MikrotikUserResponseDto>> SearchUsersAsync(string term)
+        {
+            return await _httpClient.GetFromJsonAsync<List<MikrotikUserResponseDto>>($"api/Mikrotik/Search?term={term}") ?? new();
+        }
+
+
+        public async Task<List<MikrotikHostResponse>> GetAllHostsAsync() =>
+            await _httpClient.GetFromJsonAsync<List<MikrotikHostResponse>>("api/Host/GetAll") ?? new();
+
+        public async Task<List<MikrotikHostResponse>> SearchHostsAsync(string term)
+        {
+            var result = await _httpClient.GetFromJsonAsync<List<MikrotikHostResponse>>($"api/Host/Search?term={term}");
+            return result ?? new List<MikrotikHostResponse>();
+        }
+
+        public async Task<bool> RemoveHostAsync(string macAddress)
+        {
+            var encodedMac = Uri.EscapeDataString(macAddress);
+            var response = await _httpClient.DeleteAsync($"api/Host/Delete/{encodedMac}");
+
+            return response.IsSuccessStatusCode;
+        }
+
+        public async Task<bool> RemoveAllHostsAsync()
+        {
+            var response = await _httpClient.DeleteAsync("api/Host/Delete/All");
+            return response.IsSuccessStatusCode;
+        }
 
     }
 }

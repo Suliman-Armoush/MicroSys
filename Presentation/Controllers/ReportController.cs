@@ -23,8 +23,7 @@ namespace Presentation.Controllers
         [HttpGet("Export/Departments/Consumption")]
         public async Task<IActionResult> ExportExcel()
         {
-            var result = await _mediator.Send(new RemoveAllMikrotikHostsCommand());
-            if (!result) return BadRequest("Could not clear hosts list.");
+            
 
             var fileBytes = await _mediator.Send(new ExportMikrotikExcelQuery());
 
@@ -40,8 +39,7 @@ namespace Presentation.Controllers
         [HttpGet("Export/Detailed/Consumption")]
         public async Task<IActionResult> ExportDetailedReport()
         {
-            var result = await _mediator.Send(new RemoveAllMikrotikHostsCommand());
-            if (!result) return BadRequest("Could not clear hosts list.");
+
 
             var fileBytes = await _mediator.Send(new ExportDetailedMikrotikReportQuery());
             return File(
