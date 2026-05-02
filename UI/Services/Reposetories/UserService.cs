@@ -42,7 +42,7 @@ namespace UI.Services.Reposetories
 
     public async Task DeleteAsync(int id)
     {
-      var response = await _httpClient.DeleteAsync($"api/User/Delete{id}");
+      var response = await _httpClient.DeleteAsync($"api/User/Delete/{id}");
       response.EnsureSuccessStatusCode();
     }
   }

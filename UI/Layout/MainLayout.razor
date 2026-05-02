@@ -1,15 +1,20 @@
-﻿@inherits LayoutComponentBase
+@inherits LayoutComponentBase
+
 <div class="page">
     <div class="sidebar">
         <NavMenu />
     </div>
 
-    <main>
-        <div class="top-row px-4">
-            Town Center Technical suport
+    <main class="main-shell">
+        <div class="top-row">
+            <div>
+                <span class="top-kicker">MicroSys</span>
+                <strong>Town Center Specialist Support</strong>
+            </div>
+            <span class="top-status">Software Department</span>
         </div>
 
-        <article class="content px-4">
+        <article class="content">
             @Body
         </article>
     </main>

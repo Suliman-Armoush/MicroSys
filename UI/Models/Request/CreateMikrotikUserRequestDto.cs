@@ -4,20 +4,20 @@ namespace UI.Models.Request
 {
     public class CreateMikrotikUserRequestDto
     {
-        [Required(ErrorMessage = "اسم المستخدم مطلوب")]
+        [Required(ErrorMessage = "Username is required")]
         public string Username { get; set; } = string.Empty;
 
-        [Required(ErrorMessage = "كلمة المرور مطلوبة")]
+        [Required(ErrorMessage = "Password is required")]
         public string Password { get; set; } = string.Empty;
 
-        [Required(ErrorMessage = "يجب اختيار بروفايل")]
+        [Required(ErrorMessage = "Profile is required")]
         public string Profile { get; set; } = string.Empty;
 
-        [Required(ErrorMessage = "يجب اختيار سيرفر")]
+        [Required(ErrorMessage = "Server is required")]
         public string Server { get; set; } = string.Empty;
 
-        [Required(ErrorMessage = "يجب تحديد القسم")]
-        [Range(1, int.MaxValue, ErrorMessage = "القسم المختار غير صحيح")]
+        [Required(ErrorMessage = "Department is required")]
+        [Range(1, int.MaxValue, ErrorMessage = "Selected department is invalid")]
         public int DepartmentId { get; set; }
 
         public string UserDetails { get; set; } = string.Empty;

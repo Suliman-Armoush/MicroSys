@@ -1,9 +1,8 @@
-﻿@page "/users"
+@page "/users"
 @attribute [Authorize(Roles = "Admin")]
 
 @using UI.Models.Request
 @using UI.Models.Response
-@using UI.Services.Reposetories
 @using UI.Services.Interfaces
 
 @inject IUserService UserService
@@ -11,98 +10,116 @@
 @inject IDepartmentService DepartmentService
 @inject IJSRuntime JS
 
-<PageTitle>إدارة المستخدمين</PageTitle>
+<PageTitle>Users - MicroSys</PageTitle>
 
-<div class="container mt-4">
-    <h2>المستخدمين</h2>
+<div class="admin-page">
+    <div class="admin-shell">
+        <div class="page-header">
+            <div class="page-header-main">
+                <span class="page-kicker">Administration</span>
+                <h1 class="page-title">Users</h1>
+                <p class="page-subtitle">Review users and connect each account to the right role and department.</p>
+            </div>
 
-    <button class="btn btn-primary mb-3" @onclick="OpenCreateModal">
-        + إضافة مستخدم
-    </button>
+            <div class="page-actions">
+                <button class="btn btn-primary" type="button" @onclick="OpenCreateModal">
+                    Add User
+                </button>
+            </div>
+        </div>
 
-    @if (isLoading)
-    {
-        <p>جاري التحميل...</p>
-    }
-    else
-    {
-        <table class="table table-bordered table-striped">
-            <thead>
-                <tr>
-                    <th>#</th>
-                    <th>الاسم</th>
-                    <th>اسم المستخدم</th>
-                    <th>الدور</th>
-                    <th>القسم</th>
-                    <th>إجراءات</th>
-                </tr>
-            </thead>
-            <tbody>
-                @foreach (var user in users)
-                {
-                    <tr>
-                        <td>@user.Id</td>
-                        <td>@user.Name</td>
-                        <td>@user.UserName</td>
-                        <td>@user.Role?.Name</td>
-                        <td>@user.Department?.Name</td>
-                        <td>
-                            <button class="btn btn-sm btn-warning"
-                                    @onclick="() => OpenEditModal(user)">
-                                تعديل
-                            </button>
-
-                            <button class="btn btn-sm btn-danger"
-                                    @onclick="() => DeleteUser(user.Id)">
-                                حذف
-                            </button>
-                        </td>
-                    </tr>
-                }
-            </tbody>
-        </table>
-    }
+        <div class="page-card">
+            @if (isLoading)
+            {
+                <div class="loading-state">
+                    <div class="spinner-border text-primary" role="status">
+                        <span class="visually-hidden">Loading...</span>
+                    </div>
+                    <p>Loading users...</p>
+                </div>
+            }
+            else
+            {
+                <div class="table-responsive">
+                    <table class="table table-hover data-table align-middle">
+                        <thead>
+                            <tr>
+                                <th>#</th>
+                                <th>Name</th>
+                                <th>Username</th>
+                                <th>Role</th>
+                                <th>Department</th>
+                                <th class="text-center">Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach (var user in users)
+                            {
+                                <tr>
+                                    <td><span class="text-muted fw-bold">#@user.Id</span></td>
+                                    <td>
+                                        <div class="d-inline-flex align-items-center gap-2 fw-bold">
+                                            <span class="avatar-circle" aria-hidden="true">@GetInitial(user.Name)</span>
+                                            <span>@user.Name</span>
+                                        </div>
+                                    </td>
+                                    <td><span class="text-muted fw-bold">@user.UserName</span></td>
+                                    <td><span class="soft-badge primary">@user.Role?.Name</span></td>
+                                    <td><span class="soft-badge success">@user.Department?.Name</span></td>
+                                    <td class="text-center">
+                                        <div class="data-table-actions">
+                                            <button class="btn btn-sm btn-light" type="button" @onclick="() => OpenEditModal(user)">
+                                                Edit
+                                            </button>
+                                            <button class="btn btn-sm btn-outline-danger" type="button" @onclick="() => DeleteUser(user.Id)">
+                                                Delete
+                                            </button>
+                                        </div>
+                                    </td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+            }
+        </div>
+    </div>
 </div>
 
-<!-- Modal -->
-<div class="modal fade" id="userModal">
-    <div class="modal-dialog">
+<div class="modal fade" id="userModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
         <div class="modal-content">
-
             <div class="modal-header">
-                <h5 class="modal-title">
-                    @(isEditMode ? "تعديل مستخدم" : "إضافة مستخدم")
-                </h5>
-                <button class="btn-close" data-bs-dismiss="modal"></button>
+                <h5 class="modal-title">@(isEditMode ? "Edit User" : "Add User")</h5>
+                <button class="btn-close" type="button" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
 
             <div class="modal-body">
                 <EditForm Model="@currentUser" OnValidSubmit="SaveUser">
                     <DataAnnotationsValidator />
 
-                    <div class="mb-2">
-                        <label>الاسم</label>
+                    <div class="mb-3">
+                        <label class="form-label">Name</label>
                         <InputText class="form-control" @bind-Value="currentUser.Name" />
                     </div>
 
-                    <div class="mb-2">
-                        <label>اسم المستخدم</label>
+                    <div class="mb-3">
+                        <label class="form-label">Username</label>
                         <InputText class="form-control" @bind-Value="currentUser.UserName" />
                     </div>
 
                     @if (!isEditMode)
                     {
-                        <div class="mb-2">
-                            <label>كلمة المرور</label>
-                            <InputText type="password" class="form-control"
-                                       @bind-Value="currentUser.Password" />
+                        <div class="mb-3">
+                            <label class="form-label">Password</label>
+                            <InputText type="password" class="form-control" @bind-Value="currentUser.Password" />
                         </div>
                     }
 
-                    <div class="mb-2">
-                        <label>الدور</label>
-                        <InputSelect class="form-control" @bind-Value="currentUser.RoleId">
-                            <option value="">-- اختر --</option>
+                    <div class="mb-3">
+                        <label class="form-label">Role</label>
+                        <InputSelect class="form-select" @bind-Value="currentUser.RoleId">
+                            <option value="">-- Select --</option>
                             @foreach (var role in roles)
                             {
                                 <option value="@role.Id">@role.Name</option>
@@ -110,10 +127,10 @@
                         </InputSelect>
                     </div>
 
-                    <div class="mb-2">
-                        <label>القسم</label>
-                        <InputSelect class="form-control" @bind-Value="currentUser.DepartmentId">
-                            <option value="">-- اختر --</option>
+                    <div class="mb-3">
+                        <label class="form-label">Department</label>
+                        <InputSelect class="form-select" @bind-Value="currentUser.DepartmentId">
+                            <option value="">-- Select --</option>
                             @foreach (var dept in departments)
                             {
                                 <option value="@dept.Id">@dept.Name</option>
@@ -121,16 +138,17 @@
                         </InputSelect>
                     </div>
 
-                    <button class="btn btn-primary" type="submit" disabled="@isSaving">
-                        @(isSaving ? "جاري الحفظ..." : "حفظ")
-                    </button>
+                    <div class="d-flex gap-2">
+                        <button class="btn btn-primary" type="submit" disabled="@isSaving">
+                            @(isSaving ? "Saving..." : "Save")
+                        </button>
 
-                    <button class="btn btn-secondary" data-bs-dismiss="modal">
-                        إلغاء
-                    </button>
+                        <button class="btn btn-light" type="button" data-bs-dismiss="modal">
+                            Cancel
+                        </button>
+                    </div>
                 </EditForm>
             </div>
-
         </div>
     </div>
 </div>
@@ -139,9 +157,7 @@
     private List<UserResponseDto> users = new();
     private List<RoleResponseDto> roles = new();
     private List<DepartmentResponseDto> departments = new();
-
     private UserRequestDto currentUser = new();
-
     private bool isLoading = true;
     private bool isSaving = false;
     private bool isEditMode = false;
@@ -155,11 +171,9 @@
     private async Task LoadData()
     {
         isLoading = true;
-
         users = await UserService.GetAllAsync();
         roles = await RoleService.GetAllAsync();
         departments = await DepartmentService.GetAllAsync();
-
         isLoading = false;
     }
 
@@ -193,9 +207,13 @@
         try
         {
             if (isEditMode)
+            {
                 await UserService.UpdateAsync(editingId, currentUser);
+            }
             else
+            {
                 await UserService.CreateAsync(currentUser);
+            }
 
             await LoadData();
             CloseModal();
@@ -212,13 +230,19 @@
 
     private async Task DeleteUser(int id)
     {
-        var confirm = await JS.InvokeAsync<bool>("confirm", "تأكيد الحذف؟");
-
-        if (confirm)
+        var confirm = await JS.InvokeAsync<bool>("confirm", "Delete this user?");
+        if (!confirm)
         {
-            await UserService.DeleteAsync(id);
-            await LoadData();
+            return;
         }
+
+        await UserService.DeleteAsync(id);
+        await LoadData();
+    }
+
+    private static string GetInitial(string? name)
+    {
+        return string.IsNullOrWhiteSpace(name) ? "U" : name.Trim()[0].ToString();
     }
 
     private async void ShowModal()

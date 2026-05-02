@@ -1,88 +1,99 @@
-﻿@page "/mikrotik-users"
+@page "/mikrotik-users"
 @attribute [Authorize(Roles = "Admin")]
 @using UI.Models.Response
 @using UI.Services.Interfaces
 @inject IMikrotikService MikrotikService
 @inject NavigationManager Navigation
 
-<div class="container-fluid mt-4">
-    @* --- Header Section --- *@
-    <div class="d-flex justify-content-between align-items-center mb-4" dir="rtl">
+<PageTitle>MikroTik Users - MicroSys</PageTitle>
 
-        <!-- اليمين: الرجوع + العنوان -->
-        <div class="d-flex align-items-center gap-3">
-            <button class="btn btn-outline-dark px-3 shadow-sm d-flex align-items-center gap-2"
-                    @onclick='() => Navigation.NavigateTo("/")'>
-                <i class="bi bi-arrow-right"></i>
-                <span>الرجوع</span>
-            </button>
+<div class="admin-page">
+    <div class="admin-shell">
+        <div class="page-header">
+            <div class="page-header-main">
+                <span class="page-kicker">MikroTik</span>
+                <h1 class="page-title">Network Users</h1>
+                <p class="page-subtitle">Track consumption and manage MikroTik user status from one readable table.</p>
+            </div>
 
-            <h3 class="fw-bold m-0">مستخدمي الميكروتيك</h3>
+            <div class="page-actions">
+                <button class="btn btn-light" type="button" @onclick='() => Navigation.NavigateTo("/")'>Back</button>
+                <button class="btn btn-primary" type="button" @onclick="() => showCreateModal = true">Add User</button>
+                <button class="btn btn-outline-danger" type="button" @onclick="() => showResetAllCountersModal = true">Reset Counters</button>
+            </div>
         </div>
 
-        <!-- الوسط: البحث -->
-        <div class="search-wrapper position-relative" style="width: 350px;">
-            <input type="text"
-                   class="form-control rounded-pill ps-5 py-2 border-primary shadow-none"
-                   placeholder="بحث عن مستخدم..."
-                   @bind="searchTerm"
-                   @bind:event="oninput"
-                   @onkeyup="HandleSearch" />
+        <div class="toolbar">
+            <div class="search-field">
+                <input type="text"
+                       class="form-control"
+                       placeholder="Search users..."
+                       @bind="searchTerm"
+                       @bind:event="oninput"
+                       @onkeyup="HandleSearch" />
+            </div>
+
+            @if (isSearching)
+            {
+                <span class="soft-badge primary">Searching...</span>
+            }
         </div>
 
-        <!-- اليسار: الأزرار -->
-        <div class="d-flex gap-2">
-            <button class="btn btn-primary shadow-sm px-4 fw-bold"
-                    @onclick="() => showCreateModal = true">
-                إضافة مستخدم جديد
-            </button>
-            <button class="btn btn-danger shadow-sm px-4 fw-bold"
-                    @onclick="() => showResetAllCountersModal = true">
-                ترسيت جميع العدادات
-            </button>
-        </div>
-    </div>
-
-    @* --- Table Section (نفس تصميمك الأصلي) --- *@
-    <div class="card shadow-sm border-0">
-        <div class="card-body p-0">
+        <div class="page-card">
             <div class="table-responsive">
-                <table class="table align-middle mb-0 text-end" dir="rtl">
-                    <thead class="bg-light fw-bold">
+                <table class="table table-hover data-table align-middle text-center">
+                    <thead>
                         <tr>
-                            <th class="py-3 text-center">الإجراءات</th>
-                            <th class="text-center">الإجمالي (Total GB)</th>
-                            <th class="text-center">تحميل (Download GB)</th>
-                            <th class="text-center">رفع (Upload GB)</th>
-                            <th class="text-start">الملاحظات (Comment)</th>
-                            <th class="text-start ps-3">المستخدم (Username)</th>
+                            <th class="text-start">User</th>
+                            <th class="text-start">Comments</th>
+                            <th>Upload GB</th>
+                            <th>Download GB</th>
+                            <th>Total GB</th>
+                            <th>Actions</th>
                         </tr>
                     </thead>
                     <tbody>
                         @if (users == null)
                         {
-                            <tr><td colspan="6" class="text-center py-5"><div class="spinner-border text-primary"></div></td></tr>
+                            <tr>
+                                <td colspan="6">
+                                    <div class="loading-state">
+                                        <div class="spinner-border text-primary" role="status">
+                                            <span class="visually-hidden">Loading...</span>
+                                        </div>
+                                        <p>Loading users...</p>
+                                    </div>
+                                </td>
+                            </tr>
+                        }
+                        else if (users.Count == 0)
+                        {
+                            <tr>
+                                <td colspan="6">
+                                    <div class="empty-state">
+                                        <p>No users match your search.</p>
+                                    </div>
+                                </td>
+                            </tr>
                         }
                         else
                         {
                             @foreach (var user in users)
                             {
                                 <tr>
-                                    <td class="text-center">
-                                        <div class="d-flex justify-content-center gap-1">
-                                            <button class="btn btn-sm btn-outline-success" @onclick="() => OpenEnableModal(user.Username)">تفعيل</button>
-                                            <button class="btn btn-sm btn-outline-secondary" @onclick="() => OpenDisableModal(user.Username)">تعطيل</button>
-                                            <button class="btn btn-sm btn-outline-warning" @onclick="() => OpenEditModal(user.Username)">تعديل</button>
-                                            <button class="btn btn-sm btn-outline-danger" @onclick="() => OpenDeleteModal(user.Username)">حذف</button>
+                                    <td class="text-start fw-bold text-primary">@user.Username</td>
+                                    <td class="text-start text-muted">@user.Comment</td>
+                                    <td><span class="soft-badge danger">@user.BytesIn.ToString("N2")</span></td>
+                                    <td><span class="soft-badge success">@user.BytesOut.ToString("N2")</span></td>
+                                    <td><span class="soft-badge primary">@user.Total.ToString("N2")</span></td>
+                                    <td>
+                                        <div class="data-table-actions">
+                                            <button class="btn btn-sm btn-outline-success" type="button" @onclick="() => OpenEnableModal(user.Username)">Enable</button>
+                                            <button class="btn btn-sm btn-light" type="button" @onclick="() => OpenDisableModal(user.Username)">Disable</button>
+                                            <button class="btn btn-sm btn-outline-warning" type="button" @onclick="() => OpenEditModal(user.Username)">Edit</button>
+                                            <button class="btn btn-sm btn-outline-danger" type="button" @onclick="() => OpenDeleteModal(user.Username)">Delete</button>
                                         </div>
                                     </td>
-                                    <td class="text-center">
-                                        <span class="badge rounded-pill bg-primary px-3 py-2">GB @user.Total.ToString("N2")</span>
-                                    </td>
-                                    <td class="text-center fw-bold" style="color: #28a745;">@user.BytesOut.ToString("N2")</td>
-                                    <td class="text-center fw-bold" style="color: #dc3545;">@user.BytesIn.ToString("N2")</td>
-                                    <td class="text-start text-muted">@user.Comment</td>
-                                    <td class="text-start ps-3 fw-bold text-primary">@user.Username</td>
                                 </tr>
                             }
                         }
@@ -93,67 +104,43 @@
     </div>
 </div>
 
-@* المودالات *@
 <CreateMikrotikUserModal IsVisible="showCreateModal" OnClose="() => showCreateModal = false" OnUserCreated="ReloadUsers" />
 <EditMikrotikUserModal IsVisible="showEditModal" CurrentUsername="@selectedUsername" OnClose="() => showEditModal = false" OnUserUpdated="ReloadUsers" />
 <DeleteMikrotikUserModal IsVisible="showDeleteModal" Username="@selectedUsername" OnClose="() => showDeleteModal = false" OnUserDeleted="ReloadUsers" />
 <EnableUserModal IsVisible="showEnableModal" Username="@selectedUsername" OnClose="() => showEnableModal = false" OnUserEnabled="ReloadUsers" />
 <DisableUserModal IsVisible="showDisableModal" Username="@selectedUsername" OnClose="() => showDisableModal = false" OnUserDisabled="ReloadUsers" />
+
 @if (showResetAllCountersModal)
 {
-    <div class="modal fade show d-block" tabindex="-1" style="background: rgba(0,0,0,0.5);" dir="rtl">
+    <div class="modal fade show d-block app-modal-backdrop" tabindex="-1">
         <div class="modal-dialog modal-dialog-centered">
-            <div class="modal-content border-0 shadow-lg rounded-4">
-
-                <div class="modal-header bg-danger text-white">
-                    <h5 class="modal-title fw-bold">تأكيد ترسيت جميع العدادات</h5>
-                    <button type="button" class="btn-close btn-close-white"
-                            @onclick="CloseResetModal"></button>
+            <div class="modal-content danger-zone">
+                <div class="modal-header">
+                    <h5 class="modal-title">Confirm Reset All Counters</h5>
+                    <button type="button" class="btn-close" @onclick="CloseResetModal" aria-label="Close"></button>
                 </div>
 
-                <div class="modal-body text-center p-4">
-                    <p class="fw-bold text-danger mb-3">
-                        هذا الإجراء سيقوم بترسيت جميع عدادات المستخدمين نهائيًا
-                    </p>
-
-                    <p class="text-muted">
-                        للمتابعة اكتب الكلمة التالية:
-                    </p>
-
-                    <div class="alert alert-light border fw-bold fs-5">
-                        reset
-                    </div>
+                <div class="modal-body">
+                    <p class="fw-bold text-danger mb-2">This action will reset counters for all users.</p>
+                    <p class="text-muted">To continue, type the word below:</p>
+                    <div class="alert alert-light border fw-bold text-center">reset</div>
 
                     <input type="text"
                            class="form-control text-center"
-                           placeholder="اكتب reset هنا"
+                           placeholder="Type reset here"
                            @bind="resetConfirmationText" />
                 </div>
 
                 <div class="modal-footer">
-                    <button class="btn btn-secondary"
-                            @onclick="CloseResetModal">
-                        إلغاء
-                    </button>
-
-                    <button class="btn btn-danger"
-                            disabled="@(resetConfirmationText?.Trim().ToLower() != "reset")"
-                            @onclick="ConfirmResetAllCounters">
-                        تنفيذ الترسيت
+                    <button class="btn btn-light" type="button" @onclick="CloseResetModal">Cancel</button>
+                    <button class="btn btn-danger" type="button" disabled="@(!CanResetCounters)" @onclick="ConfirmResetAllCounters">
+                        Reset Counters
                     </button>
                 </div>
-
             </div>
         </div>
     </div>
 }
-<style>
-    /* لمسة جمالية إضافية لصندوق البحث */
-    .search-wrapper input:focus {
-        background-color: #f8f9fa;
-        box-shadow: 0 4px 10px rgba(13, 110, 253, 0.15) !important;
-    }
-</style>
 
 @code {
     private List<MikrotikUserResponseDto>? users;
@@ -164,7 +151,7 @@
     private string selectedUsername = "";
     private bool showResetAllCountersModal = false;
     private string resetConfirmationText = "";
-
+    private bool CanResetCounters => string.Equals(resetConfirmationText?.Trim(), "reset", StringComparison.OrdinalIgnoreCase);
 
     protected override async Task OnInitializedAsync() => await ReloadUsers();
 
@@ -188,7 +175,8 @@
 
     private async Task ReloadUsers()
     {
-        users = null; StateHasChanged();
+        users = null;
+        StateHasChanged();
         users = await MikrotikService.GetAllUsersAsync();
         StateHasChanged();
     }

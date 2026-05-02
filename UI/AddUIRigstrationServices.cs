@@ -12,10 +12,10 @@ namespace UI
   {
     public static void AddUIServices(this IServiceCollection services, string apiBaseAddress)
     {
-      // إعداد HttpClient الأساسي مع عنوان الـ API
+      // Configure the shared HttpClient with the API base address.
       services.AddScoped(sp => new HttpClient { BaseAddress = new Uri(apiBaseAddress) });
 
-      // تسجيل خدمات Blazor
+      // Register Blazor and application services.
       services.AddBlazoredLocalStorage();
       services.AddAuthorizationCore();
       services.AddScoped<AuthenticationStateProvider, CustomAuthStateProvider>();
@@ -27,7 +27,7 @@ namespace UI
       services.AddScoped<ISysInfosService, SysInfosService>();
       services.AddScoped<IUserService, UserService>();
 
-      // يمكنك إضافة أي خدمات أخرى هنا مستقبلاً مثل IDepartmentService, IUserService إلخ.
+      // Add future UI services here when needed.
     }
   }
 

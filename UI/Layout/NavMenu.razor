@@ -1,103 +1,120 @@
-﻿<div class="top-row ps-3 navbar navbar-dark">
-    <div class="container-fluid">
-        <a class="navbar-brand" href="">MicroSys</a>
-        <button title="Navigation menu" class="navbar-toggler" @onclick="ToggleNavMenu">
-            <span class="navbar-toggler-icon"></span>
-        </button>
-    </div>
+<div class="nav-brand-row">
+    <a class="navbar-brand" href="">
+        <span class="brand-mark">MS</span>
+        <span>
+            <strong>MicroSys</strong>
+            <small>Network Management</small>
+        </span>
+    </a>
+
+    <button title="Navigation menu" class="navbar-toggler" @onclick="ToggleNavMenu">
+        <span></span>
+        <span></span>
+        <span></span>
+    </button>
 </div>
 
-<div class="@NavMenuCssClass nav-scrollable" @onclick="ToggleNavMenu">
-    <nav class="flex-column">
-        <AuthorizeView Context="authContext">
+<div class="@($"nav-scrollable {NavMenuCssClass}")" @onclick="ToggleNavMenu" style="color:white">
+    <nav class="nav-stack">
+        <AuthorizeView Context="authContext"  Roles="Admin">
             <Authorized>
-                @* Home *@
-                <div class="nav-item px-3">
+                <div class="nav-section-label">Workspace</div>
+
+                <div class="nav-item">
                     <NavLink class="nav-link" href="" Match="NavLinkMatch.All">
-                        <span class="oi oi-home" aria-hidden="true"></span> Home
+                        <span class="nav-icon nav-home" aria-hidden="true"></span>
+                        <span>Dashboard</span>
                     </NavLink>
                 </div>
 
-                @* Mikrotik Dropdown *@
-                <div class="nav-item px-3">
-                    <div class="nav-link dropdown-toggle-custom @(expandMikrotik ? "active-parent" : "")"
-                         @onclick="ToggleMikrotikMenu" @onclick:stopPropagation>
-                        <span class="oi oi-wifi" aria-hidden="true"></span>
-                        <span class="flex-grow-1 ms-2">Mikrotik</span>
-                        <span class="oi @(expandMikrotik ? "oi-chevron-bottom" : "oi-chevron-left")"
-                              style="font-size: 0.7rem; transition: transform 0.3s;"></span>
-                    </div>
+                <div class="nav-item">
+                    <button class="nav-link nav-button @(expandMikrotik ? "active-parent" : "")"
+                            type="button"
+                            @onclick="ToggleMikrotikMenu"
+                            @onclick:stopPropagation>
+                        <span class="nav-icon nav-network" aria-hidden="true"></span>
+                        <span class="flex-grow-1">Mikrotik</span>
+                        <span class="nav-chevron @(expandMikrotik ? "open" : "")" aria-hidden="true"></span>
+                    </button>
                 </div>
 
                 @if (expandMikrotik)
                 {
                     <div class="submenu-container">
-                        @* 1. Users *@
-                        <div class="nav-item px-3 ms-3">
+                        <div class="nav-item">
                             <NavLink class="nav-link submenu-link" href="mikrotik-users">
-                                <span class="oi oi-people me-2" aria-hidden="true"></span> Users
-                            </NavLink>
-                        </div>
-                        
-                        @* 2. Hosts *@
-                        <div class="nav-item px-3 ms-3">
-                            <NavLink class="nav-link submenu-link" href="mikrotik-hosts">
-                                <span class="bi bi-laptop me-2" aria-hidden="true"></span> Hosts
+                                <span class="nav-icon nav-users" aria-hidden="true"></span>
+                                <span>Network Users</span>
                             </NavLink>
                         </div>
 
-                        @* 3. Reports *@
-                        <div class="nav-item px-3 ms-3">
+                        <div class="nav-item">
+                            <NavLink class="nav-link submenu-link" href="mikrotik-hosts">
+                                <span class="nav-icon nav-hosts" aria-hidden="true"></span>
+                                <span>Connected Hosts</span>
+                            </NavLink>
+                        </div>
+
+                        <div class="nav-item">
                             <NavLink class="nav-link submenu-link" href="reports">
-                                <span class="oi oi-document me-2" aria-hidden="true"></span> Reports
+                                <span class="nav-icon nav-reports" aria-hidden="true"></span>
+                                <span>Reports</span>
                             </NavLink>
                         </div>
                     </div>
                 }
 
-                @* Users *@
-                <div class="nav-item px-3">
+                <div class="nav-section-label">Administration</div>
+
+                <div class="nav-item">
                     <NavLink class="nav-link" href="users">
-                        <span class="oi oi-people" aria-hidden="true"></span> Users
+                        <span class="nav-icon nav-users" aria-hidden="true"></span>
+                        <span>Users</span>
                     </NavLink>
                 </div>
 
-                @* Roles *@
-                <div class="nav-item px-3">
+                <div class="nav-item">
                     <NavLink class="nav-link" href="roles">
-                        <span class="oi oi-person" aria-hidden="true"></span> Roles
+                        <span class="nav-icon nav-roles" aria-hidden="true"></span>
+                        <span>Roles</span>
                     </NavLink>
                 </div>
 
-                @* Department *@
-                <div class="nav-item px-3">
+                <div class="nav-item">
                     <NavLink class="nav-link" href="departments">
-                        <span class="oi oi-briefcase" aria-hidden="true"></span> Departments
+                        <span class="nav-icon nav-departments" aria-hidden="true"></span>
+                        <span>Departments</span>
                     </NavLink>
                 </div>
 
-                @* Settings *@
-                <div class="nav-item px-3">
+                <div class="nav-item">
                     <NavLink class="nav-link" href="sysInfos">
-                        <span class="oi oi-briefcase" aria-hidden="true"></span> Settings
+                        <span class="nav-icon nav-settings" aria-hidden="true"></span>
+                        <span>Settings</span>
                     </NavLink>
                 </div>
 
-                @* Logout *@
-                <div class="nav-item px-3 mt-auto">
-                    <NavLink class="nav-link logout-link text-danger" href="logout">
-                        <span class="oi oi-account-logout" aria-hidden="true"></span>
-                        <small class="ms-1 text-truncate">
-                            Logout (@authContext.User.FindFirst(System.Security.Claims.ClaimTypes.Email)?.Value)
-                        </small>
+                <div class="nav-spacer"></div>
+
+                <div class="nav-user">
+                    <span class="nav-user-label">Signed in</span>
+                    <span class="nav-user-email">@authContext.User.FindFirst(System.Security.Claims.ClaimTypes.Email)?.Value</span>
+                </div>
+
+                <div class="nav-item">
+                    <NavLink class="nav-link logout-link" href="logout">
+                        <span class="nav-icon nav-logout" aria-hidden="true"></span>
+                        <span>Sign Out</span>
                     </NavLink>
                 </div>
             </Authorized>
-            
+
             <NotAuthorized>
-                <div class="nav-item px-3">
+                <div class="nav-section-label">Access</div>
+                <div class="nav-item">
                     <NavLink class="nav-link" href="login">
-                        <span class="oi oi-account-login" aria-hidden="true"></span> Login
+                        <span class="nav-icon nav-login" aria-hidden="true"></span>
+                        <span>Sign In</span>
                     </NavLink>
                 </div>
             </NotAuthorized>
@@ -109,7 +126,7 @@
     private bool collapseNavMenu = true;
     private bool expandMikrotik = false;
 
-    private string? NavMenuCssClass => collapseNavMenu ? "collapse" : null;
+    private string NavMenuCssClass => collapseNavMenu ? "collapse" : string.Empty;
 
     private void ToggleNavMenu()
     {
@@ -125,55 +142,3 @@
         }
     }
 }
-
-<style>
-    /* تنسيق الحاوية الرئيسية للقائمة الفرعية */
-    .submenu-container {
-        background-color: rgba(0, 0, 0, 0.2);
-        margin: 5px 15px;
-        border-radius: 8px;
-        padding: 5px 0;
-        border: 1px solid rgba(255, 255, 255, 0.05);
-    }
-
-    /* توحيد شكل الروابط الفرعية */
-    .submenu-link {
-        color: #adb5bd !important;
-        font-size: 0.85rem !important;
-        padding: 8px 15px !important;
-        display: flex !important;
-        align-items: center;
-        transition: all 0.2s ease;
-    }
-
-        .submenu-link:hover {
-            color: white !important;
-            background-color: rgba(255, 255, 255, 0.1);
-            border-radius: 5px;
-            padding-left: 20px !important;
-        }
-
-    /* تنسيق زر القائمة المنسدلة الرئيسي */
-    .dropdown-toggle-custom {
-        display: flex;
-        align-items: center;
-        cursor: pointer;
-        padding: 0.5rem 1rem;
-        border-radius: 4px;
-        color: #d7d7d7;
-        transition: all 0.2s ease;
-    }
-
-    .active-parent {
-        background-color: rgba(0, 123, 255, 0.2);
-        border-right: 4px solid #007bff; /* لتحديد القائمة المفتوحة */
-        color: white;
-    }
-
-    nav {
-        display: flex;
-        flex-direction: column;
-        height: 100%;
-    }
-
-</style>

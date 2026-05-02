@@ -44,7 +44,7 @@ namespace UI.Services.Reposetories
         {
             try
             {
-                // المسار api/Report/Departments/Consumption حسب الـ Controller عندك    
+                // Matches the api/Report/Departments/Consumption controller route.
                 var result = await _httpClient.GetFromJsonAsync<List<DepartmentConsumptionResponseDto>>("api/Report/Departments/Consumption");
                 return result ?? new List<DepartmentConsumptionResponseDto>();
             }
