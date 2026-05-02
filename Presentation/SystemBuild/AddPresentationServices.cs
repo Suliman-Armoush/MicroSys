@@ -21,8 +21,8 @@ namespace Presentation.SystemBuild
           Description = "featured API",
           Contact = new OpenApiContact
           {
-            Name = "Suliman Armoush",
-            Email = "suliman221232@gmail.com"
+            Name = "Khaled Alhossien",
+            Email = "hossink131@gmail.com"
           }
         });
 
