@@ -23,122 +23,136 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using FluentValidation;
 using Application.Features.Mikrotik.Command.ResetAllCounters;
+using Application.Features.Mikrotik.Queries.TestConnection;
 namespace Presentation.Controllers
 {
-    [ApiController]
-    [Route("api/Mikrotik")]
-    public class MikrotikController : ControllerBase
+  [ApiController]
+  [Route("api/Mikrotik")]
+  public class MikrotikController : ControllerBase
+  {
+    private readonly IMediator _mediator;
+
+    public MikrotikController(IMediator mediator)
     {
-        private readonly IMediator _mediator;
-
-        public MikrotikController(IMediator mediator)
-        {
-            _mediator = mediator;
-        }
-
-        [HttpGet("Users")]
-        public async Task<IActionResult> GetAllUsers()
-        {
-            var result = await _mediator.Send(new GetAllMikrotikUsersQuery());
-            return Ok(result);
-        }
-
-        [HttpGet("Profiles")]
-        public async Task<IActionResult> GetAllProfiles()
-        {
-            var result = await _mediator.Send(new GetAllMikrotikProfilesQuery());
-            return Ok(result);
-        }
+      _mediator = mediator;
+    }
 
 
-        [HttpPost("Create")]
-        public async Task<ActionResult<MikrotikUserInformationResponse>> CreateUser([FromBody] CreateMikrotikUserCommand command)
-        {
-            var result = await _mediator.Send(command);
-            return Ok(result);
-        }
-        [HttpPut("update/{currentUsername}")]
-        public async Task<ActionResult<MikrotikUserInformationResponse>> UpdateUser([FromRoute] string currentUsername, [FromBody] UpdateMikrotikUserCommand command)
-        {
-            command.CurrentUsername = currentUsername;
+    [HttpGet("TestConnection")]
+    public async Task<IActionResult> TestConnection()
+    {
+      var result = await _mediator.Send(new TestMikrotikConnectionQuery());
 
-            var result = await _mediator.Send(command);
-            return Ok(result);
-        }
+      if (result)
+        return Ok(new { status = "Connected ✅", success = true });
 
-        [HttpGet("Get/User/{username}")]
-        public async Task<ActionResult<MikrotikUserInformationResponse>> GetUser(string username)
-        {
-            // الهاندلر سيتكفل بالتحقق ورمي خطأ إذا لم يجد اليوزر
-            var result = await _mediator.Send(new GetMikrotikUserByNameQuery(username));
-
-            return Ok(result);
-        }
-
-        [HttpGet("Search")]
-        public async Task<ActionResult<List<MikrotikUserResponse>>> Search([FromQuery] string term)
-        {
-            var results = await _mediator.Send(new SearchMikrotikUsersQuery(term));
-
-            return Ok(results);
-        }
+      return StatusCode(503, new { status = "Failed ❌", success = false });
+    }
 
 
-        [HttpDelete("Delete/{username}")]
-        public async Task<IActionResult> DeleteUser([FromRoute] string username)
-        {
-            var result = await _mediator.Send(new DeleteMikrotikUserCommand(username));
+    [HttpGet("Users")]
+    public async Task<IActionResult> GetAllUsers()
+    {
+      var result = await _mediator.Send(new GetAllMikrotikUsersQuery());
+      return Ok(result);
+    }
 
-            return Ok(new { message = "Deleted successfully" });
+    [HttpGet("Profiles")]
+    public async Task<IActionResult> GetAllProfiles()
+    {
+      var result = await _mediator.Send(new GetAllMikrotikProfilesQuery());
+      return Ok(result);
+    }
 
-        }
+
+    [HttpPost("Create")]
+    public async Task<ActionResult<MikrotikUserInformationResponse>> CreateUser([FromBody] CreateMikrotikUserCommand command)
+    {
+      var result = await _mediator.Send(command);
+      return Ok(result);
+    }
+    [HttpPut("update/{currentUsername}")]
+    public async Task<ActionResult<MikrotikUserInformationResponse>> UpdateUser([FromRoute] string currentUsername, [FromBody] UpdateMikrotikUserCommand command)
+    {
+      command.CurrentUsername = currentUsername;
+
+      var result = await _mediator.Send(command);
+      return Ok(result);
+    }
+
+    [HttpGet("Get/User/{username}")]
+    public async Task<ActionResult<MikrotikUserInformationResponse>> GetUser(string username)
+    {
+      // الهاندلر سيتكفل بالتحقق ورمي خطأ إذا لم يجد اليوزر
+      var result = await _mediator.Send(new GetMikrotikUserByNameQuery(username));
+
+      return Ok(result);
+    }
+
+    [HttpGet("Search")]
+    public async Task<ActionResult<List<MikrotikUserResponse>>> Search([FromQuery] string term)
+    {
+      var results = await _mediator.Send(new SearchMikrotikUsersQuery(term));
+
+      return Ok(results);
+    }
 
 
-        [HttpPut("{username}/Disable")]
-        public async Task<IActionResult> DisableUser(string username)
-        {
-            try
-            {
-                // لاحظ هنا: الـ Command يحتاج Username
-                var result = await _mediator.Send(new DisableMikrotikUserCommand(username));
-                return Ok(new { success = true, message = "User disabled successfully." });
-            }
-            catch (ValidationException ex)
-            {
-                // هذا الجزء هو المسؤول عن إرسال رسالة "This user is already disabled" للفرونت
-                return BadRequest(ex.Errors.FirstOrDefault()?.ErrorMessage ?? "Validation failed");
-            }
-            catch (Exception ex)
-            {
-                return StatusCode(500, ex.Message);
-            }
-        }
+    [HttpDelete("Delete/{username}")]
+    public async Task<IActionResult> DeleteUser([FromRoute] string username)
+    {
+      var result = await _mediator.Send(new DeleteMikrotikUserCommand(username));
 
-        [HttpPut("{username}/Enable")]
-        public async Task<IActionResult> EnableUser(string username)
-        {
-            try
-            {
-                var result = await _mediator.Send(new EnableMikrotikUserCommand(username));
+      return Ok(new { message = "Deleted successfully" });
 
-                return Ok(new { success = true, message = "User enabled successfully." });
-            }
-            catch (ValidationException ex)
-            {
-                return BadRequest(ex.Errors.FirstOrDefault()?.ErrorMessage ?? "Validation failed");
-            }
-            catch (Exception ex)
-            {
-                return StatusCode(500, "Internal server error: " + ex.Message);
-            }
-        }
+    }
 
-        [HttpGet("Get/Servers")]
-        public async Task<ActionResult<List<MikrotikServerResponse>>> GetServers()
-        {
-            var servers = await _mediator.Send(new GetAllMikrotikServersQuery());
-            return Ok(servers);
-        }
+
+    [HttpPut("{username}/Disable")]
+    public async Task<IActionResult> DisableUser(string username)
+    {
+      try
+      {
+        // لاحظ هنا: الـ Command يحتاج Username
+        var result = await _mediator.Send(new DisableMikrotikUserCommand(username));
+        return Ok(new { success = true, message = "User disabled successfully." });
+      }
+      catch (ValidationException ex)
+      {
+        // هذا الجزء هو المسؤول عن إرسال رسالة "This user is already disabled" للفرونت
+        return BadRequest(ex.Errors.FirstOrDefault()?.ErrorMessage ?? "Validation failed");
+      }
+      catch (Exception ex)
+      {
+        return StatusCode(500, ex.Message);
+      }
+    }
+
+    [HttpPut("{username}/Enable")]
+    public async Task<IActionResult> EnableUser(string username)
+    {
+      try
+      {
+        var result = await _mediator.Send(new EnableMikrotikUserCommand(username));
+
+        return Ok(new { success = true, message = "User enabled successfully." });
+      }
+      catch (ValidationException ex)
+      {
+        return BadRequest(ex.Errors.FirstOrDefault()?.ErrorMessage ?? "Validation failed");
+      }
+      catch (Exception ex)
+      {
+        return StatusCode(500, "Internal server error: " + ex.Message);
+      }
+    }
+
+    [HttpGet("Get/Servers")]
+    public async Task<ActionResult<List<MikrotikServerResponse>>> GetServers()
+    {
+      var servers = await _mediator.Send(new GetAllMikrotikServersQuery());
+      return Ok(servers);
+    }
 
     [HttpDelete("ResetAllCounters")]
     public async Task<IActionResult> ResetAllCounters()
