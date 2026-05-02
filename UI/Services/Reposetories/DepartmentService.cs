@@ -12,7 +12,7 @@ namespace UI.Services.Reposetories
 
         //public async Task<List<DepartmentResponseDto>> GetAllAsync()
         //{
-        //    // تأكد أن المسار هو api/Department/GetAll وليس api/Departments
+        //    // Ensure the route is api/Department/GetAll, not api/Departments.
         //    return await _httpClient.GetFromJsonAsync<List<DepartmentResponseDto>>("api/Department/GetAll") ?? new();
         //}
 
@@ -34,7 +34,7 @@ namespace UI.Services.Reposetories
 
         public async Task<DepartmentResponseDto> GetByIdAsync(int id)
         {
-            // ✅ تم التعديل هنا ليتوافق مع المسار في Controller: Get/{id}
+            // Matches the controller route: Get/{id}.
             return await _httpClient.GetFromJsonAsync<DepartmentResponseDto>($"api/Department/Get/{id}");
         }
 

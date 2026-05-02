@@ -3,53 +3,46 @@
 
 @if (IsVisible)
 {
-    <div class="modal fade show d-block" style="background: rgba(0,0,0,0.5);" tabindex="-1" role="dialog">
+    <div class="modal fade show d-block app-modal-backdrop" tabindex="-1" role="dialog">
         <div class="modal-dialog modal-dialog-centered" role="document">
-            <div class="modal-content border-0 shadow-lg">
-                @* رأس المودال - لون رمادي غامق للإشارة للتعطيل *@
-                <div class="modal-header bg-secondary text-white">
+            <div class="modal-content">
+                <div class="modal-header">
                     <h5 class="modal-title fw-bold">
-                        <i class="bi bi-person-x-fill me-2"></i> تعطيل مستخدم
+                        Disable User
                     </h5>
-                    <button type="button" class="btn-close btn-close-white" @onclick="Close" aria-label="Close"></button>
+                    <button type="button" class="btn-close" @onclick="Close" aria-label="Close"></button>
                 </div>
 
-                @* محتوى المودال *@
-                <div class="modal-body text-end" dir="rtl">
+                <div class="modal-body">
                     <div class="py-3">
-                        <p class="fs-5">هل أنت متأكد من رغبتك في تعطيل حساب المستخدم التالي؟</p>
-                        <div class="p-3 bg-light rounded border-start border-4 border-secondary mt-2">
-                            <strong class="text-dark">اسم المستخدم: </strong>
+                        <p class="mb-3">Are you sure you want to disable this user account?</p>
+                        <div class="p-3 border rounded bg-light">
+                            <strong class="text-dark">Username: </strong>
                             <span class="text-secondary fw-bold">@Username</span>
                         </div>
                     </div>
 
-                    @* تنبيه الخطأ - يظهر فقط في حال وجود رسالة من الباك إند *@
                     @if (!string.IsNullOrEmpty(errorMessage))
                     {
-                        <div class="alert alert-danger d-flex align-items-center mt-3 shadow-sm" role="alert">
-                            <i class="bi bi-exclamation-triangle-fill me-3 fs-4"></i>
-                            <div>
-                                <strong>تنبيه:</strong> @errorMessage
-                            </div>
+                        <div class="alert alert-danger mt-3" role="alert">
+                            <strong>Notice:</strong> @errorMessage
                         </div>
                     }
                 </div>
 
-                @* أزرار التحكم *@
-                <div class="modal-footer bg-light border-top-0">
-                    <button type="button" class="btn btn-outline-secondary px-4" @onclick="Close" disabled="@isSubmitting">
-                        إلغاء
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-light px-4" @onclick="Close" disabled="@isSubmitting">
+                        Cancel
                     </button>
-                    <button type="button" class="btn btn-secondary px-4 fw-bold shadow-sm" @onclick="HandleDisable" disabled="@isSubmitting">
+                    <button type="button" class="btn btn-secondary px-4 fw-bold" @onclick="HandleDisable" disabled="@isSubmitting">
                         @if (isSubmitting)
                         {
                             <span class="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>
-                            <span>جاري المعالجة...</span>
+                            <span>Processing...</span>
                         }
                         else
                         {
-                            <span>تأكيد التعطيل</span>
+                            <span>Confirm Disable</span>
                         }
                     </button>
                 </div>
@@ -74,24 +67,21 @@
 
         try
         {
-            // استدعاء السيرفس (تأكد أن السيرفس يعيد string? للخطأ)
             var errorResult = await MikrotikService.DisableUserAsync(Username);
 
             if (string.IsNullOrEmpty(errorResult))
             {
-                // نجاح العملية
                 await OnUserDisabled.InvokeAsync();
                 await Close();
             }
             else
             {
-                // عرض رسالة الخطأ القادمة من Validator (مثل: This user is already disabled)
                 errorMessage = errorResult;
             }
         }
         catch (Exception ex)
         {
-            errorMessage = "عذراً، حدث خطأ تقني أثناء محاولة تعطيل الحساب.";
+            errorMessage = "A technical error occurred while disabling the account.";
             Console.WriteLine($"Disable Error: {ex.Message}");
         }
         finally
@@ -102,7 +92,7 @@
 
     private async Task Close()
     {
-        errorMessage = ""; // تصفير الخطأ عند الإغلاق
+        errorMessage = "";
         await OnClose.InvokeAsync();
     }
 }

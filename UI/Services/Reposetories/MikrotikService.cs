@@ -73,19 +73,17 @@ namespace UI.Services.Reposetories
       return response.IsSuccessStatusCode;
     }
 
-    // في ملف UI/Services/Repositories/MikrotikService.cs
-
     public async Task<string?> DisableUserAsync(string username)
     {
       var response = await _httpClient.PutAsync($"api/mikrotik/{username}/Disable", null);
 
       if (!response.IsSuccessStatusCode)
       {
-        // قراءة الرسالة القادمة من الباك إند (مثل: This user is already disabled)
+        // Return the backend validation message, for example: This user is already disabled.
         return await response.Content.ReadAsStringAsync();
       }
 
-      return null; // نجاح
+      return null;
     }
 
     public async Task<string?> EnableUserAsync(string username)
@@ -97,7 +95,7 @@ namespace UI.Services.Reposetories
         return await response.Content.ReadAsStringAsync();
       }
 
-      return null; // نجاح
+      return null;
     }
 
     public async Task<List<MikrotikUserResponseDto>> SearchUsersAsync(string term)

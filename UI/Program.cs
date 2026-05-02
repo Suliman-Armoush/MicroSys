@@ -6,7 +6,7 @@ var builder = WebAssemblyHostBuilder.CreateDefault(args);
 builder.RootComponents.Add<App>("#app");
 builder.RootComponents.Add<HeadOutlet>("head::after");
 
-// استدعاء طريقة التسجيل مع تمرير رابط الـ API
-builder.Services.AddUIServices("https://localhost:44345"); // ضع عنوان API الخاص بك
+// Register UI services with the API base address.
+builder.Services.AddUIServices("https://localhost:44345");
 
 await builder.Build().RunAsync();

@@ -25,7 +25,7 @@ namespace UI.Services
                 if (string.IsNullOrEmpty(token))
                     return new AuthenticationState(new ClaimsPrincipal(new ClaimsIdentity()));
 
-                // إضافة التوكن إلى الـ HttpClient header (لكل الطلبات)
+                // Attach the token to the HttpClient header for subsequent requests.
                 _httpClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", token);
 
                 var identity = new ClaimsIdentity(ParseClaimsFromJwt(token), "jwt");

@@ -48,7 +48,7 @@ namespace Presentation.Controllers
 
             return Ok(result);
         }
-        [HttpDelete("Delete{id}")]
+        [HttpDelete("Delete/{id}")]
         public async Task<IActionResult> Delete(int id)
         {
             await _mediator.Send(new DeleteUserCommand(id));

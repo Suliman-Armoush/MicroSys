@@ -6,14 +6,13 @@
 
 @if (IsVisible)
 {
-    <div class="modal fade show d-block" tabindex="-1" style="background: rgba(0,0,0,0.5); backdrop-filter: blur(4px);">
+    <div class="modal fade show d-block app-modal-backdrop" tabindex="-1">
         <div class="modal-dialog modal-dialog-centered modal-lg">
-            <div class="modal-content border-0 shadow-lg text-end" dir="rtl">
+            <div class="modal-content">
                 
-                @* الهيدر: النص يمين والإكس يسار *@
-                <div class="modal-header bg-warning text-dark d-flex align-items-center justify-content-between px-4 py-3">
-                    <h5 class="modal-title fw-bold m-0">تعديل المستخدم: @CurrentUsername</h5>
-                    <button type="button" class="btn-close ms-0 me-0" @onclick="Close" style="filter: brightness(0);"></button>
+                <div class="modal-header d-flex align-items-center justify-content-between px-4 py-3">
+                    <h5 class="modal-title fw-bold m-0">Edit User: @CurrentUsername</h5>
+                    <button type="button" class="btn-close" @onclick="Close" aria-label="Close"></button>
                 </div>
 
                 <EditForm Model="updateModel" OnValidSubmit="HandleUpdate">
@@ -24,27 +23,25 @@
                         {
                             <div class="text-center py-5">
                                 <div class="spinner-border text-warning" role="status"></div>
-                                <p class="mt-2 text-muted">جاري تحميل البيانات...</p>
+                                <p class="mt-2 text-muted">Loading data...</p>
                             </div>
                         }
                         else
                         {
                             <div class="row">
-                                @* اسم المستخدم وكلمة المرور *@
                                 <div class="col-md-6 mb-3">
-                                    <label class="form-label fw-bold small">اسم المستخدم الجديد</label>
+                                    <label class="form-label">New Username</label>
                                     <InputText @bind-Value="updateModel.NewUsername" class="form-control" />
                                 </div>
                                 <div class="col-md-6 mb-3">
-                                    <label class="form-label fw-bold small">كلمة المرور الجديدة</label>
-                                    <InputText @bind-Value="updateModel.Password" class="form-control" placeholder="اتركه فارغاً لعدم التغيير" />
+                                    <label class="form-label">New Password</label>
+                                    <InputText @bind-Value="updateModel.Password" class="form-control" placeholder="Leave blank to keep unchanged" />
                                 </div>
 
-                                @* السيرفر والبروفايل *@
                                 <div class="col-md-6 mb-3">
-                                    <label class="form-label fw-bold small">السيرفر</label>
+                                    <label class="form-label">Server</label>
                                     <InputSelect @bind-Value="updateModel.Server" class="form-select">
-                                        <option value="">-- اختر السيرفر --</option>
+                                        <option value="">-- Select server --</option>
                                         @foreach (var srv in servers)
                                         {
                                             <option value="@srv.Name">@srv.Name</option>
@@ -52,9 +49,9 @@
                                     </InputSelect>
                                 </div>
                                 <div class="col-md-6 mb-3">
-                                    <label class="form-label fw-bold small">البروفايل</label>
+                                    <label class="form-label">Profile</label>
                                     <InputSelect @bind-Value="updateModel.Profile" class="form-select">
-                                        <option value="">-- اختر البروفايل --</option>
+                                        <option value="">-- Select profile --</option>
                                         @foreach (var prof in profiles)
                                         {
                                             <option value="@prof.Name">@prof.Name</option>
@@ -62,11 +59,10 @@
                                     </InputSelect>
                                 </div>
 
-                                @* القسم والحد الأقصى مع لاحقة GB *@
                                 <div class="col-md-6 mb-3">
-                                    <label class="form-label fw-bold small">القسم</label>
+                                    <label class="form-label">Department</label>
                                     <InputSelect @bind-Value="updateModel.DepartmentId" class="form-select">
-                                        <option value="0">-- اختر القسم --</option>
+                                        <option value="0">-- Select department --</option>
                                         @foreach (var dept in departments)
                                         {
                                             <option value="@dept.Id">@dept.Name</option>
@@ -74,25 +70,24 @@
                                     </InputSelect>
                                 </div>
                                 <div class="col-md-6 mb-3">
-                                    <label class="form-label fw-bold small">الحد الأقصى (Limit GB)</label>
-                                    <div class="input-group" dir="ltr">
-                                        <span class="input-group-text bg-light text-muted fw-bold">GB</span>
-                                        <InputNumber @bind-Value="updateModel.LimitGB" class="form-control text-end" />
+                                    <label class="form-label">Limit GB</label>
+                                    <div class="input-group">
+                                        <span class="input-group-text">GB</span>
+                                        <InputNumber @bind-Value="updateModel.LimitGB" class="form-control" />
                                     </div>
                                 </div>
 
-                                @* التفاصيل بعرض كامل *@
                                 <div class="col-12 mb-3">
-                                    <label class="form-label fw-bold small">ملاحظات (Comment)</label>
+                                    <label class="form-label">Comments</label>
                                     <InputText @bind-Value="updateModel.UserDetails" class="form-control" />
                                 </div>
                             </div>
                         }
                     </div>
 
-                    <div class="modal-footer bg-light d-flex justify-content-start gap-2">
-                        <button type="submit" class="btn btn-warning px-4 fw-bold shadow-sm" disabled="@isLoading">حفظ التعديلات</button>
-                        <button type="button" class="btn btn-secondary px-4 fw-bold" @onclick="Close">إلغاء</button>
+                    <div class="modal-footer d-flex justify-content-start gap-2">
+                        <button type="submit" class="btn btn-primary px-4" disabled="@isLoading">Save Changes</button>
+                        <button type="button" class="btn btn-light px-4" @onclick="Close">Cancel</button>
                     </div>
                 </EditForm>
             </div>
@@ -102,7 +97,7 @@
 
 @code {
     [Parameter] public bool IsVisible { get; set; }
-    [Parameter] public string CurrentUsername { get; set; }
+    [Parameter] public string CurrentUsername { get; set; } = string.Empty;
     [Parameter] public EventCallback OnClose { get; set; }
     [Parameter] public EventCallback OnUserUpdated { get; set; }
 

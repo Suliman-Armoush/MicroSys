@@ -1,0 +1,313 @@
+@using UI.Models.Request
+@using UI.Models.Response
+@using UI.Services.Interfaces
+
+@inject ISysInfosService SysInfosService
+@inject IMikrotikService MikrotikService
+@inject IJSRuntime JS
+
+<div class="admin-page">
+    <div class="admin-shell">
+        <div class="page-header">
+            <div class="page-header-main">
+                <span class="page-kicker">System Configuration</span>
+                <h1 class="page-title">System Settings</h1>
+                <p class="page-subtitle">Manage the MikroTik connection and consumption pricing segments from one clear console.</p>
+            </div>
+
+            @if (sysInfo != null)
+            {
+                <div class="page-actions">
+                    <button class="btn btn-outline-secondary" type="button" @onclick="TestConnection">
+                        Test Connection
+                    </button>
+
+                    <button class="btn btn-primary" type="button" @onclick="OpenEditModal">
+                        Edit Settings
+                    </button>
+                </div>
+            }
+        </div>
+
+        @if (isLoading)
+        {
+            <div class="page-card">
+                <div class="loading-state">
+                    <div class="spinner-border text-primary" role="status">
+                        <span class="visually-hidden">Loading...</span>
+                    </div>
+                    <p>Loading settings...</p>
+                </div>
+            </div>
+        }
+        else if (sysInfo == null)
+        {
+            <div class="page-card">
+                <div class="empty-state">
+                    <h5 class="mb-0">No saved settings</h5>
+                    <p>Add connection settings to unlock the full system dashboard.</p>
+                </div>
+            </div>
+        }
+        else
+        {
+            <div class="metric-grid mb-3">
+                <div class="metric-card">
+                    <span class="metric-label">MikroTik IP</span>
+                    <div class="metric-value">@sysInfo.MikroTikIp</div>
+                    <div class="metric-note">Primary connection address</div>
+                </div>
+
+                <div class="metric-card">
+                    <span class="metric-label">Username</span>
+                    <div class="metric-value">@sysInfo.Username</div>
+                    <div class="metric-note">Server integration account</div>
+                </div>
+
+                <div class="metric-card">
+                    <span class="metric-label">Password</span>
+                    <div class="d-flex align-items-center justify-content-between gap-2">
+                        <div class="metric-value mb-0">@(showPassword ? sysInfo.Password : "********")</div>
+                        <button class="btn btn-sm btn-light" type="button" @onclick="TogglePassword">
+                            @(showPassword ? "Hide" : "Show")
+                        </button>
+                    </div>
+                    <div class="metric-note">Show temporarily when needed</div>
+                </div>
+
+                <div class="metric-card wide">
+                    <div class="d-flex flex-wrap align-items-center justify-content-between gap-2">
+                        <div>
+                            <span class="metric-label">DVR Price</span>
+                            <div class="metric-value">@sysInfo.DvrPrice</div>
+                        </div>
+                        <span class="soft-badge success">Active Settings</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="page-card">
+                <div class="page-card-header">
+                    <h2 class="page-card-title">Network Pricing Segments</h2>
+                    <span class="soft-badge primary">6 Segments</span>
+                </div>
+
+                <div class="table-responsive">
+                    <table class="table data-table text-center align-middle">
+                        <thead>
+                            <tr>
+                                <th>Segment</th>
+                                <th>Range</th>
+                                <th>Price</th>
+                            </tr>
+                        </thead>
+
+                        <tbody>
+                            @for (int i = 1; i <= 6; i++)
+                            {
+                                <tr>
+                                    <td class="fw-bold">Segment @i</td>
+                                    <td>@GetRange(i)</td>
+                                    <td><span class="soft-badge success">@GetPrice(i)</span></td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        }
+    </div>
+</div>
+
+<div class="modal fade" id="sysInfoModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-lg modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Edit System Settings</h5>
+                <button class="btn-close" type="button" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+
+            <div class="modal-body">
+                <EditForm Model="@editModel" OnValidSubmit="Save">
+                    <DataAnnotationsValidator />
+
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">IP</label>
+                            <InputText class="form-control" @bind-Value="editModel.MikroTikIp" />
+                        </div>
+
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">Username</label>
+                            <InputText class="form-control" @bind-Value="editModel.Username" />
+                        </div>
+
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">Password</label>
+                            <InputText class="form-control" @bind-Value="editModel.Password" />
+                        </div>
+
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">DVR Price</label>
+                            <InputNumber class="form-control" @bind-Value="editModel.DvrPrice" />
+                        </div>
+                    </div>
+
+                    <div class="app-divider"></div>
+                    <h6 class="mb-3 fw-bold">Pricing Segments</h6>
+
+                    <div class="row">
+                        <div class="col-md-4 mb-3">
+                            <label class="form-label">Segment 1</label>
+                            <InputNumber class="form-control" @bind-Value="editModel.segment1" />
+                        </div>
+
+                        <div class="col-md-4 mb-3">
+                            <label class="form-label">Segment 2</label>
+                            <InputNumber class="form-control" @bind-Value="editModel.segment2" />
+                        </div>
+
+                        <div class="col-md-4 mb-3">
+                            <label class="form-label">Segment 3</label>
+                            <InputNumber class="form-control" @bind-Value="editModel.segment3" />
+                        </div>
+
+                        <div class="col-md-4 mb-3">
+                            <label class="form-label">Segment 4</label>
+                            <InputNumber class="form-control" @bind-Value="editModel.segment4" />
+                        </div>
+
+                        <div class="col-md-4 mb-3">
+                            <label class="form-label">Segment 5</label>
+                            <InputNumber class="form-control" @bind-Value="editModel.segment5" />
+                        </div>
+
+                        <div class="col-md-4 mb-3">
+                            <label class="form-label">Segment 6</label>
+                            <InputNumber class="form-control" @bind-Value="editModel.segment6" />
+                        </div>
+                    </div>
+
+                    <div class="modal-footer px-0 pb-0">
+                        <button class="btn btn-primary" type="submit" disabled="@isSaving">
+                            @(isSaving ? "Saving..." : "Save")
+                        </button>
+
+                        <button type="button" class="btn btn-light" data-bs-dismiss="modal">
+                            Cancel
+                        </button>
+                    </div>
+                </EditForm>
+            </div>
+        </div>
+    </div>
+</div>
+
+@code {
+    private SysInfosResponseDto? sysInfo;
+    private SysInfosRequestDto editModel = new();
+    private bool isLoading = true;
+    private bool isSaving = false;
+    private bool showPassword = false;
+
+    protected override async Task OnInitializedAsync()
+    {
+        await Load();
+    }
+
+    private async Task Load()
+    {
+        isLoading = true;
+        var list = await SysInfosService.GetAsync();
+        sysInfo = list.FirstOrDefault();
+        isLoading = false;
+    }
+
+    private void OpenEditModal()
+    {
+        if (sysInfo == null)
+        {
+            return;
+        }
+
+        editModel = new SysInfosRequestDto
+        {
+            MikroTikIp = sysInfo.MikroTikIp,
+            Username = sysInfo.Username,
+            Password = sysInfo.Password,
+            DvrPrice = sysInfo.DvrPrice,
+            segment1 = sysInfo.segment1,
+            segment2 = sysInfo.segment2,
+            segment3 = sysInfo.segment3,
+            segment4 = sysInfo.segment4,
+            segment5 = sysInfo.segment5,
+            segment6 = sysInfo.segment6
+        };
+
+        ShowModal();
+    }
+
+    private async Task Save()
+    {
+        if (sysInfo == null)
+        {
+            return;
+        }
+
+        isSaving = true;
+        await SysInfosService.UpdateAsync(sysInfo.Id, editModel);
+        await Load();
+        CloseModal();
+        isSaving = false;
+    }
+
+    private async Task TestConnection()
+    {
+        var result = await MikrotikService.TestConnectionAsync();
+        await JS.InvokeVoidAsync("alert", result ? "Connection successful" : "Connection failed");
+    }
+
+    private async void ShowModal()
+    {
+        await JS.InvokeVoidAsync("eval",
+            "new bootstrap.Modal(document.getElementById('sysInfoModal')).show()");
+    }
+
+    private async void CloseModal()
+    {
+        await JS.InvokeVoidAsync("eval",
+            "bootstrap.Modal.getInstance(document.getElementById('sysInfoModal'))?.hide()");
+    }
+
+    private void TogglePassword()
+    {
+        showPassword = !showPassword;
+    }
+
+    private string GetRange(int i)
+    {
+        var start = (i - 1) * 25;
+
+        if (i == 6)
+        {
+            return $"{start}+";
+        }
+
+        var end = i * 25;
+        return $"{start} - {end}";
+    }
+
+    private double GetPrice(int i)
+    {
+        return i switch
+        {
+            1 => sysInfo?.segment1 ?? 0,
+            2 => sysInfo?.segment2 ?? 0,
+            3 => sysInfo?.segment3 ?? 0,
+            4 => sysInfo?.segment4 ?? 0,
+            5 => sysInfo?.segment5 ?? 0,
+            6 => sysInfo?.segment6 ?? 0,
+            _ => 0
+        };
+    }
+}

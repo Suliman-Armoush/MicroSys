@@ -1,23 +1,34 @@
-﻿@page "/roleform/{id:int?}"
+@page "/roleform/{id:int?}"
 
 @inject IRoleService RoleService
 @inject NavigationManager Navigation
 
-<PageTitle>@(IsNew ? "إضافة دور" : "تعديل دور")</PageTitle>
+<PageTitle>@(IsNew ? "Add Role" : "Edit Role") - MicroSys</PageTitle>
 
-<div class="container mt-4">
-    <div class="row justify-content-center">
-        <div class="col-md-6">
-            <h3>@(IsNew ? "إضافة دور جديد" : "تعديل الدور")</h3>
+<div class="admin-page">
+    <div class="admin-shell">
+        <div class="page-header">
+            <div class="page-header-main">
+                <span class="page-kicker">Access Control</span>
+                <h1 class="page-title">@(IsNew ? "Add Role" : "Edit Role")</h1>
+                <p class="page-subtitle">Enter the role name that will appear in user permissions.</p>
+            </div>
+        </div>
+
+        <div class="page-card p-3">
             <EditForm Model="@roleDto" OnValidSubmit="@HandleSubmit">
                 <DataAnnotationsValidator />
                 <div class="mb-3">
-                    <label class="form-label">اسم الدور</label>
+                    <label class="form-label">Role Name</label>
                     <InputText class="form-control" @bind-Value="roleDto.Name" />
                     <ValidationMessage For="@(() => roleDto.Name)" />
                 </div>
-                <button type="submit" class="btn btn-success" disabled="@isSubmitting">@(isSubmitting ? "جاري الحفظ..." : "حفظ")</button>
-                <a href="/roles" class="btn btn-secondary">إلغاء</a>
+                <div class="d-flex gap-2">
+                    <button type="submit" class="btn btn-primary" disabled="@isSubmitting">
+                        @(isSubmitting ? "Saving..." : "Save")
+                    </button>
+                    <a href="/roles" class="btn btn-light">Cancel</a>
+                </div>
             </EditForm>
         </div>
     </div>
@@ -27,7 +38,6 @@
     [Parameter] public int? Id { get; set; }
     private bool IsNew => Id == null || Id == 0;
     private bool isSubmitting = false;
-
     private RoleRequestDto roleDto = new();
 
     protected override async Task OnInitializedAsync()
@@ -45,9 +55,14 @@
         try
         {
             if (IsNew)
+            {
                 await RoleService.CreateAsync(roleDto);
+            }
             else
+            {
                 await RoleService.UpdateAsync(Id!.Value, roleDto);
+            }
+
             Navigation.NavigateTo("/roles");
         }
         catch (Exception ex)

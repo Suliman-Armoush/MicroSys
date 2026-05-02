@@ -27,7 +27,7 @@ namespace UI.Services.Reposetories
 
     public async Task<AuthResponse> LoginAsync(LoginRequest request)
     {
-      var response = await _httpClient.PostAsJsonAsync("api/Auth/login", request); // غيّر المسار حسب API الخاص بك
+      var response = await _httpClient.PostAsJsonAsync("api/Auth/login", request);
 
       if (response.IsSuccessStatusCode)
       {
@@ -41,7 +41,7 @@ namespace UI.Services.Reposetories
         }
       }
 
-      // محاولة قراءة خطأ مخصص من الـ API (قد يعيد 401 مع JSON)
+      // Try to read a structured API error response, including 401 JSON payloads.
       var error = await response.Content.ReadFromJsonAsync<AuthResponse>();
       return error ?? new AuthResponse { Success = false, Message = "Login failed" };
     }

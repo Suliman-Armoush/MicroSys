@@ -1,84 +1,106 @@
-﻿@page "/departments"
+@page "/departments"
 @attribute [Authorize(Roles = "Admin")]
 @using UI.Models
 @using UI.Models.Enums
 @using UI.Services.Interfaces
 @inject IDepartmentService DepartmentService
-@inject NavigationManager Navigation
 @inject IJSRuntime JS
 
-<PageTitle>إدارة الأقسام</PageTitle>
+<PageTitle>Departments - MicroSys</PageTitle>
 
-<div class="container mt-4">
-    <div class="row">
-        <div class="col-12">
-            <h2>الأقسام</h2>
-            <button class="btn btn-primary mb-3" @onclick="OpenCreateModal">+ إضافة قسم جديد</button>
+<div class="admin-page">
+    <div class="admin-shell">
+        <div class="page-header">
+            <div class="page-header-main">
+                <span class="page-kicker">Organization</span>
+                <h1 class="page-title">Departments</h1>
+                <p class="page-subtitle">Define departments, their type, and DVR number for users and reports.</p>
+            </div>
 
+            <div class="page-actions">
+                <button class="btn btn-primary" type="button" @onclick="OpenCreateModal">
+                    Add Department
+                </button>
+            </div>
+        </div>
+
+        <div class="page-card">
             @if (isLoading)
             {
-                <p>جاري التحميل...</p>
+                <div class="loading-state">
+                    <div class="spinner-border text-primary" role="status">
+                        <span class="visually-hidden">Loading...</span>
+                    </div>
+                    <p>Loading departments...</p>
+                </div>
             }
             else
             {
-                <table class="table table-striped table-bordered">
-                    <thead>
-                        <tr>
-                            <th>#</th>
-                            <th>اسم القسم</th>
-                            <th>(اسم القسم (عربي</th>
-                            <th>النوع</th>
-                            <th>رقم DVR</th>
-                            <th>الإجراءات</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        @foreach (var department in departments)
-                        {
+                <div class="table-responsive">
+                    <table class="table table-hover data-table align-middle">
+                        <thead>
                             <tr>
-                                <td>@department.Id</td>
-                                <td>@department.Name</td>
-                                <td>@department.ArName</td>
-                                <td>@GetTypeName(department.Type)</td>
-                                <td>@department.DvrNum</td>
-                                <td>
-                                    <button class="btn btn-sm btn-warning" @onclick="() => OpenEditModal(department)">تعديل</button>
-                                    <button class="btn btn-sm btn-danger" @onclick="() => DeleteDepartment(department.Id)">حذف</button>
-                                </td>
+                                <th>#</th>
+                                <th>Name</th>
+                                <th>Arabic Name</th>
+                                <th>Type</th>
+                                <th>DVR Number</th>
+                                <th class="text-center">Actions</th>
                             </tr>
-                        }
-                    </tbody>
-                </table>
+                        </thead>
+                        <tbody>
+                            @foreach (var department in departments)
+                            {
+                                <tr>
+                                    <td><span class="text-muted fw-bold">#@department.Id</span></td>
+                                    <td class="fw-bold">@department.Name</td>
+                                    <td>@department.ArName</td>
+                                    <td><span class="soft-badge primary">@GetTypeName(department.Type)</span></td>
+                                    <td><span class="soft-badge warning">@department.DvrNum</span></td>
+                                    <td class="text-center">
+                                        <div class="data-table-actions">
+                                            <button class="btn btn-sm btn-light" type="button" @onclick="() => OpenEditModal(department)">
+                                                Edit
+                                            </button>
+                                            <button class="btn btn-sm btn-outline-danger" type="button" @onclick="() => DeleteDepartment(department.Id)">
+                                                Delete
+                                            </button>
+                                        </div>
+                                    </td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
             }
         </div>
     </div>
 </div>
 
-@* Modal لإضافة/تعديل القسم *@
 <div class="modal fade" id="departmentModal" tabindex="-1" aria-labelledby="departmentModalLabel" aria-hidden="true">
-    <div class="modal-dialog">
+    <div class="modal-dialog modal-dialog-centered">
         <div class="modal-content">
             <div class="modal-header">
-                <h5 class="modal-title" id="departmentModalLabel">@(isEditMode ? "تعديل قسم" : "إضافة قسم جديد")</h5>
+                <h5 class="modal-title" id="departmentModalLabel">@(isEditMode ? "Edit Department" : "Add Department")</h5>
                 <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
             <div class="modal-body">
                 <EditForm Model="@currentDepartment" OnValidSubmit="@SaveDepartment">
                     <DataAnnotationsValidator />
                     <div class="mb-3">
-                        <label for="deptName" class="form-label">اسم القسم</label>
+                        <label for="deptName" class="form-label">Department Name</label>
                         <InputText id="deptName" class="form-control" @bind-Value="currentDepartment.Name" />
                         <ValidationMessage For="@(() => currentDepartment.Name)" />
                     </div>
                     <div class="mb-3">
-                        <label for="deptName" class="form-label">(اسم القسم (عربي</label>
-                        <InputText id="deptName" class="form-control" @bind-Value="currentDepartment.ArName" />
+                        <label for="deptArName" class="form-label">Arabic Name</label>
+                        <InputText id="deptArName" class="form-control" @bind-Value="currentDepartment.ArName" />
                         <ValidationMessage For="@(() => currentDepartment.ArName)" />
                     </div>
                     <div class="mb-3">
-                        <label for="deptType" class="form-label">نوع القسم</label>
-                        <InputSelect id="deptType" class="form-control" @bind-Value="currentDepartment.Type">
-                            <option value="">-- اختر النوع --</option>
+                        <label for="deptType" class="form-label">Department Type</label>
+                        <InputSelect id="deptType" class="form-select" @bind-Value="currentDepartment.Type">
+                            <option value="">-- Select type --</option>
                             <option value="@DepartmentTypes.Service">Service</option>
                             <option value="@DepartmentTypes.TcShops">TcShops</option>
                             <option value="@DepartmentTypes.Shops">Shops</option>
@@ -86,14 +108,16 @@
                         <ValidationMessage For="@(() => currentDepartment.Type)" />
                     </div>
                     <div class="mb-3">
-                        <label for="dvrNum" class="form-label">رقم DVR</label>
+                        <label for="dvrNum" class="form-label">DVR Number</label>
                         <InputNumber id="dvrNum" class="form-control" @bind-Value="currentDepartment.DvrNum" />
                         <ValidationMessage For="@(() => currentDepartment.DvrNum)" />
                     </div>
-                    <button type="submit" class="btn btn-primary" disabled="@isSaving">
-                        @(isSaving ? "جاري الحفظ..." : "حفظ")
-                    </button>
-                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">إلغاء</button>
+                    <div class="d-flex gap-2">
+                        <button type="submit" class="btn btn-primary" disabled="@isSaving">
+                            @(isSaving ? "Saving..." : "Save")
+                        </button>
+                        <button type="button" class="btn btn-light" data-bs-dismiss="modal">Cancel</button>
+                    </div>
                 </EditForm>
             </div>
         </div>
@@ -159,13 +183,14 @@
             {
                 await DepartmentService.CreateAsync(currentDepartment);
             }
+
             await LoadDepartments();
             CloseModal();
         }
         catch (Exception ex)
         {
             Console.WriteLine($"Error: {ex.Message}");
-            await JS.InvokeVoidAsync("alert", "حدث خطأ: " + ex.Message);
+            await JS.InvokeVoidAsync("alert", "An error occurred: " + ex.Message);
         }
         finally
         {
@@ -175,23 +200,25 @@
 
     private async Task DeleteDepartment(int id)
     {
-        bool confirmed = await JS.InvokeAsync<bool>("confirm", "هل أنت متأكد من حذف هذا القسم؟");
-        if (confirmed)
+        var confirmed = await JS.InvokeAsync<bool>("confirm", "Delete this department?");
+        if (!confirmed)
         {
-            try
-            {
-                await DepartmentService.DeleteAsync(id);
-                await LoadDepartments();
-            }
-            catch (Exception ex)
-            {
-                Console.WriteLine($"Error deleting: {ex.Message}");
-                await JS.InvokeVoidAsync("alert", "فشل الحذف: " + ex.Message);
-            }
+            return;
+        }
+
+        try
+        {
+            await DepartmentService.DeleteAsync(id);
+            await LoadDepartments();
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Error deleting: {ex.Message}");
+            await JS.InvokeVoidAsync("alert", "Delete failed: " + ex.Message);
         }
     }
 
-    private string GetTypeName(DepartmentTypes type)
+    private static string GetTypeName(DepartmentTypes type)
     {
         return type switch
         {
@@ -204,11 +231,11 @@
 
     private async void ShowModal()
     {
-        await JS.InvokeVoidAsync("eval", "var myModal = new bootstrap.Modal(document.getElementById('departmentModal')); myModal.show();");
+        await JS.InvokeVoidAsync("eval", "new bootstrap.Modal(document.getElementById('departmentModal')).show();");
     }
 
     private async void CloseModal()
     {
-        await JS.InvokeVoidAsync("eval", "var myModal = bootstrap.Modal.getInstance(document.getElementById('departmentModal')); if(myModal) myModal.hide();");
+        await JS.InvokeVoidAsync("eval", "bootstrap.Modal.getInstance(document.getElementById('departmentModal'))?.hide();");
     }
 }

@@ -1,13 +1,10 @@
-﻿<div class="search-wrapper position-relative" style="width: 350px;">
+<div class="search-field">
     <input type="text"
-           class="form-control rounded-pill ps-5 py-2 border-primary shadow-none"
-           placeholder="بحث بالعنوان الفيزيائي، IP أو الملاحظات..."
+           class="form-control"
+           placeholder="Search by MAC address, IP, or comments..."
            @bind="SearchTerm"
            @bind:event="oninput"
-           @onkeyup="OnSearchChanged"
-           style="border-width: 2px;" />
-    
-    <i class="bi bi-search position-absolute top-50 start-0 translate-middle-y ms-3 text-primary"></i>
+           @onkeyup="OnSearchChanged" />
 
     @if (IsLoading)
     {
@@ -17,7 +14,7 @@
 
 @code {
     private string SearchTerm { get; set; } = "";
-    
+
     [Parameter] public bool IsLoading { get; set; }
     [Parameter] public EventCallback<string> OnSearch { get; set; }
 

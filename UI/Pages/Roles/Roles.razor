@@ -1,67 +1,94 @@
-﻿@page "/roles"
-@* @attribute [Authorize(Roles = "Admin")] *@
+@page "/roles"
 @attribute [Authorize(Roles = "Admin")]
 @inject IRoleService RoleService
-@inject NavigationManager Navigation
 @inject IJSRuntime JS
 
-<PageTitle>إدارة الأدوار</PageTitle>
+<PageTitle>Roles - MicroSys</PageTitle>
 
-<div class="container mt-4">
-    <div class="row">
-        <div class="col-12">
-            <h2>الأدوار</h2>
-            <button class="btn btn-primary mb-3" @onclick="OpenCreateModal">+ إضافة دور جديد</button>
+<div class="admin-page">
+    <div class="admin-shell">
+        <div class="page-header">
+            <div class="page-header-main">
+                <span class="page-kicker">Access Control</span>
+                <h1 class="page-title">Roles</h1>
+                <p class="page-subtitle">Organize user permissions with clear, easy-to-review roles.</p>
+            </div>
 
+            <div class="page-actions">
+                <button class="btn btn-primary" type="button" @onclick="OpenCreateModal">
+                    Add Role
+                </button>
+            </div>
+        </div>
+
+        <div class="page-card">
             @if (isLoading)
             {
-                <p>جاري التحميل...</p>
+                <div class="loading-state">
+                    <div class="spinner-border text-primary" role="status">
+                        <span class="visually-hidden">Loading...</span>
+                    </div>
+                    <p>Loading roles...</p>
+                </div>
             }
             else
             {
-                <table class="table table-striped">
-                    <thead>
-                        <tr><th>#</th><th>اسم الدور</th><th>الإجراءات</th></tr>
-                    </thead>
-                    <tbody>
-                        @foreach (var role in roles)
-                        {
+                <div class="table-responsive">
+                    <table class="table table-hover data-table align-middle">
+                        <thead>
                             <tr>
-                                <td>@role.Id</td>
-                                <td>@role.Name</td>
-                                <td>
-                                    <button class="btn btn-sm btn-warning" @onclick="() => OpenEditModal(role)">تعديل</button>
-                                    <button class="btn btn-sm btn-danger" @onclick="() => DeleteRole(role.Id)">حذف</button>
-                                </td>
+                                <th>#</th>
+                                <th>Role Name</th>
+                                <th class="text-center">Actions</th>
                             </tr>
-                        }
-                    </tbody>
-                </table>
+                        </thead>
+                        <tbody>
+                            @foreach (var role in roles)
+                            {
+                                <tr>
+                                    <td><span class="text-muted fw-bold">#@role.Id</span></td>
+                                    <td><span class="soft-badge primary">@role.Name</span></td>
+                                    <td class="text-center">
+                                        <div class="data-table-actions">
+                                            <button class="btn btn-sm btn-light" type="button" @onclick="() => OpenEditModal(role)">
+                                                Edit
+                                            </button>
+                                            <button class="btn btn-sm btn-outline-danger" type="button" @onclick="() => DeleteRole(role.Id)">
+                                                Delete
+                                            </button>
+                                        </div>
+                                    </td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
             }
         </div>
     </div>
 </div>
 
-@* Modal لإضافة/تعديل الدور *@
 <div class="modal fade" id="roleModal" tabindex="-1" aria-labelledby="roleModalLabel" aria-hidden="true">
-    <div class="modal-dialog">
+    <div class="modal-dialog modal-dialog-centered">
         <div class="modal-content">
             <div class="modal-header">
-                <h5 class="modal-title" id="roleModalLabel">@(isEditMode ? "تعديل دور" : "إضافة دور جديد")</h5>
+                <h5 class="modal-title" id="roleModalLabel">@(isEditMode ? "Edit Role" : "Add Role")</h5>
                 <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
             <div class="modal-body">
                 <EditForm Model="@currentRole" OnValidSubmit="@SaveRole">
                     <DataAnnotationsValidator />
                     <div class="mb-3">
-                        <label for="roleName" class="form-label">اسم الدور</label>
+                        <label for="roleName" class="form-label">Role Name</label>
                         <InputText id="roleName" class="form-control" @bind-Value="currentRole.Name" />
                         <ValidationMessage For="@(() => currentRole.Name)" />
                     </div>
-                    <button type="submit" class="btn btn-primary" disabled="@isSaving">
-                        @(isSaving ? "جاري الحفظ..." : "حفظ")
-                    </button>
-                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">إلغاء</button>
+                    <div class="d-flex gap-2">
+                        <button type="submit" class="btn btn-primary" disabled="@isSaving">
+                            @(isSaving ? "Saving..." : "Save")
+                        </button>
+                        <button type="button" class="btn btn-light" data-bs-dismiss="modal">Cancel</button>
+                    </div>
                 </EditForm>
             </div>
         </div>
@@ -73,7 +100,7 @@
     private bool isLoading = true;
     private bool isSaving = false;
     private bool isEditMode = false;
-    private int editingRoleId = 0;          // المتغير المفقود
+    private int editingRoleId = 0;
     private RoleRequestDto currentRole = new();
 
     protected override async Task OnInitializedAsync()
@@ -117,13 +144,14 @@
             {
                 await RoleService.CreateAsync(currentRole);
             }
+
             await LoadRoles();
             CloseModal();
         }
         catch (Exception ex)
         {
             Console.WriteLine($"Error: {ex.Message}");
-            await JS.InvokeVoidAsync("alert", "حدث خطأ: " + ex.Message);
+            await JS.InvokeVoidAsync("alert", "An error occurred: " + ex.Message);
         }
         finally
         {
@@ -133,30 +161,31 @@
 
     private async Task DeleteRole(int id)
     {
-        bool confirmed = await JS.InvokeAsync<bool>("confirm", "هل أنت متأكد من حذف هذا الدور؟");
-        if (confirmed)
+        var confirmed = await JS.InvokeAsync<bool>("confirm", "Delete this role?");
+        if (!confirmed)
         {
-            try
-            {
-                await RoleService.DeleteAsync(id);
-                await LoadRoles();
-            }
-            catch (Exception ex)
-            {
-                Console.WriteLine($"Error deleting: {ex.Message}");
-                await JS.InvokeVoidAsync("alert", "فشل الحذف: " + ex.Message);
-            }
+            return;
+        }
+
+        try
+        {
+            await RoleService.DeleteAsync(id);
+            await LoadRoles();
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Error deleting: {ex.Message}");
+            await JS.InvokeVoidAsync("alert", "Delete failed: " + ex.Message);
         }
     }
 
-    // دوال لعرض وإخفاء Modal باستخدام Bootstrap JS
     private async void ShowModal()
     {
-        await JS.InvokeVoidAsync("eval", "var myModal = new bootstrap.Modal(document.getElementById('roleModal')); myModal.show();");
+        await JS.InvokeVoidAsync("eval", "new bootstrap.Modal(document.getElementById('roleModal')).show();");
     }
 
     private async void CloseModal()
     {
-        await JS.InvokeVoidAsync("eval", "var myModal = bootstrap.Modal.getInstance(document.getElementById('roleModal')); if(myModal) myModal.hide();");
+        await JS.InvokeVoidAsync("eval", "bootstrap.Modal.getInstance(document.getElementById('roleModal'))?.hide();");
     }
 }
