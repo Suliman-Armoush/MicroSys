@@ -1,4 +1,4 @@
-﻿@page "/reports"
+@page "/reports"
 @attribute [Authorize(Roles = "Admin")]
 
 @using UI.Models.Response
@@ -7,139 +7,127 @@
 @inject IJSRuntime JS
 @inject NavigationManager Navigation
 
-<style>
-    .report-card {
-        transition: all 0.3s ease-in-out;
-    }
+<PageTitle>Reports - MicroSys</PageTitle>
 
-        .report-card:hover {
-            transform: translateY(-5px);
-        }
+<div class="admin-page">
+    <div class="admin-shell">
+        <div class="page-header">
+            <div class="page-header-main">
+                <span class="page-kicker">Reports Center</span>
+                <h1 class="page-title">Reports Center</h1>
+                <p class="page-subtitle">Export department consumption reports to Excel and review a quick summary in the system.</p>
+            </div>
 
-    .btn-download {
-        transition: transform 0.1s active;
-    }
+            <div class="page-actions">
+                <button class="btn btn-light" type="button" @onclick="GoBack">Back</button>
+            </div>
+        </div>
 
-        .btn-download:active {
-            transform: scale(0.98);
-        }
-    /* تنسيق الجدول من اليسار لليمين */
-    .ltr-table {
-        direction: ltr !important;
-        text-align: left !important;
-    }
-
-        .ltr-table th, .ltr-table td {
-            text-align: center !important;
-        }
-
-            .ltr-table td:first-child, .ltr-table th:first-child {
-                text-align: left !important;
-                padding-left: 1.5rem !important;
-            }
-</style>
-
-<div class="container mt-5" dir="rtl">
-    @* العناوين *@
-    <div class="d-flex justify-content-between align-items-center mb-5">
-        <button class="btn btn-outline-secondary px-4 shadow-sm" @onclick="GoBack">رجوع</button>
-        <h2 class="fw-bold m-0">مركز التقارير</h2>
-    </div>
-
-    @* كروت التصدير *@
-    <div class="row g-4 justify-content-center mb-5">
-        @* التقرير المختصر *@
-        <div class="col-md-5">
-            <div class="card h-100 border-0 shadow-sm report-card p-4">
-                <div class="card-body text-center">
-                    <div class="d-flex justify-content-end mb-2">
-                        <span class="p-3 rounded-circle bg-primary bg-opacity-10"></span>
+        <div class="row g-3 mb-3">
+            <div class="col-lg-6">
+                <div class="report-option accent-primary">
+                    <div>
+                        <span class="soft-badge primary mb-3">Summary</span>
+                        <h2 class="h4 mb-2">Department Summary Report</h2>
+                        <p class="page-subtitle mb-0">An Excel file with department consumption totals and cost calculations.</p>
                     </div>
-                    <h4 class="fw-bold mb-3">تقرير الأقسام المختصر</h4>
-                    <p class="text-muted mb-4 small">ملف Excel يحتوي على ملخص استهلاك الأقسام ككتلة واحدة مع حساب التكاليف.</p>
-                    <button class="btn btn-primary btn-lg w-100 py-3 fw-bold shadow btn-download"
-                            @onclick="() => DownloadReport(false)"
-                            disabled="@isExporting">
+
+                    <button class="btn btn-primary w-100" type="button" @onclick="() => DownloadReport(false)" disabled="@isExporting">
                         @if (isExporting && !isDetailedAction)
                         {
-                            <span class="spinner-border spinner-border-sm me-2"></span>
-                            <span>جاري توليد البيانات...</span>
+                            <span class="spinner-border spinner-border-sm me-2" aria-hidden="true"></span>
+                            <span>Exporting...</span>
                         }
                         else
                         {
-                            <span>تصدير المختصر</span>
+                            <span>Export Summary</span>
                         }
                     </button>
                 </div>
             </div>
-        </div>
 
-        @* التقرير التفصيلي *@
-        <div class="col-md-5">
-            <div class="card h-100 border-0 shadow-sm report-card p-4 border-start border-success border-5">
-                <div class="card-body text-center">
-                    <div class="d-flex justify-content-end mb-2">
-                        <span class="p-3 rounded-circle bg-success bg-opacity-10"></span>
+            <div class="col-lg-6">
+                <div class="report-option accent-success">
+                    <div>
+                        <span class="soft-badge success mb-3">Detailed</span>
+                        <h2 class="h4 mb-2">Detailed Department Report</h2>
+                        <p class="page-subtitle mb-0">A full Excel file showing each user's consumption inside each department.</p>
                     </div>
-                    <h4 class="fw-bold mb-3 text-success">تقرير الأقسام التفصيلي</h4>
-                    <p class="text-muted mb-4 small">ملف Excel شامل يعرض استهلاك كل مستخدم (User) داخل الأقسام بشكل مفصل.</p>
-                    <button class="btn btn-success btn-lg w-100 py-3 fw-bold shadow btn-download"
-                            @onclick="() => DownloadReport(true)"
-                            disabled="@isExporting">
+
+                    <button class="btn btn-success w-100" type="button" @onclick="() => DownloadReport(true)" disabled="@isExporting">
                         @if (isExporting && isDetailedAction)
                         {
-                            <span class="spinner-border spinner-border-sm me-2"></span>
-                            <span>جاري توليد البيانات...</span>
+                            <span class="spinner-border spinner-border-sm me-2" aria-hidden="true"></span>
+                            <span>Exporting...</span>
                         }
                         else
                         {
-                            <span>تصدير التفصيلي</span>
+                            <span>Export Detailed</span>
                         }
                     </button>
                 </div>
             </div>
         </div>
-    </div>
 
-    @* الجدول بعد إزالة عمود الـ DVR *@
-    @if (summaryData != null)
-    {
-        <div class="card border-0 shadow-sm mt-4">
-            <div class="card-body p-0">
+        <div class="page-card">
+            <div class="page-card-header">
+                <h2 class="page-card-title">Current Consumption Summary</h2>
+                <span class="soft-badge primary">Departments</span>
+            </div>
+
+            @if (isLoadingSummary)
+            {
+                <div class="loading-state">
+                    <div class="spinner-border text-primary" role="status">
+                        <span class="visually-hidden">Loading...</span>
+                    </div>
+                    <p>Loading summary...</p>
+                </div>
+            }
+            else if (summaryData == null || summaryData.Count == 0)
+            {
+                <div class="empty-state">
+                    <p>No summary data is available yet.</p>
+                </div>
+            }
+            else
+            {
                 <div class="table-responsive">
-                    <table class="table table-hover align-middle ltr-table mb-0">
-                        <thead class="bg-light text-muted">
+                    <table class="table table-hover data-table align-middle text-center">
+                        <thead>
                             <tr>
-                                <th>القسم (Department)</th>
-                                <th>المشتركين</th>
-                                <th>الاستهلاك (GB)</th>
+                                <th class="text-start">Department</th>
+                                <th>Subscribers</th>
+                                <th>Consumption GB</th>
                             </tr>
                         </thead>
                         <tbody>
                             @foreach (var item in summaryData)
                             {
                                 <tr>
-                                    <td class="fw-bold text-dark">@item.DepartmentName.ToUpper()</td>
-                                    <td><span class="badge bg-light text-dark border px-3">@item.ActiveUsersCount</span></td>
-                                    <td class="fw-bold text-primary">@item.TotalConsumptionGB.ToString("N2")</td>
+                                    <td class="text-start fw-bold">@item.DepartmentName.ToUpper()</td>
+                                    <td><span class="soft-badge primary">@item.ActiveUsersCount</span></td>
+                                    <td><span class="soft-badge success">@item.TotalConsumptionGB.ToString("N2")</span></td>
                                 </tr>
                             }
                         </tbody>
                     </table>
                 </div>
-            </div>
+            }
         </div>
-    }
+    </div>
 </div>
 
 @code {
     private List<DepartmentConsumptionResponseDto>? summaryData;
     private bool isExporting = false;
     private bool isDetailedAction = false;
+    private bool isLoadingSummary = true;
 
     protected override async Task OnInitializedAsync()
     {
         summaryData = await ReportService.GetDepartmentsSummaryAsync();
+        isLoadingSummary = false;
     }
 
     private async Task DownloadReport(bool isDetailed)
@@ -149,15 +137,21 @@
         try
         {
             byte[]? fileBytes;
-            string fileName = isDetailed ? "Detailed_Report.xlsx" : "Summary_Report.xlsx";
+            var fileName = isDetailed ? "Detailed_Report.xlsx" : "Summary_Report.xlsx";
 
             if (isDetailed)
+            {
                 fileBytes = await ReportService.DownloadDetailedConsumptionExcelAsync();
+            }
             else
+            {
                 fileBytes = await ReportService.DownloadDepartmentConsumptionExcelAsync();
+            }
 
             if (fileBytes != null)
+            {
                 await JS.InvokeVoidAsync("downloadFileFromBytes", fileName, Convert.ToBase64String(fileBytes));
+            }
         }
         finally
         {

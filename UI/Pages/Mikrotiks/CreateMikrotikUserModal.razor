@@ -6,13 +6,13 @@
 
 @if (IsVisible)
 {
-    <div class="modal fade show d-block" tabindex="-1" style="background: rgba(0,0,0,0.5); backdrop-filter: blur(4px);">
+    <div class="modal fade show d-block app-modal-backdrop" tabindex="-1">
         <div class="modal-dialog modal-dialog-centered modal-lg">
-            <div class="modal-content border-0 shadow-lg text-end" dir="rtl">
+            <div class="modal-content">
                 
-                <div class="modal-header bg-primary text-white d-flex">
-                    <h5 class="modal-title fw-bold flex-grow-1">إضافة مستخدم ميكروتيك جديد</h5>
-                    <button type="button" class="btn-close btn-close-white" @onclick="Close"></button>
+                <div class="modal-header">
+                    <h5 class="modal-title fw-bold flex-grow-1">Add MikroTik User</h5>
+                    <button type="button" class="btn-close" @onclick="Close" aria-label="Close"></button>
                 </div>
 
                 <EditForm Model="createModel" OnValidSubmit="HandleSave">
@@ -21,20 +21,20 @@
                     <div class="modal-body p-4">
                         <div class="row">
                             <div class="col-md-6 mb-3">
-                                <label class="form-label fw-bold small">اسم المستخدم</label>
+                                <label class="form-label">Username</label>
                                 <InputText @bind-Value="createModel.Username" class="form-control" />
                                 <ValidationMessage For="@(() => createModel.Username)" />
                             </div>
 
                             <div class="col-md-6 mb-3">
-                                <label class="form-label fw-bold small">كلمة المرور</label>
+                                <label class="form-label">Password</label>
                                 <InputText @bind-Value="createModel.Password" class="form-control" type="password" />
                             </div>
 
                             <div class="col-md-6 mb-3">
-                                <label class="form-label fw-bold small">السيرفر (Server)</label>
-                                <InputSelect @bind-Value="createModel.Server" class="form-select text-center">
-                                    <option value="">-- اختر السيرفر --</option>
+                                <label class="form-label">Server</label>
+                                <InputSelect @bind-Value="createModel.Server" class="form-select">
+                                    <option value="">-- Select server --</option>
                                     @if (servers != null)
                                     {
                                         @foreach (var srv in servers)
@@ -46,9 +46,9 @@
                             </div>
 
                             <div class="col-md-6 mb-3">
-                                <label class="form-label fw-bold small">البروفايل (Profile)</label>
-                                <InputSelect @bind-Value="createModel.Profile" class="form-select text-center">
-                                    <option value="">-- اختر البروفايل --</option>
+                                <label class="form-label">Profile</label>
+                                <InputSelect @bind-Value="createModel.Profile" class="form-select">
+                                    <option value="">-- Select profile --</option>
                                     @if (profiles != null)
                                     {
                                         @foreach (var prof in profiles)
@@ -60,9 +60,9 @@
                             </div>
 
                             <div class="col-md-6 mb-3">
-                                <label class="form-label fw-bold small">القسم (Department)</label>
-                                <InputSelect @bind-Value="createModel.DepartmentId" class="form-select text-center">
-                                    <option value="0">-- اختر القسم --</option>
+                                <label class="form-label">Department</label>
+                                <InputSelect @bind-Value="createModel.DepartmentId" class="form-select">
+                                    <option value="0">-- Select department --</option>
                                     @if (departments != null)
                                     {
                                         @foreach (var dept in departments)
@@ -74,24 +74,24 @@
                             </div>
 
                             <div class="col-md-6 mb-3">
-                                <label class="form-label fw-bold small">الحد الأقصى (Limit GB)</label>
-                                <div class="input-group" dir="ltr">
+                                <label class="form-label">Limit GB</label>
+                                <div class="input-group">
                                     <span class="input-group-text">GB</span>
-                                    <InputNumber @bind-Value="createModel.LimitGB" class="form-control text-end" />
+                                    <InputNumber @bind-Value="createModel.LimitGB" class="form-control" />
                                 </div>
                             </div>
 
                             <div class="col-12 mb-3">
-                                <label class="form-label fw-bold small">ملاحظات (Comment)</label>
+                                <label class="form-label">Comments</label>
                                 <InputTextArea @bind-Value="createModel.UserDetails" class="form-control" rows="2" />
                             </div>
                         </div>
                     </div>
 
-                    <div class="modal-footer bg-light d-flex justify-content-start gap-2 px-4 py-3">
-                        <button type="submit" class="btn btn-primary px-4 fw-bold shadow-sm">حفظ المستخدم</button>
+                    <div class="modal-footer d-flex justify-content-start gap-2 px-4 py-3">
+                        <button type="submit" class="btn btn-primary px-4">Save User</button>
     
-                        <button type="button" class="btn btn-secondary px-4 fw-bold shadow-sm" @onclick="Close">إلغاء</button>
+                        <button type="button" class="btn btn-light px-4" @onclick="Close">Cancel</button>
                     </div>
                 </EditForm>
             </div>
