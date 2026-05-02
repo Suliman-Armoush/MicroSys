@@ -17,6 +17,19 @@ namespace Infrastructure.MikroTik.Services
       _client = client;
     }
 
+    public Task<bool> TestConnection()
+    {
+      try
+      {
+        using var connection = _client.Connect();
+        return Task.FromResult(true);
+      }
+      catch
+      {
+        return Task.FromResult(false);
+      }
+    }
+
     public async Task<List<MikrotikUserResponse>> GetAllUsersAsync()
     {
       var result = new List<MikrotikUserResponse>();

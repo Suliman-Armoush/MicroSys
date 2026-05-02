@@ -6,6 +6,8 @@
 @using UI.Services.Interfaces
 
 @inject ISysInfosService SysInfosService
+@inject IMikrotikService MikrotikService
+
 @inject IJSRuntime JS
 
 <PageTitle>Home - MicroSys 🤪</PageTitle>
@@ -286,7 +288,12 @@
 
     private async Task TestConnection()
     {
-        await JS.InvokeVoidAsync("alert", "Connection Successful");
+        var result = await MikrotikService.TestConnectionAsync();
+
+        if (result)
+            await JS.InvokeVoidAsync("alert", "Connected ✅");
+        else
+            await JS.InvokeVoidAsync("alert", "Failed ❌");
     }
 
     private async void ShowModal()
