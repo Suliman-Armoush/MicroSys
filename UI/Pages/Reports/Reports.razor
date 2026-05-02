@@ -1,4 +1,6 @@
 ﻿@page "/reports"
+@attribute [Authorize(Roles = "Admin")]
+
 @using UI.Models.Response
 @using UI.Services.Interfaces
 @inject IReportService ReportService

@@ -1,0 +1,235 @@
+﻿@page "/users"
+@attribute [Authorize(Roles = "Admin")]
+
+@using UI.Models.Request
+@using UI.Models.Response
+@using UI.Services.Reposetories
+@using UI.Services.Interfaces
+
+@inject IUserService UserService
+@inject IRoleService RoleService
+@inject IDepartmentService DepartmentService
+@inject IJSRuntime JS
+
+<PageTitle>إدارة المستخدمين</PageTitle>
+
+<div class="container mt-4">
+    <h2>المستخدمين</h2>
+
+    <button class="btn btn-primary mb-3" @onclick="OpenCreateModal">
+        + إضافة مستخدم
+    </button>
+
+    @if (isLoading)
+    {
+        <p>جاري التحميل...</p>
+    }
+    else
+    {
+        <table class="table table-bordered table-striped">
+            <thead>
+                <tr>
+                    <th>#</th>
+                    <th>الاسم</th>
+                    <th>اسم المستخدم</th>
+                    <th>الدور</th>
+                    <th>القسم</th>
+                    <th>إجراءات</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var user in users)
+                {
+                    <tr>
+                        <td>@user.Id</td>
+                        <td>@user.Name</td>
+                        <td>@user.UserName</td>
+                        <td>@user.Role?.Name</td>
+                        <td>@user.Department?.Name</td>
+                        <td>
+                            <button class="btn btn-sm btn-warning"
+                                    @onclick="() => OpenEditModal(user)">
+                                تعديل
+                            </button>
+
+                            <button class="btn btn-sm btn-danger"
+                                    @onclick="() => DeleteUser(user.Id)">
+                                حذف
+                            </button>
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    }
+</div>
+
+<!-- Modal -->
+<div class="modal fade" id="userModal">
+    <div class="modal-dialog">
+        <div class="modal-content">
+
+            <div class="modal-header">
+                <h5 class="modal-title">
+                    @(isEditMode ? "تعديل مستخدم" : "إضافة مستخدم")
+                </h5>
+                <button class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+
+            <div class="modal-body">
+                <EditForm Model="@currentUser" OnValidSubmit="SaveUser">
+                    <DataAnnotationsValidator />
+
+                    <div class="mb-2">
+                        <label>الاسم</label>
+                        <InputText class="form-control" @bind-Value="currentUser.Name" />
+                    </div>
+
+                    <div class="mb-2">
+                        <label>اسم المستخدم</label>
+                        <InputText class="form-control" @bind-Value="currentUser.UserName" />
+                    </div>
+
+                    @if (!isEditMode)
+                    {
+                        <div class="mb-2">
+                            <label>كلمة المرور</label>
+                            <InputText type="password" class="form-control"
+                                       @bind-Value="currentUser.Password" />
+                        </div>
+                    }
+
+                    <div class="mb-2">
+                        <label>الدور</label>
+                        <InputSelect class="form-control" @bind-Value="currentUser.RoleId">
+                            <option value="">-- اختر --</option>
+                            @foreach (var role in roles)
+                            {
+                                <option value="@role.Id">@role.Name</option>
+                            }
+                        </InputSelect>
+                    </div>
+
+                    <div class="mb-2">
+                        <label>القسم</label>
+                        <InputSelect class="form-control" @bind-Value="currentUser.DepartmentId">
+                            <option value="">-- اختر --</option>
+                            @foreach (var dept in departments)
+                            {
+                                <option value="@dept.Id">@dept.Name</option>
+                            }
+                        </InputSelect>
+                    </div>
+
+                    <button class="btn btn-primary" type="submit" disabled="@isSaving">
+                        @(isSaving ? "جاري الحفظ..." : "حفظ")
+                    </button>
+
+                    <button class="btn btn-secondary" data-bs-dismiss="modal">
+                        إلغاء
+                    </button>
+                </EditForm>
+            </div>
+
+        </div>
+    </div>
+</div>
+
+@code {
+    private List<UserResponseDto> users = new();
+    private List<RoleResponseDto> roles = new();
+    private List<DepartmentResponseDto> departments = new();
+
+    private UserRequestDto currentUser = new();
+
+    private bool isLoading = true;
+    private bool isSaving = false;
+    private bool isEditMode = false;
+    private int editingId;
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadData();
+    }
+
+    private async Task LoadData()
+    {
+        isLoading = true;
+
+        users = await UserService.GetAllAsync();
+        roles = await RoleService.GetAllAsync();
+        departments = await DepartmentService.GetAllAsync();
+
+        isLoading = false;
+    }
+
+    private void OpenCreateModal()
+    {
+        isEditMode = false;
+        currentUser = new UserRequestDto();
+        ShowModal();
+    }
+
+    private void OpenEditModal(UserResponseDto user)
+    {
+        isEditMode = true;
+        editingId = user.Id;
+
+        currentUser = new UserRequestDto
+        {
+            Name = user.Name,
+            UserName = user.UserName,
+            RoleId = user.Role?.Id,
+            DepartmentId = user.Department?.Id
+        };
+
+        ShowModal();
+    }
+
+    private async Task SaveUser()
+    {
+        isSaving = true;
+
+        try
+        {
+            if (isEditMode)
+                await UserService.UpdateAsync(editingId, currentUser);
+            else
+                await UserService.CreateAsync(currentUser);
+
+            await LoadData();
+            CloseModal();
+        }
+        catch (Exception ex)
+        {
+            await JS.InvokeVoidAsync("alert", ex.Message);
+        }
+        finally
+        {
+            isSaving = false;
+        }
+    }
+
+    private async Task DeleteUser(int id)
+    {
+        var confirm = await JS.InvokeAsync<bool>("confirm", "تأكيد الحذف؟");
+
+        if (confirm)
+        {
+            await UserService.DeleteAsync(id);
+            await LoadData();
+        }
+    }
+
+    private async void ShowModal()
+    {
+        await JS.InvokeVoidAsync("eval",
+            "new bootstrap.Modal(document.getElementById('userModal')).show()");
+    }
+
+    private async void CloseModal()
+    {
+        await JS.InvokeVoidAsync("eval",
+            "bootstrap.Modal.getInstance(document.getElementById('userModal'))?.hide()");
+    }
+}
