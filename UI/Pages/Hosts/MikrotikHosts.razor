@@ -1,4 +1,6 @@
 ﻿@page "/mikrotik-hosts"
+@attribute [Authorize(Roles = "Admin")]
+
 @using UI.Models.Response
 @using UI.Services.Interfaces
 @inject IMikrotikService MikrotikService
