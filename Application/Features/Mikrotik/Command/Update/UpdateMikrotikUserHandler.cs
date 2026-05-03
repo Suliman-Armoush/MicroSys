@@ -52,7 +52,7 @@ namespace Application.Features.Mikrotik.Command.Update
             string finalDetails = !string.IsNullOrEmpty(request.UserDetails) ? request.UserDetails : oldDetails;
 
             // 5. بناء الكومنت النهائي بنفس تنسيق الكريت (QIMS Standard)
-            string finalComment = $"@{finalDeptName} - {finalDetails}";
+            string finalComment = $"{finalDeptName} - {finalDetails}";
 
             // 6. تحويل اللمت لـ Bytes دقيقة (1024 * 1024 * 1024) عشان تظهر 5G بالوين بوكس
             long? limitBytes = null;
