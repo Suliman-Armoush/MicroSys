@@ -40,11 +40,11 @@
                 <table class="table table-hover data-table align-middle text-center">
                     <thead>
                         <tr>
-                            <th>Actions</th>
-                            <th>Uptime</th>
-                            <th>IP Address</th>
-                            <th class="text-start">MAC</th>
                             <th class="text-start">Comments</th>
+                            <th class="text-start">MAC</th>
+                            <th>IP Address</th>
+                            <th>Uptime</th>
+                            <th>Actions</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -76,11 +76,11 @@
                             @foreach (var host in hosts)
                             {
                                 <tr>
-                                    <td><HostDeleteButton OnClickRequest="() => OpenModal(false, host.MacAddress)" /></td>
-                                    <td class="text-muted fw-bold">@host.Uptime</td>
-                                    <td><span class="soft-badge primary">@host.IpAddress</span></td>
-                                    <td class="text-start font-monospace fw-bold">@host.MacAddress</td>
                                     <td class="text-start text-muted">@host.Comment</td>
+                                    <td class="text-start font-monospace fw-bold">@host.MacAddress</td>
+                                    <td><span class="soft-badge primary">@host.IpAddress</span></td>
+                                    <td class="text-muted fw-bold">@host.Uptime</td>
+                                    <td><HostDeleteButton OnClickRequest="() => OpenModal(false, host.MacAddress)" /></td>
                                 </tr>
                             }
                         }
