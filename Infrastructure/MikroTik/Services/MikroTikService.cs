@@ -152,28 +152,28 @@ namespace Infrastructure.MikroTik.Services
         {
             using var connection = _client.Connect();
 
-\            var cmd = connection.CreateCommand("/ip/hotspot/user/set");
+            var cmd = connection.CreateCommand("/ip/hotspot/user/set");
 
-\            cmd.AddParameter(".id", currentUsername);
+            cmd.AddParameter(".id", currentUsername);
 
-\            if (!string.IsNullOrEmpty(request.NewUsername)) cmd.AddParameter("name", request.NewUsername);
+            if (!string.IsNullOrEmpty(request.NewUsername)) cmd.AddParameter("name", request.NewUsername);
             if (!string.IsNullOrEmpty(request.Password)) cmd.AddParameter("password", request.Password);
             if (!string.IsNullOrEmpty(request.Profile)) cmd.AddParameter("profile", request.Profile);
             if (!string.IsNullOrEmpty(request.Server)) cmd.AddParameter("server", request.Server);
             if (!string.IsNullOrEmpty(request.Comment)) cmd.AddParameter("comment", request.Comment);
 
-\            if (!string.IsNullOrEmpty(request.LimitBytes))
+            if (!string.IsNullOrEmpty(request.LimitBytes))
             {
                 cmd.AddParameter("limit-bytes-total", request.LimitBytes);
             }
 
-\            cmd.ExecuteNonQuery();
+            cmd.ExecuteNonQuery();
 
             return new MikrotikUserInformationResponse
             {
                 Username = request.NewUsername ?? currentUsername,
                 Comment = request.Comment,
-\                LimitGB = string.IsNullOrEmpty(request.LimitBytes) ? 0 : double.Parse(request.LimitBytes.Replace("G", ""))
+               LimitGB = string.IsNullOrEmpty(request.LimitBytes) ? 0 : double.Parse(request.LimitBytes.Replace("G", ""))
             };
         }
         public async Task<bool> IsUserExistsAsync(string username)
