@@ -194,7 +194,8 @@ namespace Infrastructure.MikroTik.Services
             double? limitGb = null;
             if (user.LimitBytesTotal > 0)
             {
-                limitGb = Math.Round(user.LimitBytesTotal / (1024.0 * 1024.0 * 1024.0), 2);
+                
+                limitGb = Math.Round(user.LimitBytesTotal / 1_000_000_000.0, 0);
             }
 
             return new MikrotikUserInformationResponse
@@ -255,13 +256,56 @@ namespace Infrastructure.MikroTik.Services
         public async Task<bool> UpdateUserStatusAsync(string username, bool isDisabled)
         {
             using var connection = _client.Connect();
-            var user = connection.LoadAll<HotspotUser>().FirstOrDefault(u => u.Name == username);
 
-            if (user == null) return false;
+            try
+            {
+                // 1. تحديث الحالة - استخدم ExecuteScalar هنا لأنه لا يتوقع عودة بيانات
+                var setStatusCmd = connection.CreateCommand("/ip/hotspot/user/set");
+                setStatusCmd.AddParameter(".id", username);
+                setStatusCmd.AddParameter("disabled", isDisabled ? "yes" : "no");
+                setStatusCmd.ExecuteScalar();
 
-            user.Disabled = isDisabled;
-            connection.Save(user);
-            return true;
+                if (isDisabled)
+                {
+                    // 2. حذف من Active (مع التحقق)
+                    var getActiveCmd = connection.CreateCommand("/ip/hotspot/active/print");
+                    getActiveCmd.AddParameter("?user", username);
+                    var activeSessions = getActiveCmd.ExecuteList();
+
+                    foreach (var session in activeSessions)
+                    {
+                        try
+                        {
+                            var removeActiveCmd = connection.CreateCommand("/ip/hotspot/active/remove");
+                            removeActiveCmd.AddParameter(".id", session.GetId());
+                            removeActiveCmd.ExecuteScalar();
+                        }
+                        catch { /* تجاوز إذا كان قد حذف بالفعل */ }
+                    }
+
+                    // 3. حذف من Host (مع التحقق)
+                    var getHostCmd = connection.CreateCommand("/ip/hotspot/host/print");
+                    getHostCmd.AddParameter("?user", username);
+                    var hosts = getHostCmd.ExecuteList();
+
+                    foreach (var host in hosts)
+                    {
+                        try
+                        {
+                            var removeHostCmd = connection.CreateCommand("/ip/hotspot/host/remove");
+                            removeHostCmd.AddParameter(".id", host.GetId());
+                            removeHostCmd.ExecuteScalar();
+                        }
+                        catch { /* تجاوز */ }
+                    }
+                }
+                return true;
+            }
+            catch (Exception ex)
+            {
+                // تسجيل الخطأ أو التعامل معه
+                return false;
+            }
         }
 
 

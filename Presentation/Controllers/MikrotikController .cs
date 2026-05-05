@@ -113,13 +113,11 @@ namespace Presentation.Controllers
     {
       try
       {
-        // لاحظ هنا: الـ Command يحتاج Username
         var result = await _mediator.Send(new DisableMikrotikUserCommand(username));
         return Ok(new { success = true, message = "User disabled successfully." });
       }
       catch (ValidationException ex)
       {
-        // هذا الجزء هو المسؤول عن إرسال رسالة "This user is already disabled" للفرونت
         return BadRequest(ex.Errors.FirstOrDefault()?.ErrorMessage ?? "Validation failed");
       }
       catch (Exception ex)
