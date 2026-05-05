@@ -8,445 +8,433 @@ using tik4net.Objects.Ip.Hotspot;
 
 namespace Infrastructure.MikroTik.Services
 {
-  public class MikrotikService : IMikrotikService
-  {
-    private readonly MikrotikClient _client;
-
-    public MikrotikService(MikrotikClient client)
+    public class MikrotikService : IMikrotikService
     {
-      _client = client;
-    }
+        private readonly MikrotikClient _client;
 
-    public Task<bool> TestConnection()
-    {
-      try
-      {
-        using var connection = _client.Connect();
-        return Task.FromResult(true);
-      }
-      catch
-      {
-        return Task.FromResult(false);
-      }
-    }
-
-    public async Task<List<MikrotikUserResponse>> GetAllUsersAsync()
-    {
-      var result = new List<MikrotikUserResponse>();
-
-      using var connection = _client.Connect();
-
-      var users = connection.LoadAll<HotspotUser>();
-
-      foreach (var user in users)
-      {
-        result.Add(new MikrotikUserResponse
+        public MikrotikService(MikrotikClient client)
         {
-          Comment = user.Comment,
-          Username = user.Name,
-          BytesInRaw = user.BytesIn,
-          BytesOutRaw = user.BytesOut
-        });
-      }
+            _client = client;
+        }
 
-      return result;
-    }
-
-    public async Task<List<MikrotikProfileResponse>> GetAllProfilesAsync()
-    {
-      var result = new List<MikrotikProfileResponse>();
-
-      using var connection = _client.Connect();
-
-      var profiles = connection.LoadAll<HotspotUserProfile>();
-
-      foreach (var profile in profiles)
-      {
-        result.Add(new MikrotikProfileResponse
+        public Task<bool> TestConnection()
         {
-          Name = profile.Name,
-          SharedUsers = profile.SharedUsers,
-          RateLimit = profile.RateLimit
-        });
-      }
+            try
+            {
+                using var connection = _client.Connect();
+                return Task.FromResult(true);
+            }
+            catch
+            {
+                return Task.FromResult(false);
+            }
+        }
 
-      return result;
-    }
-
-
-    public async Task<DetailedDepartmentConsumptionResponse> GetUsageByDepartmentNameAsync(string departmentName)
-    {
-      var allUsers = await GetAllUsersAsync();
-      var searchKey = departmentName.Trim().ToLower();
-
-      var deptUsers = allUsers.Where(u =>
-      {
-        var comment = (u.Comment ?? "").Trim().ToLower();
-        return comment.StartsWith($"@{searchKey}") ||
-                     comment.StartsWith($"#{searchKey}") ||
-                     comment.StartsWith(searchKey);
-      }).ToList();
-
-      return new DetailedDepartmentConsumptionResponse
-      {
-        DepartmentName = departmentName,
-        TotalConsumptionGB = Math.Round(deptUsers.Sum(x => x.BytesInRaw + x.BytesOutRaw) / Math.Pow(1024, 3), 2),
-        Users = deptUsers.Select(u => new UserConsumptionDetail
+        public async Task<List<MikrotikUserResponse>> GetAllUsersAsync()
         {
-          // نستخدم الدالة المساعدة هنا لتنظيف الاسم
-          UserName = CleanUserName(u.Comment ?? u.Username, departmentName),
-          UsageGB = Math.Round((u.BytesInRaw + u.BytesOutRaw) / Math.Pow(1024, 3), 2)
-        }).OrderByDescending(u => u.UsageGB).ToList(),
-        Type = "DepartmentUsage"
-      };
-    }
+            var result = new List<MikrotikUserResponse>();
 
-    // دالة مساعدة لتنظيف اسم المستخدم من اسم القسم والرموز
-    private string CleanUserName(string rawName, string deptName)
-    {
-      if (string.IsNullOrEmpty(rawName)) return "Unknown";
+            using var connection = _client.Connect();
 
-      var cleaned = rawName.TrimStart('@', '#', ' ').Trim();
+            var users = connection.LoadAll<HotspotUser>();
 
-      if (cleaned.ToLower().StartsWith(deptName.ToLower()))
-      {
-        cleaned = cleaned.Substring(deptName.Length).Trim();
+            foreach (var user in users)
+            {
+                result.Add(new MikrotikUserResponse
+                {
+                    Comment = user.Comment,
+                    Username = user.Name,
+                    BytesInRaw = user.BytesIn,
+                    BytesOutRaw = user.BytesOut
+                });
+            }
 
-        cleaned = cleaned.TrimStart('-', '_', ':', '.', ' ');
-      }
+            return result;
+        }
 
-      return string.IsNullOrWhiteSpace(cleaned) ? rawName : cleaned;
-    }
-
-    public async Task<MikrotikUserInformationResponse> CreateUserAsync(CreateMikrotikUserRequest request)
-    {
-      using var connection = _client.Connect();
-      var newUser = new HotspotUser
-      {
-        Name = request.Username,
-        Password = request.Password,
-        Profile = request.Profile,
-        Server = request.Server,
-        Comment = request.Comment,
-        LimitBytesTotal = request.LimitBytes ?? 0,
-        Disabled = false
-      };
-
-      connection.Save(newUser);
-
-      return new MikrotikUserInformationResponse
-      {
-        Username = request.Username,
-        Profile = request.Profile,
-        Server = request.Server,
-        Comment = request.Comment,
-        LimitGB = request.LimitBytes.HasValue ? (request.LimitBytes.Value / Math.Pow(1024, 3)) : 0
-      };
-    }
-    public async Task<MikrotikUserInformationResponse> UpdateUserAsync(UpdateMikrotikUserRequest request, string currentUsername)
-    {
-      using var connection = _client.Connect();
-
-      var existingUser = connection.LoadAll<HotspotUser>()
-                                   .FirstOrDefault(u => u.Name == currentUsername);
-
-      if (existingUser == null) throw new Exception("User not found on Mikrotik.");
-
-      if (!string.IsNullOrEmpty(request.NewUsername))
-        existingUser.Name = request.NewUsername;
-
-      if (!string.IsNullOrEmpty(request.Password))
-        existingUser.Password = request.Password;
-
-      if (!string.IsNullOrEmpty(request.Profile))
-        existingUser.Profile = request.Profile;
-
-      if (!string.IsNullOrEmpty(request.Server))
-      {
-        existingUser.Server = request.Server;
-      }
-
-
-      if (request.LimitBytes.HasValue && request.LimitBytes.Value > 0)
-      {
-        existingUser.LimitBytesTotal = request.LimitBytes.Value;
-      }
-
-      if (!string.IsNullOrEmpty(request.Comment))
-      {
-        existingUser.Comment = request.Comment;
-      }
-
-      connection.Save(existingUser);
-
-      return new MikrotikUserInformationResponse
-      {
-        Username = existingUser.Name,
-        Server = existingUser.Server,
-        Profile = existingUser.Profile,
-        Comment = existingUser.Comment,
-        LimitGB = existingUser.LimitBytesTotal > 0 ? (double)existingUser.LimitBytesTotal / 1073741824 : 0
-      };
-    }
-    public async Task<bool> IsUserExistsAsync(string username)
-    {
-      using var connection = _client.Connect();
-      return connection.LoadAll<HotspotUser>()
-                       .Any(u => u.Name.Equals(username, StringComparison.OrdinalIgnoreCase));
-    }
-
-    public async Task<MikrotikUserInformationResponse> GetUserByNameAsync(string username)
-    {
-      using var connection = _client.Connect();
-
-      var user = connection.LoadAll<HotspotUser>().FirstOrDefault(u => u.Name == username);
-
-      if (user == null) return null;
-
-      double? limitGb = null;
-      if (user.LimitBytesTotal > 0)
-      {
-        limitGb = Math.Round(user.LimitBytesTotal / (1024.0 * 1024.0 * 1024.0), 2);
-      }
-
-      return new MikrotikUserInformationResponse
-      {
-        Username = user.Name,
-        Profile = user.Profile,
-        Server = user.Server,
-        Comment = user.Comment,
-        IsDisabled = user.Disabled,
-        LimitGB = limitGb
-      };
-    }
-
-
-    public async Task<List<MikrotikUserResponse>> SearchUsersAsync(string term)
-    {
-      using var connection = _client.Connect();
-
-      var allUsers = connection.LoadAll<HotspotUser>();
-
-      if (string.IsNullOrWhiteSpace(term))
-        return MapToResponseList(allUsers.Take(20).ToList());
-
-      var filteredUsers = allUsers.Where(u =>
-          (u.Name != null && u.Name.Contains(term, StringComparison.OrdinalIgnoreCase)) ||
-          (u.Comment != null && u.Comment.Contains(term, StringComparison.OrdinalIgnoreCase))
-      ).ToList();
-
-      return MapToResponseList(filteredUsers);
-    }
-
-    private List<MikrotikUserResponse> MapToResponseList(List<HotspotUser> users)
-    {
-      return users.Select(u => new MikrotikUserResponse
-      {
-        Comment = u.Comment,
-        Username = u.Name,
-        BytesInRaw = u.BytesIn,
-        BytesOutRaw = u.BytesOut
-      }).ToList();
-    }
-
-    public async Task<bool> DeleteUserAsync(string username)
-    {
-      using var connection = _client.Connect();
-
-      var user = connection.LoadAll<HotspotUser>().FirstOrDefault(u => u.Name == username);
-
-      if (user != null)
-      {
-        connection.Delete(user);
-        return true;
-      }
-
-      return false;
-    }
-
-    public async Task<bool> UpdateUserStatusAsync(string username, bool isDisabled)
-    {
-      using var connection = _client.Connect();
-      var user = connection.LoadAll<HotspotUser>().FirstOrDefault(u => u.Name == username);
-
-      if (user == null) return false;
-
-      user.Disabled = isDisabled;
-      connection.Save(user);
-      return true;
-    }
-
-
-    public async Task<List<MikrotikServerResponse>> GetAllServersAsync()
-    {
-      using var connection = _client.Connect();
-
-      var command = connection.CreateCommand("/ip/hotspot/print");
-      var result = command.ExecuteList();
-
-      return result.Select(sentence =>
-      {
-        sentence.Words.TryGetValue("name", out string name);
-        sentence.Words.TryGetValue("interface", out string @interface);
-        sentence.Words.TryGetValue("disabled", out string disabled);
-
-        return new MikrotikServerResponse
+        public async Task<List<MikrotikProfileResponse>> GetAllProfilesAsync()
         {
-          Name = name ?? "unknown",
-          Interface = @interface ?? "unknown",
-          IsEnabled = disabled != "true"
-        };
-      }).ToList();
-    }
+            var result = new List<MikrotikProfileResponse>();
 
-    public async Task<bool> DisableUserAsync(string username)
-    {
-      return await UpdateUserStatusAsync(username, true);
-    }
+            using var connection = _client.Connect();
 
-    public async Task<bool> EnableUserAsync(string username)
-    {
-      return await UpdateUserStatusAsync(username, false);
-    }
+            var profiles = connection.LoadAll<HotspotUserProfile>();
 
-    public async Task<List<MikrotikHostResponse>> GetAllHostsAsync()
-    {
-      using var connection = _client.Connect();
+            foreach (var profile in profiles)
+            {
+                result.Add(new MikrotikProfileResponse
+                {
+                    Name = profile.Name,
+                    SharedUsers = profile.SharedUsers,
+                    RateLimit = profile.RateLimit
+                });
+            }
 
-      var command = connection.CreateCommand("/ip/hotspot/host/print");
-      var result = command.ExecuteList();
+            return result;
+        }
 
-      return result.Select(sentence =>
-      {
-        sentence.Words.TryGetValue("mac-address", out string mac);
-        sentence.Words.TryGetValue("address", out string ip);
-        sentence.Words.TryGetValue("uptime", out string uptime);
-        sentence.Words.TryGetValue("comment", out string comment);
 
-        return new MikrotikHostResponse
+        public async Task<DetailedDepartmentConsumptionResponse> GetUsageByDepartmentNameAsync(string departmentName)
         {
-          Comment = comment ?? "",
+            var allUsers = await GetAllUsersAsync();
+            var searchKey = departmentName.Trim().ToLower();
 
-          MacAddress = mac ?? "unknown",
-          IpAddress = ip ?? "0.0.0.0",
-          Uptime = uptime ?? "00:00:00"
-        };
-      }).ToList();
+            var deptUsers = allUsers.Where(u =>
+            {
+                var comment = (u.Comment ?? "").Trim().ToLower();
+                return comment.StartsWith($"@{searchKey}") ||
+                       comment.StartsWith($"#{searchKey}") ||
+                       comment.StartsWith(searchKey);
+            }).ToList();
+
+            return new DetailedDepartmentConsumptionResponse
+            {
+                DepartmentName = departmentName,
+                TotalConsumptionGB = Math.Round(deptUsers.Sum(x => x.BytesInRaw + x.BytesOutRaw) / Math.Pow(1024, 3), 2),
+                Users = deptUsers.Select(u => new UserConsumptionDetail
+                {
+                    // نستخدم الدالة المساعدة هنا لتنظيف الاسم
+                    UserName = CleanUserName(u.Comment ?? u.Username, departmentName),
+                    UsageGB = Math.Round((u.BytesInRaw + u.BytesOutRaw) / Math.Pow(1024, 3), 2)
+                }).OrderByDescending(u => u.UsageGB).ToList(),
+                Type = "DepartmentUsage"
+            };
+        }
+
+        // دالة مساعدة لتنظيف اسم المستخدم من اسم القسم والرموز
+        private string CleanUserName(string rawName, string deptName)
+        {
+            if (string.IsNullOrEmpty(rawName)) return "Unknown";
+
+            var cleaned = rawName.TrimStart('@', '#', ' ').Trim();
+
+            if (cleaned.ToLower().StartsWith(deptName.ToLower()))
+            {
+                cleaned = cleaned.Substring(deptName.Length).Trim();
+
+                cleaned = cleaned.TrimStart('-', '_', ':', '.', ' ');
+            }
+
+            return string.IsNullOrWhiteSpace(cleaned) ? rawName : cleaned;
+        }
+
+        public async Task<MikrotikUserInformationResponse> CreateUserAsync(CreateMikrotikUserRequest request)
+        {
+            using var connection = _client.Connect();
+
+            var cmd = connection.CreateCommand("/ip/hotspot/user/add");
+
+            cmd.AddParameter("name", request.Username);
+            cmd.AddParameter("password", request.Password);
+            cmd.AddParameter("profile", request.Profile);
+            cmd.AddParameter("server", request.Server);
+            cmd.AddParameter("comment", request.Comment);
+
+            if (!string.IsNullOrEmpty(request.LimitBytes))
+            {
+                cmd.AddParameter("limit-bytes-total", request.LimitBytes);
+            }
+
+            cmd.ExecuteNonQuery();
+
+            return new MikrotikUserInformationResponse
+            {
+                Username = request.Username,
+                Profile = request.Profile,
+                Server = request.Server,
+                Comment = request.Comment,
+                LimitGB = string.IsNullOrEmpty(request.LimitBytes)
+                          ? 0
+                          : double.Parse(request.LimitBytes.Replace("G", ""))
+            };
+        }
+        public async Task<MikrotikUserInformationResponse> UpdateUserAsync(UpdateMikrotikUserRequest request, string currentUsername)
+        {
+            using var connection = _client.Connect();
+
+\            var cmd = connection.CreateCommand("/ip/hotspot/user/set");
+
+\            cmd.AddParameter(".id", currentUsername);
+
+\            if (!string.IsNullOrEmpty(request.NewUsername)) cmd.AddParameter("name", request.NewUsername);
+            if (!string.IsNullOrEmpty(request.Password)) cmd.AddParameter("password", request.Password);
+            if (!string.IsNullOrEmpty(request.Profile)) cmd.AddParameter("profile", request.Profile);
+            if (!string.IsNullOrEmpty(request.Server)) cmd.AddParameter("server", request.Server);
+            if (!string.IsNullOrEmpty(request.Comment)) cmd.AddParameter("comment", request.Comment);
+
+\            if (!string.IsNullOrEmpty(request.LimitBytes))
+            {
+                cmd.AddParameter("limit-bytes-total", request.LimitBytes);
+            }
+
+\            cmd.ExecuteNonQuery();
+
+            return new MikrotikUserInformationResponse
+            {
+                Username = request.NewUsername ?? currentUsername,
+                Comment = request.Comment,
+\                LimitGB = string.IsNullOrEmpty(request.LimitBytes) ? 0 : double.Parse(request.LimitBytes.Replace("G", ""))
+            };
+        }
+        public async Task<bool> IsUserExistsAsync(string username)
+        {
+            using var connection = _client.Connect();
+            return connection.LoadAll<HotspotUser>()
+                             .Any(u => u.Name.Equals(username, StringComparison.OrdinalIgnoreCase));
+        }
+
+        public async Task<MikrotikUserInformationResponse> GetUserByNameAsync(string username)
+        {
+            using var connection = _client.Connect();
+
+            var user = connection.LoadAll<HotspotUser>().FirstOrDefault(u => u.Name == username);
+
+            if (user == null) return null;
+
+            double? limitGb = null;
+            if (user.LimitBytesTotal > 0)
+            {
+                limitGb = Math.Round(user.LimitBytesTotal / (1024.0 * 1024.0 * 1024.0), 2);
+            }
+
+            return new MikrotikUserInformationResponse
+            {
+                Username = user.Name,
+                Profile = user.Profile,
+                Server = user.Server,
+                Comment = user.Comment,
+                IsDisabled = user.Disabled,
+                LimitGB = limitGb
+            };
+        }
+
+
+        public async Task<List<MikrotikUserResponse>> SearchUsersAsync(string term)
+        {
+            using var connection = _client.Connect();
+
+            var allUsers = connection.LoadAll<HotspotUser>();
+
+            if (string.IsNullOrWhiteSpace(term))
+                return MapToResponseList(allUsers.Take(20).ToList());
+
+            var filteredUsers = allUsers.Where(u =>
+                (u.Name != null && u.Name.Contains(term, StringComparison.OrdinalIgnoreCase)) ||
+                (u.Comment != null && u.Comment.Contains(term, StringComparison.OrdinalIgnoreCase))
+            ).ToList();
+
+            return MapToResponseList(filteredUsers);
+        }
+
+        private List<MikrotikUserResponse> MapToResponseList(List<HotspotUser> users)
+        {
+            return users.Select(u => new MikrotikUserResponse
+            {
+                Comment = u.Comment,
+                Username = u.Name,
+                BytesInRaw = u.BytesIn,
+                BytesOutRaw = u.BytesOut
+            }).ToList();
+        }
+
+        public async Task<bool> DeleteUserAsync(string username)
+        {
+            using var connection = _client.Connect();
+
+            var user = connection.LoadAll<HotspotUser>().FirstOrDefault(u => u.Name == username);
+
+            if (user != null)
+            {
+                connection.Delete(user);
+                return true;
+            }
+
+            return false;
+        }
+
+        public async Task<bool> UpdateUserStatusAsync(string username, bool isDisabled)
+        {
+            using var connection = _client.Connect();
+            var user = connection.LoadAll<HotspotUser>().FirstOrDefault(u => u.Name == username);
+
+            if (user == null) return false;
+
+            user.Disabled = isDisabled;
+            connection.Save(user);
+            return true;
+        }
+
+
+        public async Task<List<MikrotikServerResponse>> GetAllServersAsync()
+        {
+            using var connection = _client.Connect();
+
+            var command = connection.CreateCommand("/ip/hotspot/print");
+            var result = command.ExecuteList();
+
+            return result.Select(sentence =>
+            {
+                sentence.Words.TryGetValue("name", out string name);
+                sentence.Words.TryGetValue("interface", out string @interface);
+                sentence.Words.TryGetValue("disabled", out string disabled);
+
+                return new MikrotikServerResponse
+                {
+                    Name = name ?? "unknown",
+                    Interface = @interface ?? "unknown",
+                    IsEnabled = disabled != "true"
+                };
+            }).ToList();
+        }
+
+        public async Task<bool> DisableUserAsync(string username)
+        {
+            return await UpdateUserStatusAsync(username, true);
+        }
+
+        public async Task<bool> EnableUserAsync(string username)
+        {
+            return await UpdateUserStatusAsync(username, false);
+        }
+
+        public async Task<List<MikrotikHostResponse>> GetAllHostsAsync()
+        {
+            using var connection = _client.Connect();
+
+            var command = connection.CreateCommand("/ip/hotspot/host/print");
+            var result = command.ExecuteList();
+
+            return result.Select(sentence =>
+            {
+                sentence.Words.TryGetValue("mac-address", out string mac);
+                sentence.Words.TryGetValue("address", out string ip);
+                sentence.Words.TryGetValue("uptime", out string uptime);
+                sentence.Words.TryGetValue("comment", out string comment);
+
+                return new MikrotikHostResponse
+                {
+                    Comment = comment ?? "",
+
+                    MacAddress = mac ?? "unknown",
+                    IpAddress = ip ?? "0.0.0.0",
+                    Uptime = uptime ?? "00:00:00"
+                };
+            }).ToList();
+        }
+
+        public async Task<List<MikrotikHostResponse>> SearchHostsAsync(string term)
+        {
+            var allHosts = await GetAllHostsAsync();
+
+            if (string.IsNullOrWhiteSpace(term))
+                return allHosts;
+
+            var searchKey = term.Trim().ToLower();
+
+            return allHosts.Where(h =>
+                (h.MacAddress != null && h.MacAddress.ToLower().Contains(searchKey)) ||
+                (h.IpAddress != null && h.IpAddress.ToLower().Contains(searchKey)) ||
+                (h.Comment != null && h.Comment.ToLower().Contains(searchKey))
+            ).ToList();
+        }
+
+
+
+        public async Task<bool> RemoveHostByMacAsync(string macAddress)
+        {
+            try
+            {
+                using var connection = _client.Connect();
+
+                var findCommand = connection.CreateCommand("/ip/hotspot/host/print");
+                findCommand.AddParameter("mac-address", macAddress);
+
+                var host = findCommand.ExecuteList().FirstOrDefault();
+
+                if (host == null) return false;
+
+                host.Words.TryGetValue(".id", out string internalId);
+                if (string.IsNullOrEmpty(internalId)) return false;
+
+                var deleteCommand = connection.CreateCommand("/ip/hotspot/host/remove");
+                deleteCommand.AddParameter(".id", internalId);
+                deleteCommand.ExecuteNonQuery();
+
+                return true;
+            }
+            catch (Exception ex) when (ex.Message.Contains("!empty") || ex.Message.Contains("not supported"))
+            {
+
+                return false;
+            }
+        }
+
+        public async Task<bool> RemoveAllHostsAsync()
+        {
+            try
+            {
+                using var connection = _client.Connect();
+
+                var findCommand = connection.CreateCommand("/ip/hotspot/host/print");
+                var allHosts = findCommand.ExecuteList();
+
+                if (allHosts == null || !allHosts.Any())
+                    return true;
+
+
+                var allIds = allHosts
+                    .Select(h => h.Words.TryGetValue(".id", out string id) ? id : null)
+                    .Where(id => !string.IsNullOrEmpty(id))
+                    .ToList();
+
+                if (!allIds.Any()) return true;
+
+
+                var deleteCommand = connection.CreateCommand("/ip/hotspot/host/remove");
+                deleteCommand.AddParameter("numbers", string.Join(",", allIds));
+                deleteCommand.ExecuteNonQuery();
+
+                return true;
+            }
+            catch (Exception ex)
+            {
+                if (ex.Message.Contains("!empty") || ex.Message.Contains("not supported"))
+                    return true;
+
+                return false;
+            }
+        }
+
+        public async Task<bool> ResetAllUserCountersAsync()
+        {
+            try
+            {
+                using var connection = _client.Connect();
+
+                var users = connection.LoadAll<HotspotUser>();
+
+                if (users == null || !users.Any())
+                    return true;
+
+                var ids = users
+                    .Where(u => !string.IsNullOrEmpty(u.Id))
+                    .Select(u => u.Id)
+                    .ToList();
+
+                if (!ids.Any())
+                    return false;
+
+                var command = connection.CreateCommand("/ip/hotspot/user/reset-counters");
+                command.AddParameter("numbers", string.Join(",", ids));
+                command.ExecuteNonQuery();
+
+                return true;
+            }
+            catch (Exception ex)
+            {
+                return false;
+            }
+        }
+
     }
-
-    public async Task<List<MikrotikHostResponse>> SearchHostsAsync(string term)
-    {
-      var allHosts = await GetAllHostsAsync();
-
-      if (string.IsNullOrWhiteSpace(term))
-        return allHosts;
-
-      var searchKey = term.Trim().ToLower();
-
-      return allHosts.Where(h =>
-          (h.MacAddress != null && h.MacAddress.ToLower().Contains(searchKey)) ||
-          (h.IpAddress != null && h.IpAddress.ToLower().Contains(searchKey)) ||
-          (h.Comment != null && h.Comment.ToLower().Contains(searchKey))
-      ).ToList();
-    }
-
-
-
-    public async Task<bool> RemoveHostByMacAsync(string macAddress)
-    {
-      try
-      {
-        using var connection = _client.Connect();
-
-        var findCommand = connection.CreateCommand("/ip/hotspot/host/print");
-        findCommand.AddParameter("mac-address", macAddress);
-
-        var host = findCommand.ExecuteList().FirstOrDefault();
-
-        if (host == null) return false;
-
-        host.Words.TryGetValue(".id", out string internalId);
-        if (string.IsNullOrEmpty(internalId)) return false;
-
-        var deleteCommand = connection.CreateCommand("/ip/hotspot/host/remove");
-        deleteCommand.AddParameter(".id", internalId);
-        deleteCommand.ExecuteNonQuery();
-
-        return true;
-      }
-      catch (Exception ex) when (ex.Message.Contains("!empty") || ex.Message.Contains("not supported"))
-      {
-
-        return false;
-      }
-    }
-
-    public async Task<bool> RemoveAllHostsAsync()
-    {
-      try
-      {
-        using var connection = _client.Connect();
-
-        var findCommand = connection.CreateCommand("/ip/hotspot/host/print");
-        var allHosts = findCommand.ExecuteList();
-
-        if (allHosts == null || !allHosts.Any())
-          return true;
-
-
-        var allIds = allHosts
-            .Select(h => h.Words.TryGetValue(".id", out string id) ? id : null)
-            .Where(id => !string.IsNullOrEmpty(id))
-            .ToList();
-
-        if (!allIds.Any()) return true;
-
-
-        var deleteCommand = connection.CreateCommand("/ip/hotspot/host/remove");
-        deleteCommand.AddParameter("numbers", string.Join(",", allIds));
-        deleteCommand.ExecuteNonQuery();
-
-        return true;
-      }
-      catch (Exception ex)
-      {
-        if (ex.Message.Contains("!empty") || ex.Message.Contains("not supported"))
-          return true;
-
-        return false;
-      }
-    }
-
-    public async Task<bool> ResetAllUserCountersAsync()
-    {
-      try
-      {
-        using var connection = _client.Connect();
-
-        var users = connection.LoadAll<HotspotUser>();
-
-        if (users == null || !users.Any())
-          return true;
-
-        var ids = users
-            .Where(u => !string.IsNullOrEmpty(u.Id))
-            .Select(u => u.Id)
-            .ToList();
-
-        if (!ids.Any())
-          return false;
-
-        var command = connection.CreateCommand("/ip/hotspot/user/reset-counters");
-        command.AddParameter("numbers", string.Join(",", ids));
-        command.ExecuteNonQuery();
-
-        return true;
-      }
-      catch (Exception ex)
-      {
-        return false;
-      }
-    }
-
-  }
 }

@@ -27,11 +27,10 @@ namespace Application.Features.Mikrotik.Command.Create
 
             string finalComment = $"{department.Name} - {request.UserDetails ?? request.Username}";
 
-            long limitBytes = 0;
-            if (request.LimitGB.HasValue && request.LimitGB.Value > 0)
-            {
-                limitBytes = (long)(request.LimitGB.Value * Math.Pow(1024, 3));
-            }
+            // تحويل الرقم إلى صيغة ميكروتك "10G"
+            string limitValue = (request.LimitGB.HasValue && request.LimitGB.Value > 0)
+                                ? $"{request.LimitGB.Value}G"
+                                : null;
 
             var serviceRequest = new CreateMikrotikUserRequest
             {
@@ -40,7 +39,7 @@ namespace Application.Features.Mikrotik.Command.Create
                 Profile = request.Profile,
                 Server = request.Server,
                 Comment = finalComment,
-                LimitBytes = limitBytes
+                LimitBytes = limitValue
             };
 
             return await _mikrotikService.CreateUserAsync(serviceRequest);
