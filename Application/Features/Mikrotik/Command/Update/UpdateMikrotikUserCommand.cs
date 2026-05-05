@@ -11,10 +11,9 @@ namespace Application.Features.Mikrotik.Command.Update
 {
     public class UpdateMikrotikUserCommand : IRequest<MikrotikUserInformationResponse>
     {
-        [JsonIgnore] // عشان يختفي نهائياً من الـ Body في Swagger
+        [JsonIgnore]
         public string? CurrentUsername { get; set; }
 
-        // هذه الحقول فقط هي التي ستظهر في الـ Body
         public string? NewUsername { get; set; }
         public string? Password { get; set; }
         public string? Profile { get; set; }
