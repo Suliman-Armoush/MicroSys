@@ -11,6 +11,6 @@ namespace Application.DTOs.Request
         public string Profile { get; set; }
         public string Server { get; set; }
         public string Comment { get; set; }
-        public long? LimitBytes { get; set; }
+        public string? LimitBytes { get; set; }
     }
 }
