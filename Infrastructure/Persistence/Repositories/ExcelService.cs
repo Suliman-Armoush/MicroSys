@@ -76,15 +76,13 @@ namespace Infrastructure.Persistence.Repositories
             var ws = workbook.Worksheets.Add(name);
             ws.RightToLeft = true;
 
-            // --- التعديل هنا لدمج الصف 1 والصف 2 ---
             var dateCell = ws.Cell(1, 1);
-            dateCell.Value = $"تاريخ استخراج التقرير: {DateTime.Now:yyyy-MM-dd HH:mm}";
+            dateCell.Value = $"تاريخ تصدير التقرير: {DateTime.Now:yyyy-MM-dd HH:mm}";
 
-            // قمنا بتغيير النطاق من (1, 1, 1, 7) إلى (1, 1, 2, 7) لدمج الصفين
             var dateRange = ws.Range(1, 1, 2, 7);
             dateRange.Merge().Style
                 .Font.SetBold()
-                .Font.SetFontSize(14) // تكبير الخط قليلاً ليتناسب مع المساحة
+                .Font.SetFontSize(14)
                 .Alignment.SetHorizontal(XLAlignmentHorizontalValues.Center)
                 .Alignment.SetVertical(XLAlignmentVerticalValues.Center)
                 .Fill.SetBackgroundColor(XLColor.LightGray);
@@ -145,7 +143,6 @@ namespace Infrastructure.Persistence.Repositories
             var ws = workbook.Worksheets.Add(name);
             ws.RightToLeft = true;
 
-            // --- التعديل هنا أيضاً لدمج الصف 1 والصف 2 ---
             var dateCell = ws.Cell(1, 1);
             dateCell.Value = $"تاريخ تصدير التقرير: {DateTime.Now:yyyy-MM-dd HH:mm}";
 
