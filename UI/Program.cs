@@ -7,6 +7,6 @@ builder.RootComponents.Add<App>("#app");
 builder.RootComponents.Add<HeadOutlet>("head::after");
 
 // Register UI services with the API base address.
-builder.Services.AddUIServices("https://localhost:54982");
+builder.Services.AddUIServices("https://localhost:44345");
 
 await builder.Build().RunAsync();
