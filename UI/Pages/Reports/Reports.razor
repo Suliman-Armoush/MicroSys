@@ -142,7 +142,7 @@
             string dateStr = DateTime.Now.ToString("yyyy-MM-dd");
             string fileName = isDetailed
                 ? $"التقرير التفصيلي لاستهلاك الأقسام {dateStr}.xlsx"
-                : $"التقريرالإجمالي لاستهلاك الأقسام {dateStr}.xlsx";
+                : $"التقرير الإجمالي لاستهلاك الأقسام {dateStr}.xlsx";
 
             if (isDetailed)
             {
@@ -164,7 +164,7 @@
         }
         finally
         {
-            isExporting = false;
+            isExporting = false; 
             isDetailedAction = false;
         }
     }
