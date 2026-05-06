@@ -137,7 +137,12 @@
         try
         {
             byte[]? fileBytes;
-            var fileName = isDetailed ? "Detailed_Report.xlsx" : "Summary_Report.xlsx";
+            
+            // تحديد اسم الملف بناءً على التاريخ الحالي ونوع التقرير
+            string dateStr = DateTime.Now.ToString("yyyy-MM-dd");
+            string fileName = isDetailed
+                ? $"التقرير التفصيلي لاستهلاك الأقسام {dateStr}.xlsx"
+                : $"التقريرالإجمالي لاستهلاك الأقسام {dateStr}.xlsx";
 
             if (isDetailed)
             {
@@ -152,6 +157,10 @@
             {
                 await JS.InvokeVoidAsync("downloadFileFromBytes", fileName, Convert.ToBase64String(fileBytes));
             }
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Export error: {ex.Message}");
         }
         finally
         {
