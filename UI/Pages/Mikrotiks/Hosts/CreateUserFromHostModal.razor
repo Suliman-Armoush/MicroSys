@@ -1,0 +1,217 @@
+﻿@using UI.Models.Request
+@using UI.Models.Response
+@using UI.Services.Interfaces
+@inject IMikrotikService MikrotikService
+
+@if (IsVisible && SelectedHost != null)
+{
+    <div class="modal fade show d-block app-modal-backdrop" tabindex="-1">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header bg-success text-white">
+                    <h5 class="modal-title">Create User from Host</h5>
+                    <button type="button" class="btn-close btn-close-white" @onclick="Close" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <label class="form-label fw-bold">MAC Address</label>
+                        <input type="text" class="form-control bg-light" readonly value="@SelectedHost.MacAddress" />
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label fw-bold">Username *</label>
+                        <input type="text" class="form-control" @bind="createModel.Username" />
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label fw-bold">Password *</label>
+                        <div class="input-group">
+                            <input type="text" class="form-control" @bind="createModel.Password" />
+                            <button class="btn btn-outline-secondary" type="button" @onclick="GenerateRandomPassword">
+                                Generate
+                            </button>
+                        </div>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label fw-bold">Profile</label>
+                        <select class="form-select" @bind="createModel.Profile">
+                            @if (profiles == null)
+                            {
+                                <option>Loading profiles...</option>
+                            }
+                            else
+                            {
+                                @foreach (var profile in profiles)
+                                {
+                                    <option value="@profile.Name">@profile.Name</option>
+                                }
+                            }
+                        </select>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label fw-bold">Server</label>
+                        <select class="form-select" @bind="createModel.Server">
+                            @if (servers == null)
+                            {
+                                <option>Loading servers...</option>
+                            }
+                            else
+                            {
+                                @foreach (var server in servers)
+                                {
+                                    <option value="@server.Name">@server.Name</option>
+                                }
+                            }
+                        </select>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label fw-bold">Limit (GB)</label>
+                        <input type="number" class="form-control" @bind="createModel.LimitGB" placeholder="Optional" />
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label fw-bold">Department</label>
+                        <select class="form-select" @bind="createModel.DepartmentId">
+                            @if (departments == null)
+                            {
+                                <option>Loading departments...</option>
+                            }
+                            else
+                            {
+                                @foreach (var dept in departments)
+                                {
+                                    <option value="@dept.Id">@dept.Name</option>
+                                }
+                            }
+                        </select>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label fw-bold">User Details</label>
+                        <input type="text" class="form-control" @bind="createModel.UserDetails" placeholder="Additional info" />
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button class="btn btn-light" type="button" @onclick="Close">Cancel</button>
+                    <button class="btn btn-success" type="button" @onclick="HandleSave" disabled="@isSubmitting">
+                        @if (isSubmitting)
+                        {
+                            <span class="spinner-border spinner-border-sm me-1"></span>
+                        }
+                        @(isSubmitting ? "Creating..." : "Create User")
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+}
+
+@code {
+    [Parameter] public bool IsVisible { get; set; }
+    [Parameter] public MikrotikHostResponse? SelectedHost { get; set; }
+    [Parameter] public EventCallback OnClose { get; set; }
+    [Parameter] public EventCallback OnUserCreated { get; set; }
+
+    private CreateMikrotikUserRequestDto createModel = new();
+    private List<MikrotikProfileResponseDto>? profiles;
+    private List<MikrotikServerResponseDto>? servers;
+    private List<DepartmentDto>? departments;
+    private bool isSubmitting = false;
+
+    protected override async Task OnParametersSetAsync()
+    {
+        if (IsVisible && SelectedHost != null)
+        {
+            await LoadInitialData();
+            ResetForm();
+        }
+    }
+
+    private async Task LoadInitialData()
+    {
+        try
+        {
+            var pTask = MikrotikService.GetAllProfilesAsync();
+            var sTask = MikrotikService.GetServersListAsync();
+            
+            await Task.WhenAll(pTask, sTask);
+            
+            profiles = pTask.Result ?? new();
+            servers = sTask.Result ?? new();
+            
+            // مؤقتاً للأقسام - استبدلها بخدمة الأقسام الحقيقية
+            departments = new List<DepartmentDto>
+            {
+                new() { Id = 1, Name = "IT Department" },
+                new() { Id = 2, Name = "Sales Department" },
+                new() { Id = 3, Name = "HR Department" }
+            };
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Error loading data: {ex.Message}");
+        }
+    }
+
+    private void ResetForm()
+    {
+        if (SelectedHost != null)
+        {
+            createModel = new CreateMikrotikUserRequestDto
+            {
+                Username = SelectedHost.MacAddress?.Replace(":", "") ?? "user",
+                Password = GenerateRandomPasswordString(),
+                Profile = profiles?.FirstOrDefault()?.Name ?? "default",
+                Server = servers?.FirstOrDefault()?.Name ?? "hotspot1",
+                LimitGB = null,
+                UserDetails = SelectedHost.Comment,
+                DepartmentId = 1,
+                MacAddress = SelectedHost.MacAddress
+            };
+        }
+    }
+
+    private void GenerateRandomPassword()
+    {
+        createModel.Password = GenerateRandomPasswordString();
+    }
+
+    private string GenerateRandomPasswordString()
+    {
+        const string chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
+        var random = new Random();
+        return new string(Enumerable.Repeat(chars, 10)
+            .Select(s => s[random.Next(s.Length)]).ToArray());
+    }
+
+    private async Task HandleSave()
+    {
+        if (string.IsNullOrWhiteSpace(createModel.Username))
+        {
+            // يمكنك إضافة Message Modal هنا
+            return;
+        }
+
+        isSubmitting = true;
+        StateHasChanged();
+
+        try
+        {
+            var result = await MikrotikService.CreateUserAsync(createModel);
+            
+            if (result != null)
+            {
+                await OnUserCreated.InvokeAsync();
+                await Close();
+            }
+        }
+        finally
+        {
+            isSubmitting = false;
+        }
+    }
+
+    private async Task Close() => await OnClose.InvokeAsync();
+
+    private class DepartmentDto
+    {
+        public int Id { get; set; }
+        public string Name { get; set; } = string.Empty;
+    }
+}

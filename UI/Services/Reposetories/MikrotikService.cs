@@ -40,21 +40,21 @@ namespace UI.Services.Reposetories
     public async Task<List<MikrotikServerResponseDto>> GetServersListAsync()
     {
       return await _httpClient.GetFromJsonAsync<List<MikrotikServerResponseDto>>("api/Mikrotik/Get/Servers") ?? new();
-    }
+        }
 
-    public async Task<MikrotikUserInformationResponseDto?> CreateUserAsync(CreateMikrotikUserRequestDto request)
-    {
-      var response = await _httpClient.PostAsJsonAsync("api/Mikrotik/Create", request);
+        public async Task<MikrotikUserInformationResponseDto?> CreateUserAsync(CreateMikrotikUserRequestDto request)
+        {
+            var response = await _httpClient.PostAsJsonAsync("api/Mikrotik/Create", request);
 
-      if (response.IsSuccessStatusCode)
-      {
-        return await response.Content.ReadFromJsonAsync<MikrotikUserInformationResponseDto>();
-      }
+            if (response.IsSuccessStatusCode)
+            {
+                return await response.Content.ReadFromJsonAsync<MikrotikUserInformationResponseDto>();
+            }
 
-      return null;
-    }
+            return null;
+        }
 
-    public async Task<MikrotikUserInformationResponseDto?> GetUserByNameAsync(string username)
+        public async Task<MikrotikUserInformationResponseDto?> GetUserByNameAsync(string username)
     {
       return await _httpClient.GetFromJsonAsync<MikrotikUserInformationResponseDto>($"api/Mikrotik/Get/User/{username}");
     }

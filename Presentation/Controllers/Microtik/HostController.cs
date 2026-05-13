@@ -1,4 +1,5 @@
 ﻿using Application.DTOs.Response;
+using Application.Features.Mikrotik.Command.Create;
 using Application.Features.Mikrotik.Command.DeleteAllFromHost;
 using Application.Features.Mikrotik.Command.DeleteFromHost;
 using Application.Features.Mikrotik.Queries.GetAllHosts;
@@ -6,7 +7,7 @@ using Application.Features.Mikrotik.Queries.SearchInHost;
 using MediatR;
 using Microsoft.AspNetCore.Mvc;
 
-namespace Presentation.Controllers
+namespace Presentation.Controllers.Microtik
 {
     [ApiController]
     [Route("api/Host")]
@@ -18,6 +19,8 @@ namespace Presentation.Controllers
         {
             _mediator = mediator;
         }
+
+      
 
         [HttpGet("GetAll")]
         public async Task<ActionResult<List<MikrotikHostResponse>>> GetHosts()
