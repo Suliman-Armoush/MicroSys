@@ -631,4 +631,21 @@ code {
     .data-table {
         min-width: 720px;
     }
+    .success-zone {
+        border-top: 4px solid #28a745;
+    }
+
+        .success-zone .modal-header {
+            background-color: #28a745;
+            color: white;
+        }
+
+    .danger-zone {
+        border-top: 4px solid #dc3545;
+    }
+
+        .danger-zone .modal-header {
+            background-color: #dc3545;
+            color: white;
+        }
 }
