@@ -1,0 +1,73 @@
+﻿@using UI.Services.Interfaces
+@inject IMikrotikService MikrotikService
+
+@if (IsVisible)
+{
+    <div class="modal fade show d-block app-modal-backdrop" tabindex="-1">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content danger-zone">
+                <div class="modal-header">
+                    <h5 class="modal-title">Confirm Delete</h5>
+                    <button type="button" class="btn-close" @onclick="Close" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <p class="mb-0 text-muted">@DeleteMessage</p>
+                </div>
+                <div class="modal-footer">
+                    <button class="btn btn-light" type="button" @onclick="Close">Cancel</button>
+                    <button class="btn btn-danger" type="button" @onclick="ConfirmDelete" disabled="@isSubmitting">
+                        @if (isSubmitting)
+                        {
+                            <span class="spinner-border spinner-border-sm me-1"></span>
+                        }
+                        @(isSubmitting ? "Deleting..." : "Delete")
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+}
+
+@code {
+    [Parameter] public bool IsVisible { get; set; }
+    [Parameter] public bool DeleteAll { get; set; }
+    [Parameter] public string? MacAddress { get; set; }
+    [Parameter] public EventCallback OnClose { get; set; }
+    [Parameter] public EventCallback OnHostDeleted { get; set; }
+
+    private bool isSubmitting = false;
+    private string DeleteMessage => DeleteAll
+        ? "Are you sure you want to delete ALL hosts from the list?"
+        : $"Are you sure you want to delete host with MAC: {MacAddress}?";
+
+    private async Task ConfirmDelete()
+    {
+        isSubmitting = true;
+        StateHasChanged();
+
+        try
+        {
+            bool result;
+            if (DeleteAll)
+            {
+                result = await MikrotikService.RemoveAllHostsAsync();
+            }
+            else
+            {
+                result = await MikrotikService.RemoveHostAsync(MacAddress ?? string.Empty);
+            }
+
+            if (result)
+            {
+                await OnHostDeleted.InvokeAsync();
+                await Close();
+            }
+        }
+        finally
+        {
+            isSubmitting = false;
+        }
+    }
+
+    private async Task Close() => await OnClose.InvokeAsync();
+}

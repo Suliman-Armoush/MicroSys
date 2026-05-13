@@ -42,7 +42,34 @@ namespace Application.Features.Mikrotik.Command.Create
                 LimitBytes = limitValue
             };
 
-            return await _mikrotikService.CreateUserAsync(serviceRequest);
+            // 1. إنشاء المستخدم
+            var result = await _mikrotikService.CreateUserAsync(serviceRequest);
+
+            // 2. إذا نجح الإنشاء ووجد MacAddress، قم بحذف الـ Host
+            if (result != null && !string.IsNullOrEmpty(request.MacAddress)) 
+            {
+                try
+                {
+                    var removed = await _mikrotikService.RemoveHostByMacAsync(request.MacAddress);
+
+                    // يمكنك تسجيل النتيجة في اللوج إذا أردت
+                    if (removed)
+                    {
+                        Console.WriteLine($"Host with MAC {request.MacAddress} removed successfully after user creation.");
+                    }
+                    else
+                    {
+                        Console.WriteLine($"Host with MAC {request.MacAddress} not found or could not be removed.");
+                    }
+                }
+                catch (Exception ex)
+                {
+                    // لا نريد أن تفشل عملية إنشاء المستخدم إذا فشل حذف الـ Host
+                    Console.WriteLine($"Error removing host after user creation: {ex.Message}");
+                }
+            }
+
+            return result;
         }
     }
 }

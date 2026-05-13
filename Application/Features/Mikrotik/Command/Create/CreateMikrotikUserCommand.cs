@@ -15,5 +15,8 @@ namespace Application.Features.Mikrotik.Command.Create
         public int DepartmentId { get; set; } 
         public string UserDetails { get; set; }
         public double? LimitGB { get; set; }
+
+        // 👇 أضف هذه الخاصية (اختيارية)
+        public string? MacAddress { get; set; }
     }
 }
