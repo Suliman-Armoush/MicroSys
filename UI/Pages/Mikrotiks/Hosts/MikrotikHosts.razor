@@ -1,0 +1,460 @@
+@page "/mikrotik-hosts"
+@attribute [Authorize(Roles = "Admin")]
+
+@using UI.Models.Response
+@using UI.Models.Request
+@using UI.Services.Interfaces
+@inject IMikrotikService MikrotikService
+@inject NavigationManager Navigation
+
+<PageTitle>Connected Hosts - MicroSys</PageTitle>
+
+<div class="admin-page">
+    <div class="admin-shell">
+        <div class="page-header">
+            <div class="page-header-main">
+                <span class="page-kicker">MikroTik Hosts</span>
+                <h1 class="page-title">Connected Hosts</h1>
+                <p class="page-subtitle">Review active hosts, remove individual entries, or clear the full host list when needed.</p>
+            </div>
+
+            <div class="page-actions">
+                <button class="btn btn-light" type="button" @onclick='() => Navigation.NavigateTo("/")'>Back</button>
+                <button class="btn btn-primary" type="button" @onclick="ReloadHosts">Refresh List</button>
+                <DeleteAllHostsButton OnClickRequest="() => OpenDeleteModal(true)" />
+            </div>
+        </div>
+
+        <div class="toolbar">
+            <div class="search-field">
+                <input type="text"
+                       class="form-control"
+                       placeholder="Search by host, IP, or MAC..."
+                       @bind="searchTerm"
+                       @bind:event="oninput"
+                       @onkeyup="HandleSearch" />
+            </div>
+        </div>
+
+        <div class="page-card">
+            <div class="table-responsive">
+                <table class="table table-hover data-table align-middle text-center">
+                    <thead>
+                        <tr>
+                            <th class="text-start">Comments</th>
+                            <th class="text-start">MAC</th>
+                            <th>IP Address</th>
+                            <th>Uptime</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @if (hosts == null)
+                        {
+                            <tr>
+                                <td colspan="5">
+                                    <div class="loading-state">
+                                        <div class="spinner-border text-primary" role="status">
+                                            <span class="visually-hidden">Loading...</span>
+                                        </div>
+                                        <p>Loading hosts...</p>
+                                    </div>
+                                </td>
+                            </tr>
+                        }
+                        else if (hosts.Count == 0)
+                        {
+                            <tr>
+                                <td colspan="5">
+                                    <div class="empty-state">
+                                        <p>No hosts match your search.</p>
+                                    </div>
+                                </td>
+                            </tr>
+                        }
+                        else
+                        {
+                            @foreach (var host in hosts)
+                            {
+                                <tr>
+                                    <td class="text-start text-muted">@host.Comment</td>
+                                    <td class="text-start font-monospace fw-bold">@host.MacAddress</td>
+                                    <td><span class="soft-badge primary">@host.IpAddress</span></td>
+                                    <td class="text-muted fw-bold">@host.Uptime</td>
+                                    <td>
+                                        <div class="action-buttons">
+                                            <button class="btn btn-sm btn-success me-1"
+                                                    title="Create user from this host"
+                                                    @onclick="() => OpenCreateModal(host)">
+                                                Create
+                                            </button>
+                                            <HostDeleteButton OnClickRequest="() => OpenDeleteModal(false, host.MacAddress)" />
+                                        </div>
+                                    </td>
+                                </tr>
+                            }
+                        }
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Delete Confirmation Modal -->
+@if (isDeleteModalOpen)
+{
+    <div class="modal fade show d-block app-modal-backdrop" tabindex="-1">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content danger-zone">
+                <div class="modal-header">
+                    <h5 class="modal-title">Confirm Delete</h5>
+                    <button type="button" class="btn-close" @onclick="CloseDeleteModal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <p class="mb-0 text-muted">@deleteModalMessage</p>
+                </div>
+                <div class="modal-footer">
+                    <button class="btn btn-light" type="button" @onclick="CloseDeleteModal">Cancel</button>
+                    <button class="btn btn-danger" type="button" @onclick="ExecuteDeleteAction">Delete</button>
+                </div>
+            </div>
+        </div>
+    </div>
+}
+
+<!-- Create User Modal -->
+@if (isCreateModalOpen && selectedHost != null)
+{
+    <div class="modal fade show d-block app-modal-backdrop" tabindex="-1">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header bg-success text-white">
+                    <h5 class="modal-title">Create User from Host</h5>
+                    <button type="button" class="btn-close btn-close-white" @onclick="CloseCreateModal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <label class="form-label fw-bold">MAC Address</label>
+                        <input type="text" class="form-control bg-light" readonly value="@selectedHost.MacAddress" />
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label fw-bold">Username *</label>
+                        <input type="text" class="form-control" @bind="newUser.Username" />
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label fw-bold">Password *</label>
+                        <div class="input-group">
+                            <input type="text" class="form-control" @bind="newUser.Password" />
+                            <button class="btn btn-outline-secondary" type="button" @onclick="GenerateRandomPassword">
+                                Generate
+                            </button>
+                        </div>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label fw-bold">Profile</label>
+                        <select class="form-select" @bind="newUser.Profile">
+                            @if (profiles == null)
+                            {
+                                <option>Loading profiles...</option>
+                            }
+                            else
+                            {
+                                @foreach (var profile in profiles)
+                                {
+                                    <option value="@profile.Name">@profile.Name</option>
+                                }
+                            }
+                        </select>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label fw-bold">Server</label>
+                        <select class="form-select" @bind="newUser.Server">
+                            @if (servers == null)
+                            {
+                                <option>Loading servers...</option>
+                            }
+                            else
+                            {
+                                @foreach (var server in servers)
+                                {
+                                    <option value="@server.Name">@server.Name</option>
+                                }
+                            }
+                        </select>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label fw-bold">Limit (GB)</label>
+                        <input type="number" class="form-control" @bind="newUser.LimitGB" placeholder="Optional" />
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label fw-bold">Department</label>
+                        <select class="form-select" @bind="newUser.DepartmentId">
+                            <option value="1">IT Department</option>
+                            <option value="2">Sales Department</option>
+                            <option value="3">HR Department</option>
+                        </select>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label fw-bold">User Details</label>
+                        <input type="text" class="form-control" @bind="newUser.UserDetails" placeholder="Additional info" />
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button class="btn btn-light" type="button" @onclick="CloseCreateModal">Cancel</button>
+                    <button class="btn btn-success" type="button" @onclick="ExecuteCreateUser" disabled="@isCreating">
+                        @if (isCreating)
+                        {
+                            <span class="spinner-border spinner-border-sm me-1"></span>
+                        }
+                        @(isCreating ? "Creating..." : "Create User")
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+}
+
+<!-- Success/Error Message Modal -->
+@if (showMessageModal)
+{
+    <div class="modal fade show d-block app-modal-backdrop" tabindex="-1">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content @(messageIsSuccess ? "success-zone" : "danger-zone")">
+                <div class="modal-header">
+                    <h5 class="modal-title">@(messageIsSuccess ? "Success" : "Error")</h5>
+                    <button type="button" class="btn-close" @onclick="CloseMessageModal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <p class="mb-0">@messageText</p>
+                </div>
+                <div class="modal-footer">
+                    <button class="btn btn-primary" type="button" @onclick="CloseMessageModal">OK</button>
+                </div>
+            </div>
+        </div>
+    </div>
+}
+
+@code {
+    private List<MikrotikHostResponse>? hosts;
+    private string searchTerm = "";
+    private System.Timers.Timer? debounceTimer;
+
+    // Delete modal state
+    private bool isDeleteModalOpen = false;
+    private bool deleteModeAll = false;
+    private string selectedMac = "";
+    private string deleteModalMessage = "";
+
+    // Create User properties
+    private bool isCreateModalOpen = false;
+    private MikrotikHostResponse? selectedHost;
+    private CreateMikrotikUserRequestDto newUser = new();
+    private bool isCreating = false;
+    
+    // Message modal state
+    private bool showMessageModal = false;
+    private string messageText = "";
+    private bool messageIsSuccess = true;
+    
+    // Lists for profiles and servers
+    private List<MikrotikProfileResponseDto>? profiles;
+    private List<MikrotikServerResponseDto>? servers;
+
+    protected override async Task OnInitializedAsync()
+    {
+        await ReloadHosts();
+        await LoadProfilesAndServers();
+    }
+
+    private async Task LoadProfilesAndServers()
+    {
+        try
+        {
+            profiles = await MikrotikService.GetAllProfilesAsync();
+            servers = await MikrotikService.GetServersListAsync();
+            StateHasChanged();
+        }
+        catch (Exception ex)
+        {
+            ShowMessage($"Error loading profiles/servers: {ex.Message}", false);
+        }
+    }
+
+    private async Task ReloadHosts()
+    {
+        hosts = null;
+        hosts = await MikrotikService.GetAllHostsAsync();
+        StateHasChanged();
+    }
+
+    // Delete Modal Methods
+    private void OpenDeleteModal(bool all, string mac = "")
+    {
+        deleteModeAll = all;
+        selectedMac = mac;
+        deleteModalMessage = all ? "Are you sure you want to delete ALL hosts from the list?" : $"Are you sure you want to delete host with MAC: {mac}?";
+        isDeleteModalOpen = true;
+    }
+
+    private void CloseDeleteModal()
+    {
+        isDeleteModalOpen = false;
+        deleteModalMessage = "";
+        selectedMac = "";
+        deleteModeAll = false;
+    }
+
+    private async Task ExecuteDeleteAction()
+    {
+        try
+        {
+            bool result;
+            if (deleteModeAll)
+            {
+                result = await MikrotikService.RemoveAllHostsAsync();
+                if (result)
+                    ShowMessage("All hosts have been deleted successfully!", true);
+                else
+                    ShowMessage("Failed to delete all hosts.", false);
+            }
+            else
+            {
+                result = await MikrotikService.RemoveHostAsync(selectedMac);
+                if (result)
+                    ShowMessage($"Host with MAC '{selectedMac}' has been deleted successfully!", true);
+                else
+                    ShowMessage($"Failed to delete host '{selectedMac}'.", false);
+            }
+        }
+        catch (Exception ex)
+        {
+            ShowMessage($"Error: {ex.Message}", false);
+        }
+        finally
+        {
+            CloseDeleteModal();
+            await ReloadHosts();
+        }
+    }
+
+    // Create Modal Methods
+    private void OpenCreateModal(MikrotikHostResponse host)
+    {
+        selectedHost = host;
+        
+        string suggestedUsername = null;
+        
+        newUser = new CreateMikrotikUserRequestDto
+        {
+            Username = host.MacAddress,
+            Password = GenerateRandomPasswordString(),
+            Profile = profiles?.FirstOrDefault()?.Name ?? "default",
+            Server = servers?.FirstOrDefault()?.Name ?? "hotspot1",
+            LimitGB = null,
+            UserDetails = host.Comment,
+            DepartmentId = 1,
+            MacAddress = host.MacAddress
+        };
+        
+        isCreateModalOpen = true;
+    }
+
+    private void CloseCreateModal()
+    {
+        isCreateModalOpen = false;
+        selectedHost = null;
+    }
+
+    private void GenerateRandomPassword()
+    {
+        newUser.Password = GenerateRandomPasswordString();
+    }
+
+    private string GenerateRandomPasswordString()
+    {
+        const string chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
+        var random = new Random();
+        return new string(Enumerable.Repeat(chars, 10)
+            .Select(s => s[random.Next(s.Length)]).ToArray());
+    }
+
+    private async Task ExecuteCreateUser()
+    {
+        // Validation
+        if (string.IsNullOrWhiteSpace(newUser.Username))
+        {
+            ShowMessage("Username is required!", false);
+            return;
+        }
+        
+        if (string.IsNullOrWhiteSpace(newUser.Password))
+        {
+            ShowMessage("Password is required!", false);
+            return;
+        }
+
+        isCreating = true;
+        StateHasChanged();
+
+        try
+        {
+            var result = await MikrotikService.CreateUserAsync(newUser);
+            
+            if (result != null)
+            {
+                ShowMessage($"User '{newUser.Username}' has been created successfully!", true);
+                CloseCreateModal();
+                await ReloadHosts();
+            }
+            else
+            {
+                ShowMessage("Failed to create user. Username may already exist or check server connection.", false);
+            }
+        }
+        catch (Exception ex)
+        {
+            ShowMessage($"Error: {ex.Message}", false);
+        }
+        finally
+        {
+            isCreating = false;
+            StateHasChanged();
+        }
+    }
+
+    // Message Modal Methods
+    private void ShowMessage(string message, bool isSuccess)
+    {
+        messageText = message;
+        messageIsSuccess = isSuccess;
+        showMessageModal = true;
+        StateHasChanged();
+    }
+
+    private void CloseMessageModal()
+    {
+        showMessageModal = false;
+        messageText = "";
+        StateHasChanged();
+    }
+
+    private void HandleSearch()
+    {
+        debounceTimer?.Stop();
+        debounceTimer = new System.Timers.Timer(400);
+        debounceTimer.Elapsed += async (s, e) =>
+        {
+            await InvokeAsync(async () =>
+            {
+                hosts = string.IsNullOrWhiteSpace(searchTerm)
+                    ? await MikrotikService.GetAllHostsAsync()
+                    : await MikrotikService.SearchHostsAsync(searchTerm);
+                StateHasChanged();
+            });
+        };
+        debounceTimer.AutoReset = false;
+        debounceTimer.Start();
+    }
+}

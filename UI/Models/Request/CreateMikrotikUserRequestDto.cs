@@ -23,5 +23,8 @@ namespace UI.Models.Request
         public string UserDetails { get; set; } = string.Empty;
 
         public double? LimitGB { get; set; }
+
+        // 👇 أضف هذه الخاصية لتخزين MAC للمستخدم (اختياري)
+        public string? MacAddress { get; set; }
     }
 }

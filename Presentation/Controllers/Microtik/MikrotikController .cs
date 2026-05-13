@@ -24,7 +24,7 @@ using Microsoft.AspNetCore.Mvc;
 using FluentValidation;
 using Application.Features.Mikrotik.Command.ResetAllCounters;
 using Application.Features.Mikrotik.Queries.TestConnection;
-namespace Presentation.Controllers
+namespace Presentation.Controllers.Microtik
 {
   [ApiController]
   [Route("api/Mikrotik")]
