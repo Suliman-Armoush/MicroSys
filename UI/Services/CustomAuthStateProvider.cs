@@ -2,6 +2,7 @@
 using System.Net.Http.Headers;
 using Microsoft.AspNetCore.Components.Authorization;
 using Blazored.LocalStorage;
+using System.IdentityModel.Tokens.Jwt;
 
 namespace UI.Services
 {
@@ -19,21 +20,42 @@ namespace UI.Services
                 _httpClient = httpClient;
             }
 
-            public override async Task<AuthenticationState> GetAuthenticationStateAsync()
+        public override async Task<AuthenticationState> GetAuthenticationStateAsync()
+        {
+            var token = await _localStorage.GetItemAsync<string>("authToken");
+            if (string.IsNullOrEmpty(token) || IsTokenExpired(token))
             {
-                var token = await _localStorage.GetItemAsync<string>("authToken");
-                if (string.IsNullOrEmpty(token))
-                    return new AuthenticationState(new ClaimsPrincipal(new ClaimsIdentity()));
-
-                // Attach the token to the HttpClient header for subsequent requests.
-                _httpClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", token);
-
-                var identity = new ClaimsIdentity(ParseClaimsFromJwt(token), "jwt");
-                var user = new ClaimsPrincipal(identity);
-                return new AuthenticationState(user);
+                // إزالة التوكن من الترويسة لتجنب إرساله مع طلبات لاحقة
+                _httpClient.DefaultRequestHeaders.Authorization = null;
+                return new AuthenticationState(new ClaimsPrincipal(new ClaimsIdentity()));
             }
 
-            public void NotifyUserAuthentication(string token)
+            _httpClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", token);
+            var identity = new ClaimsIdentity(ParseClaimsFromJwt(token), "jwt");
+            return new AuthenticationState(new ClaimsPrincipal(identity));
+        }
+
+        private bool IsTokenExpired(string token)
+        {
+            try
+            {
+                var handler = new JwtSecurityTokenHandler();
+                var jwt = handler.ReadJwtToken(token);
+                var expClaim = jwt.Claims.FirstOrDefault(c => c.Type == "exp")?.Value;
+                if (expClaim != null && long.TryParse(expClaim, out long expSeconds))
+                {
+                    var expiry = DateTimeOffset.FromUnixTimeSeconds(expSeconds);
+                    return expiry <= DateTimeOffset.UtcNow;
+                }
+                return true; // إذا لم يوجد claim exp أو كان غير صالح
+            }
+            catch
+            {
+                return true; // أي خطأ في فك التوكن يعني أنه غير صالح
+            }
+        }
+
+        public void NotifyUserAuthentication(string token)
             {
                 var authenticatedUser = new ClaimsPrincipal(new ClaimsIdentity(ParseClaimsFromJwt(token), "jwt"));
                 var authState = Task.FromResult(new AuthenticationState(authenticatedUser));
