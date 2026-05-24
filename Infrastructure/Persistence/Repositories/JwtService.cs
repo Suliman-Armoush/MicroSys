@@ -37,6 +37,8 @@ namespace Infrastructure.Persistence.Repositories
                  issuer: _config["JwtSettings:Issuer"],
                  audience: _config["JwtSettings:Audience"],
                  claims: claims,
+                 expires: DateTime.UtcNow.AddHours(8),
+               
                  signingCredentials: creds
             );
 

@@ -34,6 +34,7 @@ namespace Presentation.SystemBuild
           Type = SecuritySchemeType.Http, 
           Scheme = "Bearer",               
           BearerFormat = "JWT"
+
         });
 
 
