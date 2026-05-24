@@ -54,9 +54,9 @@ namespace Infrastructure
                       {
                           ValidateIssuer = true,
                           ValidateAudience = true,
-                          ValidateLifetime = false,
+                          ValidateLifetime = true,
                           ValidateIssuerSigningKey = true,
-
+                          ClockSkew = TimeSpan.Zero,
                           ValidIssuer = configuration["JwtSettings:Issuer"],
                           ValidAudience = configuration["JwtSettings:Audience"],
                           IssuerSigningKey = new SymmetricSecurityKey(
