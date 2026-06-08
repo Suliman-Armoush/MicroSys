@@ -7,6 +7,7 @@ using Microsoft.AspNetCore.Mvc;
 namespace Presentation.Controllers.Microtik
 {
   [ApiController]
+  [Authorize(Roles = "Manager")]
   [Route("api/Manager")]
   public class ManagerController : ControllerBase
   {
@@ -17,7 +18,6 @@ namespace Presentation.Controllers.Microtik
       _mediator = mediator;
     }
 
-    [Authorize(Roles = "Manager")]
     [HttpGet("UsersByDepartment")]
     public async Task<IActionResult> GetUsersByDepartment()
     {
