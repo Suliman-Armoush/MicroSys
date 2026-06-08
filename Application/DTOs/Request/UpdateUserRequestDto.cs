@@ -14,5 +14,8 @@ namespace Application.DTOs.Request
     public bool CreatePerm { get; set; }
     public bool UpdatePerm { get; set; }
     public bool ChangePerm { get; set; }
+
+    public int MaxSpeed { get; set; }
+
   }
 }

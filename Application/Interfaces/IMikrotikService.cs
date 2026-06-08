@@ -13,7 +13,7 @@ namespace Application.Interfaces
     Task<List<MikrotikUserResponse>> GetUsersByDepartmentAsync();
 
     Task<List<MikrotikUserResponse>> GetAllUsersAsync();
-    Task<List<MikrotikProfileResponse>> GetAllProfilesAsync();
+    Task<List<MikrotikProfileResponse>> GetAllProfilesAsync(int maxSpeed);
     Task<DetailedDepartmentConsumptionResponse> GetUsageByDepartmentNameAsync(string departmentName);
 
     Task<MikrotikUserInformationResponse> CreateUserAsync(CreateMikrotikUserRequest request);
