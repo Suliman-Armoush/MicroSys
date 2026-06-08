@@ -1,7 +1,30 @@
 @page "/"
-@attribute [Authorize(Roles = "Admin")]
+@attribute [Authorize(Roles = "Admin,Manager")]
 @using UI.Pages.SysInfos
+@inject AuthenticationStateProvider AuthProvider
+@inject NavigationManager Navigation
 
 <PageTitle>Dashboard - MicroSys</PageTitle>
 
-<SysInfoDashboard />
+@if (showAdminDashboard)
+{
+    <SysInfoDashboard />
+}
+
+@code {
+    private bool showAdminDashboard;
+
+    protected override async Task OnInitializedAsync()
+    {
+        var authState = await AuthProvider.GetAuthenticationStateAsync();
+        var user = authState.User;
+
+        if (user.IsInRole("Manager"))
+        {
+            Navigation.NavigateTo("/manager", true);
+            return;
+        }
+
+        showAdminDashboard = user.IsInRole("Admin");
+    }
+}

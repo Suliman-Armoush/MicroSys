@@ -1,0 +1,123 @@
+@using UI.Models.Request
+@using UI.Models.Response
+@using UI.Services.Interfaces
+@inject IManagerService ManagerService
+@inject IMikrotikService MikrotikService
+
+@if (IsVisible)
+{
+    <div class="modal fade show d-block app-modal-backdrop" tabindex="-1">
+        <div class="modal-dialog modal-dialog-centered modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title fw-bold flex-grow-1">Add Department User</h5>
+                    <button type="button" class="btn-close" @onclick="Close" aria-label="Close"></button>
+                </div>
+
+                <EditForm Model="createModel" OnValidSubmit="HandleSave">
+                    <DataAnnotationsValidator />
+
+                    <div class="modal-body p-4">
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label">Username</label>
+                                <InputText @bind-Value="createModel.Username" class="form-control" />
+                                <ValidationMessage For="@(() => createModel.Username)" />
+                            </div>
+
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label">Password</label>
+                                <InputText @bind-Value="createModel.Password" class="form-control" type="password" />
+                                <ValidationMessage For="@(() => createModel.Password)" />
+                            </div>
+
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label">Profile</label>
+                                <InputSelect @bind-Value="createModel.Profile" class="form-select">
+                                    <option value="">-- Select profile --</option>
+                                    @foreach (var profile in profiles)
+                                    {
+                                        <option value="@profile.Name">@profile.Name</option>
+                                    }
+                                </InputSelect>
+                                <ValidationMessage For="@(() => createModel.Profile)" />
+                            </div>
+
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label">Limit GB</label>
+                                <div class="input-group">
+                                    <span class="input-group-text">GB</span>
+                                    <InputNumber @bind-Value="createModel.LimitGB" class="form-control" />
+                                </div>
+                            </div>
+
+                            <div class="col-12 mb-3">
+                                <label class="form-label">Comments</label>
+                                <InputTextArea @bind-Value="createModel.UserDetails" class="form-control" rows="2" />
+                            </div>
+                        </div>
+
+                        @if (!string.IsNullOrEmpty(errorMessage))
+                        {
+                            <div class="alert alert-danger mb-0">@errorMessage</div>
+                        }
+                    </div>
+
+                    <div class="modal-footer d-flex justify-content-start gap-2 px-4 py-3">
+                        <button type="submit" class="btn btn-primary px-4" disabled="@isSubmitting">
+                            @(isSubmitting ? "Saving..." : "Save User")
+                        </button>
+                        <button type="button" class="btn btn-light px-4" @onclick="Close" disabled="@isSubmitting">Cancel</button>
+                    </div>
+                </EditForm>
+            </div>
+        </div>
+    </div>
+}
+
+@code {
+    [Parameter] public bool IsVisible { get; set; }
+    [Parameter] public EventCallback OnClose { get; set; }
+    [Parameter] public EventCallback OnUserCreated { get; set; }
+
+    private ManagerMikrotikUserRequestDto createModel = new();
+    private List<MikrotikProfileResponseDto> profiles = new();
+    private bool isSubmitting;
+    private string errorMessage = string.Empty;
+
+    protected override async Task OnParametersSetAsync()
+    {
+        if (IsVisible)
+        {
+            createModel = new();
+            errorMessage = string.Empty;
+            profiles = await MikrotikService.GetAllProfilesAsync();
+        }
+    }
+
+    private async Task HandleSave()
+    {
+        isSubmitting = true;
+        errorMessage = string.Empty;
+
+        try
+        {
+            var result = await ManagerService.AddUserAsync(createModel);
+            if (result != null)
+            {
+                await OnUserCreated.InvokeAsync();
+                await Close();
+            }
+            else
+            {
+                errorMessage = "Unable to create the user. Check permissions and required fields.";
+            }
+        }
+        finally
+        {
+            isSubmitting = false;
+        }
+    }
+
+    private async Task Close() => await OnClose.InvokeAsync();
+}

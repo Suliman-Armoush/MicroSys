@@ -111,7 +111,11 @@
         if (authResult.Success)
         {
             ((CustomAuthStateProvider)AuthProvider).NotifyUserAuthentication(authResult.Token);
-            Navigation.NavigateTo("/", true);
+            var destination = string.Equals(authResult.Role, "Manager", StringComparison.OrdinalIgnoreCase)
+                ? "/manager"
+                : "/";
+
+            Navigation.NavigateTo(destination, true);
         }
         else
         {

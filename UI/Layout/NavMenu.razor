@@ -16,7 +16,7 @@
 
 <div class="@($"nav-scrollable {NavMenuCssClass}")" @onclick="ToggleNavMenu" style="color:white">
     <nav class="nav-stack">
-        <AuthorizeView Context="authContext"  Roles="Admin">
+        <AuthorizeView Context="authContext" Roles="Admin">
             <Authorized>
                 <div class="nav-section-label">Workspace</div>
 
@@ -109,6 +109,43 @@
                 </div>
             </Authorized>
 
+        </AuthorizeView>
+
+        <AuthorizeView Context="managerContext" Roles="Manager">
+            <Authorized>
+                <div class="nav-section-label">Manager</div>
+
+                <div class="nav-item">
+                    <NavLink class="nav-link" href="manager" Match="NavLinkMatch.All">
+                        <span class="nav-icon nav-home" aria-hidden="true"></span>
+                        <span>My Department</span>
+                    </NavLink>
+                </div>
+
+                <div class="nav-item">
+                    <NavLink class="nav-link" href="manager/users">
+                        <span class="nav-icon nav-users" aria-hidden="true"></span>
+                        <span>Department Users</span>
+                    </NavLink>
+                </div>
+
+                <div class="nav-spacer"></div>
+
+                <div class="nav-user">
+                    <span class="nav-user-label">Signed in</span>
+                    <span class="nav-user-email">@managerContext.User.FindFirst(System.Security.Claims.ClaimTypes.Email)?.Value</span>
+                </div>
+
+                <div class="nav-item">
+                    <NavLink class="nav-link logout-link" href="logout">
+                        <span class="nav-icon nav-logout" aria-hidden="true"></span>
+                        <span>Sign Out</span>
+                    </NavLink>
+                </div>
+            </Authorized>
+        </AuthorizeView>
+
+        <AuthorizeView>
             <NotAuthorized>
                 <div class="nav-section-label">Access</div>
                 <div class="nav-item">
