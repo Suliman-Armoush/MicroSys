@@ -1,0 +1,168 @@
+@using UI.Models.Request
+@using UI.Models.Response
+@using UI.Services.Interfaces
+@inject IMikrotikService MikrotikService
+
+@if (IsVisible)
+{
+    <div class="modal fade show d-block app-modal-backdrop" tabindex="-1">
+        <div class="modal-dialog modal-dialog-centered modal-lg">
+            <div class="modal-content">
+                <div class="modal-header d-flex align-items-center justify-content-between px-4 py-3">
+                    <h5 class="modal-title fw-bold m-0">Edit User: @CurrentUsername</h5>
+                    <button type="button" class="btn-close" @onclick="Close" aria-label="Close"></button>
+                </div>
+
+                <EditForm Model="updateModel" OnValidSubmit="HandleUpdate">
+                    <DataAnnotationsValidator />
+
+                    <div class="modal-body p-4">
+                        @if (isLoading)
+                        {
+                            <div class="text-center py-5">
+                                <div class="spinner-border text-warning" role="status"></div>
+                                <p class="mt-2 text-muted">Loading data...</p>
+                            </div>
+                        }
+                        else
+                        {
+                            <div class="row">
+                                <div class="col-md-6 mb-3">
+                                    <label class="form-label">New Username</label>
+                                    <InputText @bind-Value="updateModel.NewUsername" class="form-control" />
+                                </div>
+
+                                <div class="col-md-6 mb-3">
+                                    <label class="form-label">New Password</label>
+                                    <InputText @bind-Value="updateModel.Password" class="form-control" type="password" placeholder="Leave blank to keep unchanged" />
+                                </div>
+
+                                <div class="col-md-6 mb-3">
+                                    <label class="form-label">Profile</label>
+                                    <InputSelect @bind-Value="updateModel.Profile" class="form-select">
+                                        <option value="">-- Select profile --</option>
+                                        @foreach (var profile in profiles)
+                                        {
+                                            <option value="@profile.Name">@profile.Name</option>
+                                        }
+                                    </InputSelect>
+                                </div>
+
+                                <div class="col-md-6 mb-3">
+                                    <label class="form-label">Limit GB</label>
+                                    <div class="input-group">
+                                        <span class="input-group-text">GB</span>
+                                        <InputNumber @bind-Value="updateModel.LimitGB" class="form-control" />
+                                    </div>
+                                </div>
+
+                                <div class="col-12 mb-3">
+                                    <label class="form-label">Comments</label>
+                                    <InputTextArea @bind-Value="updateModel.UserDetails" class="form-control" rows="2" />
+                                </div>
+                            </div>
+                        }
+
+                        @if (!string.IsNullOrEmpty(errorMessage))
+                        {
+                            <div class="alert alert-danger mb-0">@errorMessage</div>
+                        }
+                    </div>
+
+                    <div class="modal-footer d-flex justify-content-start gap-2">
+                        <button type="submit" class="btn btn-primary px-4" disabled="@(isLoading || isSubmitting)">
+                            @(isSubmitting ? "Saving..." : "Save Changes")
+                        </button>
+                        <button type="button" class="btn btn-light px-4" @onclick="Close" disabled="@isSubmitting">Cancel</button>
+                    </div>
+                </EditForm>
+            </div>
+        </div>
+    </div>
+}
+
+@code {
+    [Parameter] public bool IsVisible { get; set; }
+    [Parameter] public string CurrentUsername { get; set; } = string.Empty;
+    [Parameter] public EventCallback OnClose { get; set; }
+    [Parameter] public EventCallback OnUserUpdated { get; set; }
+
+    private UpdateMikrotikUserRequestDto updateModel = new();
+    private List<MikrotikProfileResponseDto> profiles = new();
+    private bool isLoading = true;
+    private bool isSubmitting;
+    private string errorMessage = string.Empty;
+
+    protected override async Task OnParametersSetAsync()
+    {
+        if (IsVisible && !string.IsNullOrEmpty(CurrentUsername))
+        {
+            isLoading = true;
+            errorMessage = string.Empty;
+            await LoadInitialData();
+            isLoading = false;
+        }
+    }
+
+    private async Task LoadInitialData()
+    {
+        var profilesTask = MikrotikService.GetAllProfilesAsync();
+        var userTask = MikrotikService.GetUserByNameAsync(CurrentUsername);
+
+        await Task.WhenAll(profilesTask, userTask);
+
+        profiles = profilesTask.Result ?? new();
+        var user = userTask.Result;
+
+        if (user != null)
+        {
+            updateModel = new UpdateMikrotikUserRequestDto
+            {
+                NewUsername = user.Username,
+                Profile = user.Profile,
+                Server = user.Server,
+                LimitGB = user.LimitGB,
+                UserDetails = ExtractDetails(user.Comment)
+            };
+        }
+    }
+
+    private async Task HandleUpdate()
+    {
+        isSubmitting = true;
+        errorMessage = string.Empty;
+
+        try
+        {
+            updateModel.DepartmentId = null;
+            var result = await MikrotikService.UpdateUserAsync(CurrentUsername, updateModel);
+
+            if (result != null)
+            {
+                await OnUserUpdated.InvokeAsync();
+                await Close();
+            }
+            else
+            {
+                errorMessage = "Unable to update the user. Check permissions and try again.";
+            }
+        }
+        finally
+        {
+            isSubmitting = false;
+        }
+    }
+
+    private static string ExtractDetails(string? comment)
+    {
+        if (string.IsNullOrWhiteSpace(comment))
+        {
+            return string.Empty;
+        }
+
+        var separatorIndex = comment.IndexOf('-');
+        return separatorIndex >= 0 ? comment[(separatorIndex + 1)..].Trim() : comment.Trim();
+    }
+
+    private async Task Close() => await OnClose.InvokeAsync();
+}
