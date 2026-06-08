@@ -5,18 +5,21 @@ using System.Text;
 
 namespace Domain.Entities
 {
-    public class User
-    {
-        public int Id { get; set; }
-        public string? Name { get; set; }
-        public required string UserName { get; set; }
-        public required string PasswordHash { get; set; }
+  public class User
+  {
+    public int Id { get; set; }
+    public string? Name { get; set; }
+    public required string UserName { get; set; }
+    public required string PasswordHash { get; set; }
 
-        public required int RoleId { get; set; }
-        public Role? Role { get; set; }
+    public required int RoleId { get; set; }
+    public Role? Role { get; set; }
 
-        public int? DepartmentId { get; set; }
-        public Department? Department { get; set; }
-    }
+    public int? DepartmentId { get; set; }
+    public Department? Department { get; set; }
+
+    public bool CreatePerm { get; set; } = false;
+    public bool UpdatePerm { get; set; } = false;
+    public bool ChangePerm { get; set; } = true;
+  }
 }
- 

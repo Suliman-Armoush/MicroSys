@@ -133,6 +133,10 @@ namespace UI.Services.Reposetories
       return response.IsSuccessStatusCode;
     }
 
+    public async Task<List<MikrotikUserResponseDto>> GetUsersByDepartmentAsync()
+    {
+      return await _httpClient.GetFromJsonAsync<List<MikrotikUserResponseDto>>("api/Manager/UsersByDepartment") ?? new();
+    }
   }
 }
 

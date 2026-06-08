@@ -6,18 +6,26 @@ using System.Text;
 
 namespace Application.Features.Mikrotik.Command.EnableUser
 {
-    public class EnableMikrotikUserHandler : IRequestHandler<EnableMikrotikUserCommand, bool>
+  public class EnableMikrotikUserHandler : IRequestHandler<EnableMikrotikUserCommand, bool>
+  {
+    private readonly IMikrotikService _mikrotikService;
+    private readonly IUserService _userService;
+
+    public EnableMikrotikUserHandler(IMikrotikService mikrotikService, IUserService userService)
     {
-        private readonly IMikrotikService _mikrotikService;
-
-        public EnableMikrotikUserHandler(IMikrotikService mikrotikService)
-        {
-            _mikrotikService = mikrotikService;
-        }
-
-        public async Task<bool> Handle(EnableMikrotikUserCommand request, CancellationToken cancellationToken)
-        {
-            return await _mikrotikService.EnableUserAsync(request.Username);
-        }
+      _mikrotikService = mikrotikService;
+      _userService = userService;
     }
+
+    public async Task<bool> Handle(EnableMikrotikUserCommand request, CancellationToken cancellationToken)
+    {
+      var user = await _userService.GetByIdAsync(_userService.UserId);
+      if (!user.ChangePerm)
+      {
+        throw new UnauthorizedAccessException("User does not have permission to change this setting");
+      }
+
+      return await _mikrotikService.EnableUserAsync(request.Username);
+    }
+  }
 }

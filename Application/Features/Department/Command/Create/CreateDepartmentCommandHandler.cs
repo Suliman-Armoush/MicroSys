@@ -31,6 +31,9 @@ namespace Application.Features.Department.Command.Create
         Password = "12345678",
         RoleId = 2,
         DepartmentId = department.Id,
+        CreatePerm = false,
+        ChangePerm = true,
+        UpdatePerm = false,
       };
 
       var user = _mapper.Map<Domain.Entities.User>(userDto);

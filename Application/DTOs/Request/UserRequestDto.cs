@@ -4,12 +4,15 @@ using System.Text;
 
 namespace Application.DTOs.Request
 {
-    public class UserRequestDto
-    {
-        public string? Name { get; set; } = string.Empty;
-        public string UserName { get; set; } = string.Empty;
-        public string Password { get; set; } = string.Empty;
-        public int RoleId { get; set; }
-        public int DepartmentId { get; set; }
-    }
+  public class UserRequestDto
+  {
+    public string? Name { get; set; } = string.Empty;
+    public string UserName { get; set; } = string.Empty;
+    public string Password { get; set; } = string.Empty;
+    public int RoleId { get; set; }
+    public int DepartmentId { get; set; }
+    public bool CreatePerm { get; set; }
+    public bool UpdatePerm { get; set; } 
+    public bool ChangePerm { get; set; }
+  }
 }

@@ -122,6 +122,12 @@ namespace Infrastructure.Migrations
 
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
 
+                    b.Property<bool>("ChangePerm")
+                        .HasColumnType("bit");
+
+                    b.Property<bool>("CreatePerm")
+                        .HasColumnType("bit");
+
                     b.Property<int?>("DepartmentId")
                         .HasColumnType("int");
 
@@ -134,6 +140,9 @@ namespace Infrastructure.Migrations
 
                     b.Property<int>("RoleId")
                         .HasColumnType("int");
+
+                    b.Property<bool>("UpdatePerm")
+                        .HasColumnType("bit");
 
                     b.Property<string>("UserName")
                         .IsRequired()
