@@ -32,6 +32,15 @@ namespace Infrastructure.Persistence.Repositories
             return Math.Round(value / 1000.0, 0, MidpointRounding.AwayFromZero) * 1000.0;
         }
 
+        // حساب Total Cost with DVR مع مراعاة الحد الأدنى فقط إذا كان الاستهلاك > 0
+        private double CalculateTotalCostWithDVR(double consumptionGB, double pricePerGB, int dvrCount, double dvrPrice)
+        {
+            if (consumptionGB <= 0) return 0;
+            double rawCost = (consumptionGB * pricePerGB) + (dvrCount * dvrPrice);
+            double rounded = RoundToNearestThousand(rawCost);
+            return rounded < 10000 ? 10000 : rounded;
+        }
+
         public byte[] GenerateMikrotikReport(
             List<DepartmentConsumptionResponse> serviceData,
             List<DepartmentConsumptionResponse> tcShopsData,
@@ -70,6 +79,12 @@ namespace Infrastructure.Persistence.Repositories
             }
         }
 
+         /// <summary>
+         /// this is the Detalid Report
+         /// </summary>
+         /// <param name="workbook"></param>
+         /// <param name="name"></param>
+         /// <param name="data"></param>
         private void AddDetailedSheet(XLWorkbook workbook, string name, List<DetailedDepartmentConsumptionResponse> data)
         {
             var sysInfo = _context.SysInfos.FirstOrDefault();
@@ -79,7 +94,7 @@ namespace Infrastructure.Persistence.Repositories
             var dateCell = ws.Cell(1, 1);
             dateCell.Value = $"تاريخ تصدير التقرير: {DateTime.Now:yyyy-MM-dd HH:mm}";
 
-            var dateRange = ws.Range(1, 1, 2, 7);
+            var dateRange = ws.Range(1, 1, 2, 4);
             dateRange.Merge().Style
                 .Font.SetBold()
                 .Font.SetFontSize(14)
@@ -91,12 +106,12 @@ namespace Infrastructure.Persistence.Repositories
             ws.Cell(headerRow, 1).Value = "Department / User";
             ws.Cell(headerRow, 2).Value = "ArName";
             ws.Cell(headerRow, 3).Value = "Consumption (GB)";
-            ws.Cell(headerRow, 4).Value = "Price per GB (Dept)";
-            ws.Cell(headerRow, 5).Value = "Total Cost";
-            ws.Cell(headerRow, 6).Value = "DVR Count";
-            ws.Cell(headerRow, 7).Value = "Total Cost (With DVR)";
+            //ws.Cell(headerRow, 4).Value = "Price per GB (Dept)";
+            //ws.Cell(headerRow, 5).Value = "Total Cost";
+            //ws.Cell(headerRow, 6).Value = "DVR Count";
+            ws.Cell(headerRow, 4).Value = "Total Cost";
 
-            var header = ws.Range(headerRow, 1, headerRow, 7);
+            var header = ws.Range(headerRow, 1, headerRow, 4);
             header.Style.Font.Bold = true;
             header.Style.Font.FontColor = XLColor.White;
             header.Style.Fill.BackgroundColor = XLColor.FromHtml("#003366");
@@ -107,15 +122,18 @@ namespace Infrastructure.Persistence.Repositories
             {
                 var deptPrice = GetPricePerGB(dept.TotalConsumptionGB);
 
+                double totalCost = RoundToNearestThousand(dept.TotalConsumptionGB * deptPrice);
+                double totalCostWithDVR = CalculateTotalCostWithDVR(dept.TotalConsumptionGB, deptPrice, dept.DvrNum, sysInfo?.DvrPrice ?? 0);
+
                 ws.Cell(currentRow, 1).Value = "DEPT: " + dept.DepartmentName;
                 ws.Cell(currentRow, 2).Value = dept.ArName;
                 ws.Cell(currentRow, 3).Value = dept.TotalConsumptionGB;
-                ws.Cell(currentRow, 4).Value = deptPrice;
-                ws.Cell(currentRow, 5).Value = RoundToNearestThousand(dept.TotalConsumptionGB * deptPrice);
-                ws.Cell(currentRow, 6).Value = dept.DvrNum;
-                ws.Cell(currentRow, 7).Value = RoundToNearestThousand(dept.TotalConsumptionGB * deptPrice + (dept.DvrNum * (sysInfo?.DvrPrice ?? 0)));
+                //ws.Cell(currentRow, 4).Value = deptPrice;
+                //ws.Cell(currentRow, 5).Value = totalCost;
+                //ws.Cell(currentRow, 6).Value = dept.DvrNum;
+                ws.Cell(currentRow, 4).Value = totalCostWithDVR;
 
-                var deptRange = ws.Range(currentRow, 1, currentRow, 7);
+                var deptRange = ws.Range(currentRow, 1, currentRow, 4);
                 deptRange.Style.Font.Bold = true;
                 deptRange.Style.Fill.BackgroundColor = XLColor.LightSkyBlue;
                 ApplyCommonStyles(deptRange);
@@ -125,9 +143,9 @@ namespace Infrastructure.Persistence.Repositories
                 {
                     ws.Cell(currentRow, 1).Value = "   • " + user.UserName;
                     ws.Cell(currentRow, 3).Value = user.UsageGB;
-                    ws.Cell(currentRow, 5).Value = RoundToNearestThousand(user.UsageGB * deptPrice);
+                    ws.Cell(currentRow, 4).Value = RoundToNearestThousand(user.UsageGB * deptPrice);
 
-                    var userRange = ws.Range(currentRow, 1, currentRow, 7);
+                    var userRange = ws.Range(currentRow, 1, currentRow, 4);
                     userRange.Style.Fill.BackgroundColor = XLColor.AliceBlue;
                     ApplyCommonStyles(userRange);
                     currentRow++;
@@ -136,6 +154,15 @@ namespace Infrastructure.Persistence.Repositories
             }
             ws.Columns().AdjustToContents();
         }
+
+
+
+        /// <summary>
+        /// This is the summary Report
+        /// </summary>
+        /// <param name="workbook"></param>
+        /// <param name="name"></param>
+        /// <param name="data"></param>
 
         private void AddSummarySheet(XLWorkbook workbook, string name, List<DepartmentConsumptionResponse> data)
         {
@@ -146,7 +173,7 @@ namespace Infrastructure.Persistence.Repositories
             var dateCell = ws.Cell(1, 1);
             dateCell.Value = $"تاريخ تصدير التقرير: {DateTime.Now:yyyy-MM-dd HH:mm}";
 
-            var dateRange = ws.Range(1, 1, 2, 7);
+            var dateRange = ws.Range(1, 1, 2, 4);
             dateRange.Merge().Style
                 .Font.SetBold()
                 .Font.SetFontSize(14)
@@ -158,12 +185,12 @@ namespace Infrastructure.Persistence.Repositories
             ws.Cell(headerRow, 1).Value = "Department Name";
             ws.Cell(headerRow, 2).Value = "ArName";
             ws.Cell(headerRow, 3).Value = "Total Consumption (GB)";
-            ws.Cell(headerRow, 4).Value = "Price per GB";
-            ws.Cell(headerRow, 5).Value = "Total Cost";
-            ws.Cell(headerRow, 6).Value = "DVR Count";
-            ws.Cell(headerRow, 7).Value = "Total Cost (With DVR)";
+            //ws.Cell(headerRow, 4).Value = "Price per GB";
+            //ws.Cell(headerRow, 5).Value = "Total Cost";
+            //ws.Cell(headerRow, 6).Value = "DVR Count";
+            ws.Cell(headerRow, 4).Value = "Total Cost";
 
-            var header = ws.Range(headerRow, 1, headerRow, 7);
+            var header = ws.Range(headerRow, 1, headerRow, 4);
             header.Style.Font.Bold = true;
             header.Style.Font.FontColor = XLColor.White;
             header.Style.Fill.BackgroundColor = XLColor.DarkBlue;
@@ -174,15 +201,18 @@ namespace Infrastructure.Persistence.Repositories
                 int currentRow = i + headerRow + 1;
                 var deptPrice = GetPricePerGB(data[i].TotalConsumptionGB);
 
+                double totalCost = RoundToNearestThousand(data[i].TotalConsumptionGB * deptPrice);
+                double totalCostWithDVR = CalculateTotalCostWithDVR(data[i].TotalConsumptionGB, deptPrice, data[i].DvrNum, sysInfo?.DvrPrice ?? 0);
+
                 ws.Cell(currentRow, 1).Value = data[i].DepartmentName;
                 ws.Cell(currentRow, 2).Value = data[i].ArName;
                 ws.Cell(currentRow, 3).Value = data[i].TotalConsumptionGB;
-                ws.Cell(currentRow, 4).Value = deptPrice;
-                ws.Cell(currentRow, 5).Value = RoundToNearestThousand(data[i].TotalConsumptionGB * deptPrice);
-                ws.Cell(currentRow, 6).Value = data[i].DvrNum;
-                ws.Cell(currentRow, 7).Value = RoundToNearestThousand(data[i].TotalConsumptionGB * deptPrice + (data[i].DvrNum * (sysInfo?.DvrPrice ?? 0)));
+                //ws.Cell(currentRow, 4).Value = deptPrice;
+                //ws.Cell(currentRow, 5).Value = totalCost;
+                //ws.Cell(currentRow, 6).Value = data[i].DvrNum;
+                ws.Cell(currentRow, 4).Value = totalCostWithDVR;
 
-                var rowRange = ws.Range(currentRow, 1, currentRow, 7);
+                var rowRange = ws.Range(currentRow, 1, currentRow, 4);
                 rowRange.Style.Fill.BackgroundColor = (currentRow % 2 == 0) ? XLColor.AliceBlue : XLColor.White;
                 ApplyCommonStyles(rowRange);
             }
