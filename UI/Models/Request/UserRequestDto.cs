@@ -7,5 +7,8 @@
     public string? Password { get; set; } = string.Empty;
     public int? RoleId { get; set; }
     public int? DepartmentId { get; set; }
+    public bool CreatePerm { get; set; }
+    public bool UpdatePerm { get; set; }
+    public bool ChangePerm { get; set; }
   }
 }

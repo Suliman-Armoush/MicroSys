@@ -1,14 +1,16 @@
 ﻿using Application.DTOs.Request;
 using Application.DTOs.Response;
+using Application.Features.Mikrotik.Command.Create;
 using Application.Interfaces;
 using MediatR;
+using Microsoft.OpenApi;
 using System;
 using System.Collections.Generic;
 using System.Text;
 
-namespace Application.Features.Mikrotik.Command.Create
+namespace Application.Features.Mikrotik.Command.AddUser
 {
-  public class AddMikrotikUserHandler : IRequestHandler<CreateMikrotikUserCommand, MikrotikUserInformationResponse>
+  public class AddMikrotikUserHandler : IRequestHandler<AddMikrotikUserCommand, MikrotikUserInformationResponse>
   {
     private readonly IMikrotikService _mikrotikService;
     private readonly IDepartmentService _departmentService;
@@ -21,9 +23,15 @@ namespace Application.Features.Mikrotik.Command.Create
       _userService = userService;
     }
 
-    public async Task<MikrotikUserInformationResponse> Handle(CreateMikrotikUserCommand request, CancellationToken cancellationToken)
+    public async Task<MikrotikUserInformationResponse> Handle(AddMikrotikUserCommand request, CancellationToken cancellationToken)
     {
-      var department = await _departmentService.GetByIdAsync(request.DepartmentId);
+      var user = await _userService.GetByIdAsync(_userService.UserId);
+      if (!user.CreatePerm)
+      {
+        throw new UnauthorizedAccessException("User does not have permission to create a new Mikrotik user");
+      }
+
+      var department = await _departmentService.GetByIdAsync(user.Department.Id);
       if (department == null)
         throw new KeyNotFoundException("Department not found.");
 
@@ -39,7 +47,7 @@ namespace Application.Features.Mikrotik.Command.Create
         Username = request.Username,
         Password = request.Password,
         Profile = request.Profile,
-        Server = request.Server,
+        Server = "all",
         Comment = finalComment,
         LimitBytes = limitValue
       };
