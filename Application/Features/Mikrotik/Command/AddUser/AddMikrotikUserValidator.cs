@@ -1,12 +1,13 @@
-﻿using Application.Interfaces;
+﻿using Application.Features.Mikrotik.Command.Create;
+using Application.Interfaces;
 using FluentValidation;
 using System;
 using System.Collections.Generic;
 using System.Text;
 
-namespace Application.Features.Mikrotik.Command.Create
+namespace Application.Features.Mikrotik.Command.AddUser
 {
-    public class AddMikrotikUserValidator : AbstractValidator<CreateMikrotikUserCommand>
+    public class AddMikrotikUserValidator : AbstractValidator<AddMikrotikUserCommand>
     {
         private readonly IMikrotikService _mikrotikService;
         public AddMikrotikUserValidator(IMikrotikService mikrotikService)
@@ -23,12 +24,6 @@ namespace Application.Features.Mikrotik.Command.Create
 
             RuleFor(x => x.Profile)
                 .NotEmpty().WithMessage("Profile must be selected.");
-
-            RuleFor(x => x.Server)
-                .NotEmpty().WithMessage("Server must be selected.");
-
-            RuleFor(x => x.DepartmentId)
-                .GreaterThan(0).WithMessage("Please select a valid department.");
 
             RuleFor(x => x.LimitGB)
                 .GreaterThan(0).When(x => x.LimitGB.HasValue)

@@ -138,6 +138,26 @@
                         </InputSelect>
                     </div>
 
+                    <div class="mb-3">
+                        <label class="form-label">Permissions</label>
+
+                        <div class="form-check">
+                            <InputCheckbox class="form-check-input" @bind-Value="currentUser.CreatePerm" />
+                            <label class="form-check-label">Create Permission</label>
+                        </div>
+
+                        <div class="form-check">
+                            <InputCheckbox class="form-check-input" @bind-Value="currentUser.UpdatePerm" />
+                            <label class="form-check-label">Update Permission</label>
+                        </div>
+
+                        <div class="form-check">
+                            <InputCheckbox class="form-check-input" @bind-Value="currentUser.ChangePerm" />
+                            <label class="form-check-label">Change Permission</label>
+                        </div>
+                    </div>
+
+
                     <div class="d-flex gap-2">
                         <button class="btn btn-primary" type="submit" disabled="@isSaving">
                             @(isSaving ? "Saving..." : "Save")
@@ -194,7 +214,10 @@
             Name = user.Name,
             UserName = user.UserName,
             RoleId = user.Role?.Id,
-            DepartmentId = user.Department?.Id
+            DepartmentId = user.Department?.Id,
+            CreatePerm = user.CreatePerm,
+            UpdatePerm = user.UpdatePerm,
+            ChangePerm = user.ChangePerm
         };
 
         ShowModal();
