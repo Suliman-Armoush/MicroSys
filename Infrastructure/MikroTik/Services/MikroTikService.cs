@@ -87,7 +87,7 @@ namespace Infrastructure.MikroTik.Services
       return result;
     }
 
-    public async Task<List<MikrotikProfileResponse>> GetAllProfilesAsync()
+    public async Task<List<MikrotikProfileResponse>> GetAllProfilesAsync(int maxSpeed)
     {
       var result = new List<MikrotikProfileResponse>();
 
@@ -97,6 +97,17 @@ namespace Infrastructure.MikroTik.Services
 
       foreach (var profile in profiles)
       {
+        if (!profile.Name.StartsWith("app-"))
+          continue;
+
+        var speedPart = profile.Name.Replace("app-", "");
+
+        if (!int.TryParse(speedPart, out int speed))
+          continue;
+
+        if (speed > maxSpeed)
+          continue;
+
         result.Add(new MikrotikProfileResponse
         {
           Name = profile.Name,

@@ -21,5 +21,7 @@ namespace Domain.Entities
     public bool CreatePerm { get; set; } = false;
     public bool UpdatePerm { get; set; } = false;
     public bool ChangePerm { get; set; } = true;
+
+    public int MaxSpeed { get; set; } = 5;
   }
 }
