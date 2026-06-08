@@ -139,21 +139,26 @@
                     </div>
 
                     <div class="mb-3">
+                        <label class="form-label">Max Speed</label>
+                        <InputNumber class="form-control" @bind-Value="currentUser.MaxSpeed" />
+                    </div>
+
+                    <div class="mb-3">
                         <label class="form-label">Permissions</label>
 
                         <div class="form-check">
                             <InputCheckbox class="form-check-input" @bind-Value="currentUser.CreatePerm" />
-                            <label class="form-check-label">Create Permission</label>
+                            <label class="form-check-label">Create</label>
                         </div>
 
                         <div class="form-check">
                             <InputCheckbox class="form-check-input" @bind-Value="currentUser.UpdatePerm" />
-                            <label class="form-check-label">Update Permission</label>
+                            <label class="form-check-label">Update</label>
                         </div>
 
                         <div class="form-check">
                             <InputCheckbox class="form-check-input" @bind-Value="currentUser.ChangePerm" />
-                            <label class="form-check-label">Change Permission</label>
+                            <label class="form-check-label">Change</label>
                         </div>
                     </div>
 
@@ -217,7 +222,8 @@
             DepartmentId = user.Department?.Id,
             CreatePerm = user.CreatePerm,
             UpdatePerm = user.UpdatePerm,
-            ChangePerm = user.ChangePerm
+            ChangePerm = user.ChangePerm,
+            MaxSpeed = user.MaxSpeed
         };
 
         ShowModal();

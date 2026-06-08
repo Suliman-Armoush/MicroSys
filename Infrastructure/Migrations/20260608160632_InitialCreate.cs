@@ -74,7 +74,8 @@ namespace Infrastructure.Migrations
                     DepartmentId = table.Column<int>(type: "int", nullable: true),
                     CreatePerm = table.Column<bool>(type: "bit", nullable: false),
                     UpdatePerm = table.Column<bool>(type: "bit", nullable: false),
-                    ChangePerm = table.Column<bool>(type: "bit", nullable: false)
+                    ChangePerm = table.Column<bool>(type: "bit", nullable: false),
+                    MaxSpeed = table.Column<int>(type: "int", nullable: false)
                 },
                 constraints: table =>
                 {
