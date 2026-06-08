@@ -1,0 +1,121 @@
+@page "/manager"
+@attribute [Authorize(Roles = "Manager")]
+@using UI.Models.Response
+@using UI.Services.Interfaces
+@inject IManagerService ManagerService
+@inject NavigationManager Navigation
+
+<PageTitle>Manager Dashboard - MicroSys</PageTitle>
+
+<div class="admin-page">
+    <div class="admin-shell">
+        <div class="page-header">
+            <div class="page-header-main">
+                <span class="page-kicker">Manager Workspace</span>
+                <h1 class="page-title">My Department</h1>
+                <p class="page-subtitle">Monitor your department consumption and jump into user management.</p>
+            </div>
+
+            <div class="page-actions">
+                <button class="btn btn-primary" type="button" @onclick='() => Navigation.NavigateTo("/manager/users")'>Manage Users</button>
+            </div>
+        </div>
+
+        @if (usage == null && string.IsNullOrEmpty(errorMessage))
+        {
+            <div class="page-card">
+                <div class="loading-state">
+                    <div class="spinner-border text-primary" role="status">
+                        <span class="visually-hidden">Loading...</span>
+                    </div>
+                    <p>Loading department usage...</p>
+                </div>
+            </div>
+        }
+        else if (!string.IsNullOrEmpty(errorMessage))
+        {
+            <div class="alert alert-danger">@errorMessage</div>
+        }
+        else if (usage != null)
+        {
+            <div class="metric-grid mb-3">
+                <div class="metric-card">
+                    <div class="metric-label">Department</div>
+                    <div class="metric-value">@DisplayDepartmentName</div>
+                    <div class="metric-note">@usage.Type</div>
+                </div>
+
+                <div class="metric-card">
+                    <div class="metric-label">Total Consumption</div>
+                    <div class="metric-value">@usage.TotalConsumptionGB.ToString("N2") GB</div>
+                    <div class="metric-note">Current MikroTik counters</div>
+                </div>
+
+                <div class="metric-card">
+                    <div class="metric-label">Users</div>
+                    <div class="metric-value">@usage.Users.Count</div>
+                    <div class="metric-note">Users linked to this department</div>
+                </div>
+            </div>
+
+            <div class="page-card">
+                <div class="page-card-header">
+                    <h2 class="page-card-title">Top Consumption</h2>
+                    <span class="soft-badge primary">@usage.Users.Count users</span>
+                </div>
+
+                <div class="table-responsive">
+                    <table class="table table-hover data-table align-middle">
+                        <thead>
+                            <tr>
+                                <th>User</th>
+                                <th class="text-center">Usage GB</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @if (usage.Users.Count == 0)
+                            {
+                                <tr>
+                                    <td colspan="2">
+                                        <div class="empty-state">
+                                            <p>No usage data is available for this department.</p>
+                                        </div>
+                                    </td>
+                                </tr>
+                            }
+                            else
+                            {
+                                @foreach (var user in usage.Users.OrderByDescending(u => u.UsageGB).Take(10))
+                                {
+                                    <tr>
+                                        <td class="fw-bold text-primary">@user.UserName</td>
+                                        <td class="text-center"><span class="soft-badge success">@user.UsageGB.ToString("N2")</span></td>
+                                    </tr>
+                                }
+                            }
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        }
+    </div>
+</div>
+
+@code {
+    private DetailedDepartmentConsumptionResponseDto? usage;
+    private string errorMessage = string.Empty;
+    private string DisplayDepartmentName => string.IsNullOrWhiteSpace(usage?.ArName) ? usage?.DepartmentName ?? "" : usage.ArName;
+
+    protected override async Task OnInitializedAsync()
+    {
+        try
+        {
+            usage = await ManagerService.GetMyDepartmentUsageAsync();
+        }
+        catch (Exception ex)
+        {
+            errorMessage = "Unable to load your department usage.";
+            Console.WriteLine($"Manager dashboard error: {ex.Message}");
+        }
+    }
+}
