@@ -15,15 +15,16 @@ namespace Application.DTOs.Response
         [JsonIgnore]
         public long BytesOutRaw { get; set; }
 
-        public double BytesIn => Math.Round(BytesInRaw / Math.Pow(1024, 3), 2);
-        public double BytesOut => Math.Round(BytesOutRaw / Math.Pow(1024, 3), 2);
+        public double BytesIn => Math.Round(BytesInRaw / Math.Pow(1000, 3), 2);
+        public double BytesOut => Math.Round(BytesOutRaw / Math.Pow(1000, 3), 2);
 
-            public double Total => Math.Round((BytesInRaw + BytesOutRaw) / Math.Pow(1024, 3), 2);
+            public double Total => Math.Round((BytesInRaw + BytesOutRaw) / Math.Pow(1000, 3), 2);
 
     public string Profile { get; set; } = null!;
-    public long? LimitTotalRaw { get; set; }
 
     [JsonIgnore]
+    public long? LimitTotalRaw { get; set; }
+
     public double? LimitTotal =>
         LimitTotalRaw.HasValue
             ? Math.Round(LimitTotalRaw.Value / Math.Pow(1000, 3), 2)

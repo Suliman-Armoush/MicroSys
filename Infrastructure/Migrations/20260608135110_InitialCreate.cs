@@ -71,7 +71,10 @@ namespace Infrastructure.Migrations
                     UserName = table.Column<string>(type: "nvarchar(max)", nullable: false),
                     PasswordHash = table.Column<string>(type: "nvarchar(max)", nullable: false),
                     RoleId = table.Column<int>(type: "int", nullable: false),
-                    DepartmentId = table.Column<int>(type: "int", nullable: true)
+                    DepartmentId = table.Column<int>(type: "int", nullable: true),
+                    CreatePerm = table.Column<bool>(type: "bit", nullable: false),
+                    UpdatePerm = table.Column<bool>(type: "bit", nullable: false),
+                    ChangePerm = table.Column<bool>(type: "bit", nullable: false)
                 },
                 constraints: table =>
                 {
