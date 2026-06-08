@@ -1,0 +1,145 @@
+@page "/manager/users"
+@attribute [Authorize(Roles = "Manager")]
+@using UI.Models.Response
+@using UI.Services.Interfaces
+@inject IManagerService ManagerService
+@inject NavigationManager Navigation
+
+<PageTitle>Department Users - MicroSys</PageTitle>
+
+<div class="admin-page">
+    <div class="admin-shell">
+        <div class="page-header">
+            <div class="page-header-main">
+                <span class="page-kicker">Manager Workspace</span>
+                <h1 class="page-title">Department Users</h1>
+                <p class="page-subtitle">Create, edit, enable, and disable users that belong to your department.</p>
+            </div>
+
+            <div class="page-actions">
+                <button class="btn btn-light" type="button" @onclick='() => Navigation.NavigateTo("/manager")'>Back</button>
+                <button class="btn btn-primary" type="button" @onclick="() => showCreateModal = true">Add User</button>
+            </div>
+        </div>
+
+        <div class="toolbar">
+            <div class="search-field">
+                <input type="text"
+                       class="form-control"
+                       placeholder="Search department users..."
+                       @bind="searchTerm"
+                       @bind:event="oninput" />
+            </div>
+            <span class="soft-badge primary">@FilteredUsers.Count users</span>
+        </div>
+
+        <div class="page-card">
+            <div class="table-responsive">
+                <table class="table table-hover data-table align-middle text-center">
+                    <thead>
+                        <tr>
+                            <th class="text-start">User</th>
+                            <th class="text-start">Comments</th>
+                            <th>Upload GB</th>
+                            <th>Download GB</th>
+                            <th>Total GB</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @if (users == null)
+                        {
+                            <tr>
+                                <td colspan="6">
+                                    <div class="loading-state">
+                                        <div class="spinner-border text-primary" role="status">
+                                            <span class="visually-hidden">Loading...</span>
+                                        </div>
+                                        <p>Loading users...</p>
+                                    </div>
+                                </td>
+                            </tr>
+                        }
+                        else if (FilteredUsers.Count == 0)
+                        {
+                            <tr>
+                                <td colspan="6">
+                                    <div class="empty-state">
+                                        <p>No users match your search.</p>
+                                    </div>
+                                </td>
+                            </tr>
+                        }
+                        else
+                        {
+                            @foreach (var user in FilteredUsers)
+                            {
+                                <tr>
+                                    <td class="text-start fw-bold text-primary">@user.Username</td>
+                                    <td class="text-start text-muted">@user.Comment</td>
+                                    <td><span class="soft-badge danger">@user.BytesIn.ToString("N2")</span></td>
+                                    <td><span class="soft-badge success">@user.BytesOut.ToString("N2")</span></td>
+                                    <td><span class="soft-badge primary">@user.Total.ToString("N2")</span></td>
+                                    <td>
+                                        <div class="data-table-actions">
+                                            <button class="btn btn-sm btn-outline-success" type="button" @onclick="() => OpenEnableModal(user.Username)">Enable</button>
+                                            <button class="btn btn-sm btn-light" type="button" @onclick="() => OpenDisableModal(user.Username)">Disable</button>
+                                            <button class="btn btn-sm btn-outline-warning" type="button" @onclick="() => OpenEditModal(user.Username)">Edit</button>
+                                        </div>
+                                    </td>
+                                </tr>
+                            }
+                        }
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+
+<ManagerCreateUserModal IsVisible="showCreateModal" OnClose="() => showCreateModal = false" OnUserCreated="ReloadUsers" />
+<ManagerEditUserModal IsVisible="showEditModal" CurrentUsername="@selectedUsername" OnClose="() => showEditModal = false" OnUserUpdated="ReloadUsers" />
+<EnableUserModal IsVisible="showEnableModal" Username="@selectedUsername" OnClose="() => showEnableModal = false" OnUserEnabled="ReloadUsers" />
+<DisableUserModal IsVisible="showDisableModal" Username="@selectedUsername" OnClose="() => showDisableModal = false" OnUserDisabled="ReloadUsers" />
+
+@code {
+    private List<MikrotikUserResponseDto>? users;
+    private string searchTerm = string.Empty;
+    private bool showCreateModal, showEditModal, showEnableModal, showDisableModal;
+    private string selectedUsername = string.Empty;
+
+    private List<MikrotikUserResponseDto> FilteredUsers
+    {
+        get
+        {
+            if (users == null)
+            {
+                return new();
+            }
+
+            if (string.IsNullOrWhiteSpace(searchTerm))
+            {
+                return users;
+            }
+
+            return users
+                .Where(u => u.Username.Contains(searchTerm, StringComparison.OrdinalIgnoreCase)
+                    || u.Comment.Contains(searchTerm, StringComparison.OrdinalIgnoreCase))
+                .ToList();
+        }
+    }
+
+    protected override async Task OnInitializedAsync() => await ReloadUsers();
+
+    private async Task ReloadUsers()
+    {
+        users = null;
+        StateHasChanged();
+        users = await ManagerService.GetUsersByDepartmentAsync();
+        StateHasChanged();
+    }
+
+    private void OpenEditModal(string username) { selectedUsername = username; showEditModal = true; }
+    private void OpenEnableModal(string username) { selectedUsername = username; showEnableModal = true; }
+    private void OpenDisableModal(string username) { selectedUsername = username; showDisableModal = true; }
+}

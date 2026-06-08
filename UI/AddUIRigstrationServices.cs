@@ -22,6 +22,7 @@ namespace UI
       services.AddScoped<IAuthService, AuthService>();
       services.AddScoped<IRoleService, RoleService>();
       services.AddScoped<IMikrotikService, MikrotikService>();
+      services.AddScoped<IManagerService, ManagerService>();
       services.AddScoped<IDepartmentService, DepartmentService>();
       services.AddScoped<IReportService, ReportService>();
       services.AddScoped<ISysInfosService, SysInfosService>();
