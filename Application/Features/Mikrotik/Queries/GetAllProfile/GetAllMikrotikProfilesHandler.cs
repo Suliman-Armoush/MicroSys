@@ -7,18 +7,21 @@ using System.Text;
 
 namespace Application.Features.Mikrotik.Queries.GetAllProfile
 {
-    public class GetAllMikrotikProfilesHandler : IRequestHandler<GetAllMikrotikProfilesQuery, List<MikrotikProfileResponse>>
+  public class GetAllMikrotikProfilesHandler : IRequestHandler<GetAllMikrotikProfilesQuery, List<MikrotikProfileResponse>>
+  {
+    private readonly IMikrotikService _mikrotikService;
+    private readonly IUserService _userService;
+
+    public GetAllMikrotikProfilesHandler(IMikrotikService mikrotikService, IUserService userService)
     {
-        private readonly IMikrotikService _mikrotikService;
-
-        public GetAllMikrotikProfilesHandler(IMikrotikService mikrotikService)
-        {
-            _mikrotikService = mikrotikService;
-        }
-
-        public async Task<List<MikrotikProfileResponse>> Handle(GetAllMikrotikProfilesQuery request, CancellationToken cancellationToken)
-        {
-            return await _mikrotikService.GetAllProfilesAsync();
-        }
+      _mikrotikService = mikrotikService;
+      _userService = userService;
     }
+
+    public async Task<List<MikrotikProfileResponse>> Handle(GetAllMikrotikProfilesQuery request, CancellationToken cancellationToken)
+    {
+      var user = await _userService.GetByIdAsync(_userService.UserId);
+      return await _mikrotikService.GetAllProfilesAsync(user.MaxSpeed);
+    }
+  }
 }

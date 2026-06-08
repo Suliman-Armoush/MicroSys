@@ -34,6 +34,7 @@ namespace Application.Features.Department.Command.Create
         CreatePerm = false,
         ChangePerm = true,
         UpdatePerm = false,
+        MaxSpeed = 5
       };
 
       var user = _mapper.Map<Domain.Entities.User>(userDto);

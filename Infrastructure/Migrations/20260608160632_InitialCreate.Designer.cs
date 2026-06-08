@@ -11,7 +11,7 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace Infrastructure.Migrations
 {
     [DbContext(typeof(DataContext))]
-    [Migration("20260608135110_InitialCreate")]
+    [Migration("20260608160632_InitialCreate")]
     partial class InitialCreate
     {
         /// <inheritdoc />
@@ -132,6 +132,9 @@ namespace Infrastructure.Migrations
                         .HasColumnType("bit");
 
                     b.Property<int?>("DepartmentId")
+                        .HasColumnType("int");
+
+                    b.Property<int>("MaxSpeed")
                         .HasColumnType("int");
 
                     b.Property<string>("Name")
