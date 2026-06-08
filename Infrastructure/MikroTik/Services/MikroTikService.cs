@@ -38,6 +38,7 @@ namespace Infrastructure.MikroTik.Services
     public async Task<List<MikrotikUserResponse>> GetUsersByDepartmentAsync()
     {
       var manager = await _userService.GetByIdAsync(_userService.UserId);
+      var departmentName = manager.Department.Name;
       var result = new List<MikrotikUserResponse>();
 
       using var connection = _client.Connect();
@@ -47,12 +48,15 @@ namespace Infrastructure.MikroTik.Services
 
       foreach (var user in users)
       {
+        var cleanComment = user.Comment.Substring(departmentName.Length).TrimStart('-', ' ');
         result.Add(new MikrotikUserResponse
         {
-          Comment = user.Comment,
+          Comment = cleanComment,
           Username = user.Name,
           BytesInRaw = user.BytesIn,
-          BytesOutRaw = user.BytesOut
+          BytesOutRaw = user.BytesOut,
+          Profile = user.Profile,
+          LimitTotalRaw = user.LimitBytesTotal
         });
       }
 
@@ -74,7 +78,9 @@ namespace Infrastructure.MikroTik.Services
           Comment = user.Comment,
           Username = user.Name,
           BytesInRaw = user.BytesIn,
-          BytesOutRaw = user.BytesOut
+          BytesOutRaw = user.BytesOut,
+          Profile = user.Profile,
+          LimitTotalRaw = user.LimitBytesTotal
         });
       }
 
@@ -263,7 +269,9 @@ namespace Infrastructure.MikroTik.Services
         Comment = u.Comment,
         Username = u.Name,
         BytesInRaw = u.BytesIn,
-        BytesOutRaw = u.BytesOut
+        BytesOutRaw = u.BytesOut,
+        Profile = u.Profile,
+        LimitTotalRaw = u.LimitBytesTotal
       }).ToList();
     }
 
