@@ -46,6 +46,7 @@ namespace Presentation.SystemBuild
 
       services.AddApplicationServices();
       services.AddInfrastructureServices(configuration);
+      services.AddHttpContextAccessor();
 
 
       return services;

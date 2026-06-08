@@ -10,6 +10,7 @@ namespace Application.Interfaces
   public interface IMikrotikService
   {
     Task<bool> TestConnection();
+    Task<List<MikrotikUserResponse>> GetUsersByDepartmentAsync();
 
     Task<List<MikrotikUserResponse>> GetAllUsersAsync();
     Task<List<MikrotikProfileResponse>> GetAllProfilesAsync();
