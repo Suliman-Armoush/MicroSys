@@ -301,63 +301,84 @@ namespace Infrastructure.MikroTik.Services
       return false;
     }
 
-    public async Task<bool> UpdateUserStatusAsync(string username, bool isDisabled)
-    {
-      using var connection = _client.Connect();
-
-      try
-      {
-        // 1. تحديث الحالة - استخدم ExecuteScalar هنا لأنه لا يتوقع عودة بيانات
-        var setStatusCmd = connection.CreateCommand("/ip/hotspot/user/set");
-        setStatusCmd.AddParameter(".id", username);
-        setStatusCmd.AddParameter("disabled", isDisabled ? "yes" : "no");
-        setStatusCmd.ExecuteScalar();
-
-        if (isDisabled)
+        public async Task<bool> UpdateUserStatusAsync(string username, bool isDisabled)
         {
-          // 2. حذف من Active (مع التحقق)
-          var getActiveCmd = connection.CreateCommand("/ip/hotspot/active/print");
-          getActiveCmd.AddParameter("?user", username);
-          var activeSessions = getActiveCmd.ExecuteList();
+            using var connection = _client.Connect();
 
-          foreach (var session in activeSessions)
-          {
             try
             {
-              var removeActiveCmd = connection.CreateCommand("/ip/hotspot/active/remove");
-              removeActiveCmd.AddParameter(".id", session.GetId());
-              removeActiveCmd.ExecuteScalar();
+                // 1. البحث عن المستخدم بواسطة الاسم
+                var findCmd = connection.CreateCommand("/ip/hotspot/user/print");
+                findCmd.AddParameter("?name", username);
+                var users = findCmd.ExecuteList();
+
+                if (users == null || !users.Any())
+                    return false; // المستخدم غير موجود
+
+                var user = users.First();
+                if (!user.Words.TryGetValue(".id", out string userId) || string.IsNullOrEmpty(userId))
+                    return false; // لا يمكن الحصول على المعرف
+
+                // 2. تحديث حالة التعطيل
+                var setStatusCmd = connection.CreateCommand("/ip/hotspot/user/set");
+                setStatusCmd.AddParameter(".id", userId);
+                setStatusCmd.AddParameter("disabled", isDisabled ? "yes" : "no");
+                setStatusCmd.ExecuteNonQuery(); // استخدم ExecuteNonQuery بدلاً من ExecuteScalar
+
+                // 3. إذا كان تعطيل، فقم بإزالة الجلسات النشطة والأجهزة المرتبطة
+                if (isDisabled)
+                {
+                    // إزالة الجلسات النشطة (active)
+                    var getActiveCmd = connection.CreateCommand("/ip/hotspot/active/print");
+                    getActiveCmd.AddParameter("?user", username);
+                    var activeSessions = getActiveCmd.ExecuteList();
+
+                    foreach (var session in activeSessions)
+                    {
+                        try
+                        {
+                            if (session.Words.TryGetValue(".id", out string activeId))
+                            {
+                                var removeActiveCmd = connection.CreateCommand("/ip/hotspot/active/remove");
+                                removeActiveCmd.AddParameter(".id", activeId);
+                                removeActiveCmd.ExecuteNonQuery();
+                            }
+                        }
+                        catch { /* تجاهل */ }
+                    }
+
+                    // إزالة المضيفين (hosts)
+                    var getHostCmd = connection.CreateCommand("/ip/hotspot/host/print");
+                    getHostCmd.AddParameter("?user", username);
+                    var hosts = getHostCmd.ExecuteList();
+
+                    foreach (var host in hosts)
+                    {
+                        try
+                        {
+                            if (host.Words.TryGetValue(".id", out string hostId))
+                            {
+                                var removeHostCmd = connection.CreateCommand("/ip/hotspot/host/remove");
+                                removeHostCmd.AddParameter(".id", hostId);
+                                removeHostCmd.ExecuteNonQuery();
+                            }
+                        }
+                        catch { }
+                    }
+                }
+
+                return true;
             }
-            catch { /* تجاوز إذا كان قد حذف بالفعل */ }
-          }
-
-          // 3. حذف من Host (مع التحقق)
-          var getHostCmd = connection.CreateCommand("/ip/hotspot/host/print");
-          getHostCmd.AddParameter("?user", username);
-          var hosts = getHostCmd.ExecuteList();
-
-          foreach (var host in hosts)
-          {
-            try
+            catch (Exception ex)
             {
-              var removeHostCmd = connection.CreateCommand("/ip/hotspot/host/remove");
-              removeHostCmd.AddParameter(".id", host.GetId());
-              removeHostCmd.ExecuteScalar();
+                // تسجيل الخطأ للتصحيح (يمكنك استخدام ILogger)
+                Console.WriteLine($"Error in UpdateUserStatusAsync: {ex.Message}");
+                return false;
             }
-            catch { /* تجاوز */ }
-          }
         }
-        return true;
-      }
-      catch (Exception ex)
-      {
-        // تسجيل الخطأ أو التعامل معه
-        return false;
-      }
-    }
 
 
-    public async Task<List<MikrotikServerResponse>> GetAllServersAsync()
+        public async Task<List<MikrotikServerResponse>> GetAllServersAsync()
     {
       using var connection = _client.Connect();
 
