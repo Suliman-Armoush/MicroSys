@@ -10,10 +10,10 @@ builder.Services.AddCors(options =>
     options.AddPolicy("AllowBlazor",
         policy =>
         {
-            policy.WithOrigins("https://localhost:7276") // رابط Blazor الخاص بك
+            policy.WithOrigins(builder.Configuration["ApiBaseUrl"]) // رابط Blazor الخاص بك
                   .AllowAnyHeader()
-                  .AllowAnyMethod()
-                  .AllowCredentials();
+                  .AllowAnyMethod();
+                  //.AllowCredentials();
         });
 });
 
@@ -30,6 +30,6 @@ using (var scope = app.Services.CreateScope())
     await DbSeeder.SeedAsync(db);
 }
 
-
+app.UseCors("AllowBlazor");
 
 app.Run();
