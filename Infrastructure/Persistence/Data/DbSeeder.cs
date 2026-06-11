@@ -26,7 +26,7 @@ namespace Infrastructure.Persistence.Data
                 var admin = new User
                 {
                     Name = "Administrator",
-                    UserName = "Admin",
+                    UserName = "IT",
                     PasswordHash = BCrypt.Net.BCrypt.HashPassword("it@123456"),
                     RoleId = adminRole.Id,
                     CreatePerm = true,
