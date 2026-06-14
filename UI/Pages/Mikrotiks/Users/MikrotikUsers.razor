@@ -2,6 +2,7 @@
 @attribute [Authorize(Roles = "Admin")]
 @using UI.Models.Response
 @using UI.Services.Interfaces
+@using System.Text.Json
 @inject IMikrotikService MikrotikService
 @inject NavigationManager Navigation
 
@@ -22,6 +23,14 @@
                 <button class="btn btn-outline-danger" type="button" @onclick="() => showResetAllCountersModal = true">Reset Counters</button>
             </div>
         </div>
+
+        @if (!string.IsNullOrEmpty(errorMessage))
+        {
+            <div class="alert alert-danger my-3 alert-dismissible fade show" role="alert">
+                @errorMessage
+                <button type="button" class="btn-close" @onclick="() => errorMessage = null" aria-label="Close"></button>
+            </div>
+        }
 
         <div class="toolbar">
             <div class="search-field">
@@ -53,30 +62,28 @@
                         </tr>
                     </thead>
                     <tbody>
-                        @if (users == null)
+                        @if (users == null && string.IsNullOrEmpty(errorMessage))
                         {
                             <tr>
                                 <td colspan="6">
                                     <div class="loading-state">
-                                        <div class="spinner-border text-primary" role="status">
-                                            <span class="visually-hidden">Loading...</span>
-                                        </div>
+                                        <div class="spinner-border text-primary" role="status"></div>
                                         <p>Loading users...</p>
                                     </div>
                                 </td>
                             </tr>
                         }
-                        else if (users.Count == 0)
+                        else if (users != null && users.Count == 0)
                         {
                             <tr>
                                 <td colspan="6">
                                     <div class="empty-state">
-                                        <p>No users match your search.</p>
+                                        <p>No users found.</p>
                                     </div>
                                 </td>
                             </tr>
                         }
-                        else
+                        else if (users != null)
                         {
                             @foreach (var user in users)
                             {
@@ -117,25 +124,15 @@
             <div class="modal-content danger-zone">
                 <div class="modal-header">
                     <h5 class="modal-title">Confirm Reset All Counters</h5>
-                    <button type="button" class="btn-close" @onclick="CloseResetModal" aria-label="Close"></button>
+                    <button type="button" class="btn-close" @onclick="CloseResetModal"></button>
                 </div>
-
                 <div class="modal-body">
-                    <p class="fw-bold text-danger mb-2">This action will reset counters for all users.</p>
-                    <p class="text-muted">To continue, type the word below:</p>
-                    <div class="alert alert-light border fw-bold text-center">reset</div>
-
-                    <input type="text"
-                           class="form-control text-center"
-                           placeholder="Type reset here"
-                           @bind="resetConfirmationText" />
+                    <p class="fw-bold text-danger">This action will reset counters for all users.</p>
+                    <input type="text" class="form-control text-center" placeholder="Type reset" @bind="resetConfirmationText" />
                 </div>
-
                 <div class="modal-footer">
-                    <button class="btn btn-light" type="button" @onclick="CloseResetModal">Cancel</button>
-                    <button class="btn btn-danger" type="button" disabled="@(!CanResetCounters)" @onclick="ConfirmResetAllCounters">
-                        Reset Counters
-                    </button>
+                    <button class="btn btn-light" @onclick="CloseResetModal">Cancel</button>
+                    <button class="btn btn-danger" disabled="@(!CanResetCounters)" @onclick="ConfirmResetAllCounters">Reset</button>
                 </div>
             </div>
         </div>
@@ -144,16 +141,26 @@
 
 @code {
     private List<MikrotikUserResponseDto>? users;
+    private string? errorMessage;
     private string searchTerm = "";
     private bool isSearching = false;
     private System.Timers.Timer? debounceTimer;
-    private bool showCreateModal, showEditModal, showDeleteModal, showEnableModal, showDisableModal;
+    private bool showCreateModal, showEditModal, showDeleteModal, showEnableModal, showDisableModal, showResetAllCountersModal;
     private string selectedUsername = "";
-    private bool showResetAllCountersModal = false;
     private string resetConfirmationText = "";
     private bool CanResetCounters => string.Equals(resetConfirmationText?.Trim(), "reset", StringComparison.OrdinalIgnoreCase);
 
     protected override async Task OnInitializedAsync() => await ReloadUsers();
+
+    private async Task ReloadUsers()
+    {
+        try
+        {
+            users = null;
+            users = await MikrotikService.GetAllUsersAsync();
+        }
+        catch (Exception ex) { errorMessage = ParseErrorMessage(ex.Message); }
+    }
 
     private void HandleSearch()
     {
@@ -162,43 +169,44 @@
         debounceTimer.Elapsed += async (s, e) =>
         {
             isSearching = true;
-            await InvokeAsync(StateHasChanged);
-            users = string.IsNullOrWhiteSpace(searchTerm)
-                ? await MikrotikService.GetAllUsersAsync()
-                : await MikrotikService.SearchUsersAsync(searchTerm);
+            try
+            {
+                users = string.IsNullOrWhiteSpace(searchTerm) ? await MikrotikService.GetAllUsersAsync() : await MikrotikService.SearchUsersAsync(searchTerm);
+            }
+            catch (Exception ex) { errorMessage = ParseErrorMessage(ex.Message); }
             isSearching = false;
             await InvokeAsync(StateHasChanged);
         };
-        debounceTimer.AutoReset = false;
         debounceTimer.Start();
-    }
-
-    private async Task ReloadUsers()
-    {
-        users = null;
-        StateHasChanged();
-        users = await MikrotikService.GetAllUsersAsync();
-        StateHasChanged();
-    }
-
-    private void CloseResetModal()
-    {
-        showResetAllCountersModal = false;
-        resetConfirmationText = "";
     }
 
     private async Task ConfirmResetAllCounters()
     {
-        var result = await MikrotikService.ResetAllCountersAsync();
-
-        if (result)
+        try
         {
-            await ReloadUsers();
+            if (await MikrotikService.ResetAllCountersAsync()) await ReloadUsers();
         }
-
+        catch (Exception ex) { errorMessage = ParseErrorMessage(ex.Message); }
         CloseResetModal();
     }
 
+    // دالة لتحليل رسالة الخطأ القادمة من الـ API (مثل الصورة التي أرسلتها)
+    private string ParseErrorMessage(string rawMessage)
+    {
+        try
+        {
+            using var doc = JsonDocument.Parse(rawMessage);
+            var root = doc.RootElement;
+            if (root.TryGetProperty("errors", out var errors) && errors.GetArrayLength() > 0)
+            {
+                return errors[0].GetProperty("Message").GetString() ?? rawMessage;
+            }
+        }
+        catch { }
+        return rawMessage;
+    }
+
+    private void CloseResetModal() { showResetAllCountersModal = false; resetConfirmationText = ""; }
     private void OpenEditModal(string u) { selectedUsername = u; showEditModal = true; }
     private void OpenDeleteModal(string u) { selectedUsername = u; showDeleteModal = true; }
     private void OpenEnableModal(string u) { selectedUsername = u; showEnableModal = true; }

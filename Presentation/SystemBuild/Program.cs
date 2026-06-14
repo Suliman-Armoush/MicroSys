@@ -3,33 +3,40 @@ using Presentation.SystemBuild;
 
 var builder = WebApplication.CreateBuilder(args);
 
+// تسجيل الخدمات
 builder.Services.AddPresentationServices(builder.Configuration);
 
+// إعداد سياسة CORS
 builder.Services.AddCors(options =>
 {
     options.AddPolicy("AllowBlazor",
         policy =>
         {
-            policy.WithOrigins(builder.Configuration["ApiBaseUrl"]) // رابط Blazor الخاص بك
-                  .AllowAnyHeader()
+            // تأكد من أن "ApiBaseUrl" في appsettings.json تساوي "http://192.168.0.19:7076"
+            // إذا استمرت المشكلة، جرب وضع الرابط مباشرة كنص داخل WithOrigins
+            //  policy.WithOrigins(builder.Configuration["ApiBaseUrl"] ?? "http://192.168.0.19:7076")
+            policy.AllowAnyOrigin()
+            .AllowAnyHeader()
                   .AllowAnyMethod();
-                  //.AllowCredentials();
         });
 });
 
-// بعد app.Build()
-
 var app = builder.Build();
 
-app.UseApplicationPipeline();
-app.MapControllers();
+// ترتيب الـ Pipeline ضروري جداً
+// يجب أن يكون UseCors في البداية
+app.UseCors("AllowBlazor");
 
+// بقية المعالجات
+app.UseApplicationPipeline();
+
+// تهيئة قاعدة البيانات
 using (var scope = app.Services.CreateScope())
 {
     var db = scope.ServiceProvider.GetRequiredService<DataContext>();
     await DbSeeder.SeedAsync(db);
 }
 
-app.UseCors("AllowBlazor");
+app.MapControllers();
 
 app.Run();

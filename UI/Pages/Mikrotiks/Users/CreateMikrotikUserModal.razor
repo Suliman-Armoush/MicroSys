@@ -9,16 +9,23 @@
     <div class="modal fade show d-block app-modal-backdrop" tabindex="-1">
         <div class="modal-dialog modal-dialog-centered modal-lg">
             <div class="modal-content">
-                
+
                 <div class="modal-header">
                     <h5 class="modal-title fw-bold flex-grow-1">Add MikroTik User</h5>
-                    <button type="button" class="btn-close" @onclick="Close" aria-label="Close"></button>
+                    <button type="button" class="btn-close" @onclick="Close" aria-label="Close" disabled="@isProcessing"></button>
                 </div>
 
                 <EditForm Model="createModel" OnValidSubmit="HandleSave">
                     <DataAnnotationsValidator />
-                    
+
                     <div class="modal-body p-4">
+                        @if (!string.IsNullOrEmpty(errorMessage))
+                        {
+                            <div class="alert alert-danger mb-3">
+                                @errorMessage
+                            </div>
+                        }
+
                         <div class="row">
                             <div class="col-md-6 mb-3">
                                 <label class="form-label">Username</label>
@@ -89,9 +96,11 @@
                     </div>
 
                     <div class="modal-footer d-flex justify-content-start gap-2 px-4 py-3">
-                        <button type="submit" class="btn btn-primary px-4">Save User</button>
-    
-                        <button type="button" class="btn btn-light px-4" @onclick="Close">Cancel</button>
+                        <button type="submit" class="btn btn-primary px-4" disabled="@isProcessing">
+                            @(isProcessing ? "Saving..." : "Save User")
+                        </button>
+
+                        <button type="button" class="btn btn-light px-4" @onclick="Close" disabled="@isProcessing">Cancel</button>
                     </div>
                 </EditForm>
             </div>
@@ -109,11 +118,15 @@
     private List<MikrotikServerResponseDto> servers = new();
     private List<DepartmentResponseDto> departments = new();
 
+    private string? errorMessage;
+    private bool isProcessing;
+
     protected override async Task OnParametersSetAsync()
     {
         if (IsVisible)
         {
             createModel = new();
+            errorMessage = null;
             await LoadInitialData();
         }
     }
@@ -127,29 +140,60 @@
             var dTask = DepartmentService.GetAllAsync();
 
             profiles = await pTask ?? new();
-            StateHasChanged();
-
             servers = await sTask ?? new();
-            StateHasChanged();
-
             departments = await dTask ?? new();
+
             StateHasChanged();
         }
         catch (Exception ex)
         {
-            Console.WriteLine($"Error: {ex.Message}");
+            errorMessage = "Failed to load initial data.";
         }
     }
 
     private async Task HandleSave()
     {
-        var result = await MikrotikService.CreateUserAsync(createModel);
-        if (result != null)
+        isProcessing = true;
+        errorMessage = null;
+
+        try
         {
+            await MikrotikService.CreateUserAsync(createModel);
             await OnUserCreated.InvokeAsync();
             await Close();
         }
+        catch (Exception ex)
+        {
+            // هنا نستخدم التحليل لاستخراج الرسالة النظيفة
+            errorMessage = ParseErrorMessage(ex.Message);
+        }
+        finally
+        {
+            isProcessing = false;
+        }
     }
 
-    private async Task Close() => await OnClose.InvokeAsync();
+    // أضف هذه الدالة داخل المودال أيضاً
+    private string ParseErrorMessage(string rawMessage)
+    {
+        try
+        {
+            using var doc = System.Text.Json.JsonDocument.Parse(rawMessage);
+            var root = doc.RootElement;
+            if (root.TryGetProperty("errors", out var errors) && errors.GetArrayLength() > 0)
+            {
+                return errors[0].GetProperty("Message").GetString() ?? rawMessage;
+            }
+        }
+        catch { }
+        return rawMessage;
+    }
+
+    private async Task Close()
+    {
+        if (!isProcessing)
+        {
+            await OnClose.InvokeAsync();
+        }
+    }
 }
